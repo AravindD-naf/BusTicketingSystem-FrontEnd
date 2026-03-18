@@ -1,0 +1,78 @@
+<app-navbar></app-navbar>
+
+<!-- Route & step bar -->
+<div class="route-bar">
+  <div class="route-info">
+    <div class="route-chip">
+      <svg viewBox="0 0 24 24" width="13" height="13" style="stroke:rgba(255,255,255,.6);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 10 20 10a8 8 0 1 0-16 0s2.7 7 8 11.7z"/></svg>
+      Review Your Booking
+    </div>
+  </div>
+  <div class="step-pills">
+    <div class="step-pill done"><span class="step-num">✓</span> Search</div>
+    <div class="step-sep"></div>
+    <div class="step-pill done"><span class="step-num">✓</span> Seats</div>
+    <div class="step-sep"></div>
+    <div class="step-pill active"><span class="step-num">3</span> Review</div>
+    <div class="step-sep"></div>
+    <div class="step-pill"><span class="step-num">4</span> Payment</div>
+  </div>
+</div>
+
+<main class="review-page">
+  <div class="review-container">
+    <h2 class="page-title">Review Your Booking</h2>
+
+    <div *ngIf="loading()" class="loading-box">Loading booking details...</div>
+    <div *ngIf="error()" class="error-box">{{ error() }}</div>
+
+    <div *ngIf="!loading() && !error()" class="review-layout">
+      <!-- Booking Details Card -->
+      <div class="details-card">
+        <h3 class="card-title">🎫 Booking Details</h3>
+        <div class="detail-rows" *ngIf="booking()">
+          <div class="detail-row"><span class="dk">Booking ID</span><span class="dv">#{{ booking()?.bookingId }}</span></div>
+          <div class="detail-row"><span class="dk">Schedule ID</span><span class="dv">{{ booking()?.scheduleId }}</span></div>
+          <div class="detail-row" *ngIf="booking()?.source"><span class="dk">From</span><span class="dv">{{ booking()?.source }}</span></div>
+          <div class="detail-row" *ngIf="booking()?.destination"><span class="dk">To</span><span class="dv">{{ booking()?.destination }}</span></div>
+          <div class="detail-row" *ngIf="booking()?.travelDate"><span class="dk">Travel Date</span><span class="dv">{{ booking()?.travelDate | date:'mediumDate' }}</span></div>
+          <div class="detail-row" *ngIf="booking()?.departureTime"><span class="dk">Departure</span><span class="dv">{{ booking()?.departureTime }}</span></div>
+          <div class="detail-row" *ngIf="booking()?.arrivalTime"><span class="dk">Arrival</span><span class="dv">{{ booking()?.arrivalTime }}</span></div>
+          <div class="detail-row" *ngIf="booking()?.busNumber"><span class="dk">Bus</span><span class="dv">{{ booking()?.busNumber }} ({{ booking()?.busType }})</span></div>
+          <div class="detail-row" *ngIf="booking()?.operatorName"><span class="dk">Operator</span><span class="dv">{{ booking()?.operatorName }}</span></div>
+          <div class="detail-row"><span class="dk">Seats</span><span class="dv">{{ booking()?.numberOfSeats }}</span></div>
+          <div class="detail-row"><span class="dk">Status</span><span class="status-badge">{{ booking()?.bookingStatus }}</span></div>
+        </div>
+
+        <!-- Seats selected (from seat service) -->
+        <div *ngIf="selectedSeats().length > 0" class="selected-seats">
+          <p class="seats-label">Selected Seats:</p>
+          <div class="seat-chips">
+            <span *ngFor="let s of selectedSeats()" class="seat-chip">{{ s.seatNumber }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fare Summary -->
+      <div class="fare-card">
+        <h3 class="card-title">💰 Fare Summary</h3>
+        <div class="fare-rows">
+          <div class="fare-row"><span>Base Fare</span><span>₹{{ booking()?.totalAmount ?? totalFare() }}</span></div>
+          <div class="fare-row" *ngIf="totalFare() > 0"><span>Tax (6%)</span><span>₹{{ taxAmount() }}</span></div>
+          <div class="fare-row" *ngIf="totalFare() > 0"><span>Convenience Fee</span><span>₹{{ convFee }}</span></div>
+          <div class="fare-row total"><span>Total Payable</span><strong>₹{{ booking()?.totalAmount ?? grandTotal() }}</strong></div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn-proceed" (click)="proceedToPayment()">Proceed to Payment →</button>
+          <button class="btn-back" (click)="goBack()">← Back</button>
+        </div>
+
+        <div class="cancellation-note">
+          <p>⚠️ Cancellation charges may apply as per policy.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<app-footer></app-footer>

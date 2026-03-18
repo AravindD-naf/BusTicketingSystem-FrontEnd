@@ -1,0 +1,83 @@
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <h3>Filters</h3>
+    <button class="clear-btn" (click)="clearAll()">Clear all</button>
+  </div>
+
+  <!-- Bus Type -->
+  <div class="filter-section">
+    <div class="filter-title">Bus Type</div>
+    <div class="check-group">
+      <div class="check-item" *ngFor="let type of busTypes">
+        <label>
+          <input type="checkbox"
+                 [checked]="selectedTypes.includes(type)"
+                 (change)="toggleType(type)"/> {{ type }}
+        </label>
+        <span class="check-count">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Price Range -->
+  <div class="filter-section">
+    <div class="filter-title">Price Range</div>
+    <div class="price-range-wrap">
+      <div class="price-labels">
+        <span>₹400</span>
+        <span>₹{{ maxPrice | number:'1.0-0':'en-IN' }}</span>
+      </div>
+      <input type="range" class="price-slider" min="400" max="3000" [value]="maxPrice"
+             (input)="onPriceChange(($event.target).valueAsNumber)"/>
+    </div>
+  </div>
+
+  <!-- Departure Time -->
+  <div class="filter-section">
+    <div class="filter-title">Departure Time</div>
+    <div class="time-grid">
+      <div class="time-chip"
+           *ngFor="let t of departureTimes"
+           [class.selected]="selectedTimes.includes(t.key)"
+           (click)="toggleTime(t.key)">
+        <div class="tc-icon">{{ t.icon }}</div>
+        <div class="tc-label">{{ t.label }}</div>
+        <div class="tc-time">{{ t.range }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ratings -->
+  <div class="filter-section">
+    <div class="filter-title">Ratings</div>
+    <div class="star-group">
+      <div class="star-item" [class.selected]="minRating===5" (click)="setRating(5)">
+        <div class="stars">★★★★★</div>
+        <span class="star-label">5★ only</span>
+      </div>
+      <div class="star-item" [class.selected]="minRating===4" (click)="setRating(4)">
+        <div class="stars">★★★★☆</div>
+        <span class="star-label">4★ & above</span>
+      </div>
+      <div class="star-item" [class.selected]="minRating===3" (click)="setRating(3)">
+        <div class="stars">★★★☆☆</div>
+        <span class="star-label">3★ & above</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operators -->
+  <div class="filter-section">
+    <div class="filter-title">Bus Operators</div>
+    <div class="operator-list">
+      <label class="op-item" *ngFor="let op of operators">
+        <input type="checkbox"
+               [checked]="selectedOperators.includes(op)"
+               (change)="selectedOperators = ($event.target).checked
+                         ? [...selectedOperators, op]
+                         : selectedOperators.filter(o => o !== op); applyFilter();">
+        {{ op }}
+      </label>
+    </div>
+  </div>
+</aside>

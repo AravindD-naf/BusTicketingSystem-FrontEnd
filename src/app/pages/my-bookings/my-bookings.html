@@ -1,0 +1,97 @@
+<app-navbar></app-navbar>
+
+<!-- Page hero bar -->
+<div class="page-hero">
+  <div class="page-hero-left">
+    <h2>My Bookings</h2>
+    <p>View and manage all your travel bookings</p>
+  </div>
+  <button class="btn-primary" (click)="goToSearch()">
+    <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Search Buses
+  </button>
+</div>
+
+<main class="bookings-page">
+  <div class="bookings-container">
+
+    <div *ngIf="loading()" class="loading-box">Loading your bookings...</div>
+    <div *ngIf="error()" class="error-box">{{ error() }}</div>
+
+    <div *ngIf="!loading() && bookings().length === 0 && !error()" class="empty-state">
+      <div class="empty-icon">🎫</div>
+      <h3>No Bookings Yet</h3>
+      <p>You haven't made any bookings. Search for buses to get started!</p>
+      <button class="btn-primary" (click)="goToSearch()">Search Buses</button>
+    </div>
+
+    <div class="bookings-list" *ngIf="!loading() && bookings().length > 0">
+      <div class="booking-card" *ngFor="let b of bookings()">
+        <div class="booking-top">
+          <div class="booking-id">#{{ b.bookingId }}</div>
+          <span class="status-badge" [class]="getStatusClass(b.bookingStatus)">{{ b.bookingStatus }}</span>
+        </div>
+        <div class="booking-info">
+          <div class="info-item" *ngIf="b.source">
+            <span class="info-label">Route</span>
+            <span class="info-val">{{ b.source }} → {{ b.destination }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Schedule</span>
+            <span class="info-val">{{ b.scheduleId }}</span>
+          </div>
+          <div class="info-item" *ngIf="b.travelDate">
+            <span class="info-label">Travel Date</span>
+            <span class="info-val">{{ formatDate(b.travelDate) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Seats</span>
+            <span class="info-val">{{ b.numberOfSeats }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Amount</span>
+            <span class="info-val price">₹{{ b.totalAmount }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Booked On</span>
+            <span class="info-val">{{ formatDate(b.bookingDate) }}</span>
+          </div>
+        </div>
+        <div class="booking-actions">
+          <button class="btn-outline" (click)="viewDetails(b)">
+            <svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View Details
+          </button>
+          <button class="btn-cancel"
+            *ngIf="b.bookingStatus?.toLowerCase() === 'confirmed'"
+            (click)="cancelBooking(b.bookingId)">
+            Cancel Booking
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" *ngIf="selectedBooking()" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Booking #{{ selectedBooking()?.bookingId }}</h3>
+        <button class="close-btn" (click)="closeModal()">✕</button>
+      </div>
+      <div class="detail-list">
+        <div class="dl-row"><span>Schedule ID</span><span>{{ selectedBooking()?.scheduleId }}</span></div>
+        <div class="dl-row"><span>Number of Seats</span><span>{{ selectedBooking()?.numberOfSeats }}</span></div>
+        <div class="dl-row"><span>Total Amount</span><span style="font-weight:700;color:#16a34a">₹{{ selectedBooking()?.totalAmount }}</span></div>
+        <div class="dl-row"><span>Status</span><span class="status-badge" [class]="getStatusClass(selectedBooking()?.bookingStatus)">{{ selectedBooking()?.bookingStatus }}</span></div>
+        <div class="dl-row" *ngIf="selectedBooking()?.travelDate"><span>Travel Date</span><span>{{ formatDate(selectedBooking()?.travelDate) }}</span></div>
+        <div class="dl-row" *ngIf="selectedBooking()?.departureTime"><span>Departure</span><span>{{ selectedBooking()?.departureTime }}</span></div>
+        <div class="dl-row" *ngIf="selectedBooking()?.busNumber"><span>Bus Number</span><span>{{ selectedBooking()?.busNumber }}</span></div>
+        <div class="dl-row" *ngIf="selectedBooking()?.operatorName"><span>Operator</span><span>{{ selectedBooking()?.operatorName }}</span></div>
+        <div class="dl-row" *ngIf="selectedBooking()?.source"><span>Route</span><span>{{ selectedBooking()?.source }} → {{ selectedBooking()?.destination }}</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<app-footer></app-footer>

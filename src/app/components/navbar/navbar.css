@@ -1,0 +1,160 @@
+@use "../../shared/styles/variables" as *;
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  height: 64px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--sh-sm);
+  transition: box-shadow 0.3s;
+}
+.navbar.scrolled { box-shadow: var(--sh-md); }
+
+.nav-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--navy);
+  letter-spacing: -0.4px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.logo-box {
+  width: 33px; height: 33px;
+  background: var(--navy);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-box svg {
+  width: 18px; height: 18px;
+  stroke: white; fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  list-style: none;
+}
+
+.nav-link {
+  font-size: 13.5px; font-weight: 500;
+  color: var(--muted);
+  transition: color 0.18s;
+  text-decoration: none;
+}
+.nav-link:hover, .nav-link.active { color: var(--navy); }
+.nav-link.active { font-weight: 600; }
+
+.btn-login {
+  padding: 7px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  border: 1.5px solid var(--navy);
+  background: transparent; color: var(--navy);
+  transition: all 0.18s; text-decoration: none;
+}
+.btn-login:hover { background: var(--navy); color: white; }
+
+.btn-register {
+  padding: 7px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  border: 1.5px solid var(--navy);
+  background: var(--navy); color: white;
+  transition: all 0.18s; text-decoration: none;
+}
+.btn-register:hover { background: var(--navy-light); transform: translateY(-1px); }
+
+.nav-user-menu {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.user-profile {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.profile-avatar {
+  width: 32px; height: 32px;
+  background: var(--navy); color: white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  flex-shrink: 0; letter-spacing: 0.5px;
+}
+
+.user-name {
+  font-size: 13px; font-weight: 500;
+  color: var(--navy);
+  max-width: 140px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.btn-logout {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: white; color: var(--muted);
+  cursor: pointer; font-size: 12px; font-weight: 500;
+  transition: all 0.18s;
+}
+.btn-logout svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn-logout:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
+.admin-link {
+  background: #fef9c3; color: #92400e !important;
+  border-radius: 6px; padding: 4px 10px !important;
+  font-size: 12px !important; font-weight: 600;
+}
+
+.mobile-toggle {
+  display: none; flex-direction: column; gap: 5px;
+  background: none; border: none; padding: 4px; cursor: pointer;
+}
+.ham-line {
+  width: 22px; height: 2px;
+  background: var(--navy); border-radius: 2px;
+  transition: all 0.3s; display: block;
+}
+
+@media (max-width: 860px) {
+  .navbar { padding: 0 24px; }
+  .nav-links {
+    display: none;
+    position: absolute; top: 64px; left: 0; right: 0;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px 20px;
+    flex-direction: column; align-items: flex-start;
+    gap: 4px; box-shadow: var(--sh-md);
+  }
+  .nav-links.open { display: flex; }
+  .nav-link { padding: 8px 0; width: 100%; font-size: 15px; }
+  .btn-login, .btn-register { width: 100%; text-align: center; padding: 10px 18px; margin-top: 4px; }
+  .nav-user-menu {
+    flex-direction: column; align-items: flex-start;
+    width: 100%; gap: 8px; margin-top: 4px;
+    padding-top: 8px; border-top: 1px solid var(--border);
+  }
+  .btn-logout { width: 100%; justify-content: center; }
+  .mobile-toggle { display: flex; }
+}

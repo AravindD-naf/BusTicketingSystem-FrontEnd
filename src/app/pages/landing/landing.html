@@ -1,0 +1,117 @@
+<app-navbar></app-navbar>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid">
+    <div class="hero-left">
+      <div class="hero-badge fade-up"><span class="badge-dot"></span> India's Fastest Growing Bus Platform</div>
+      <h1 class="hero-title fade-up">Book Your Bus<br/><span>Journey</span> with Ease.</h1>
+      <p class="hero-desc fade-up">Discover thousands of routes, compare fares, and reserve your seats in seconds. Travel smarter with BusMate.</p>
+      <div class="hero-stats fade-up">
+        <div class="hero-stat">
+          <div class="hero-stat-num">2M+</div>
+          <div class="hero-stat-label">Happy Passengers</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">500+</div>
+          <div class="hero-stat-label">Routes</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">98%</div>
+          <div class="hero-stat-label">On-time Rate</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-right fade-up">
+      <app-search-form></app-search-form>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-header">
+    <div class="section-tag">Why choose us</div>
+    <h2 class="section-title">Everything You Need<br/>to Travel Confidently</h2>
+    <p class="section-sub">From booking to boarding, we've got every step of your journey covered.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </div>
+      <h3>Easy Booking</h3>
+      <p>Reserve your seat in under 60 seconds. Our streamlined booking flow is designed for speed and simplicity.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3>Secure Payments</h3>
+      <p>Bank-grade encryption protects every transaction. Pay via UPI, cards, or net banking with total peace of mind.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+      </div>
+      <h3>Live Bus Tracking</h3>
+      <p>Track your bus in real-time on a live map. Never miss a pickup point or wonder where your bus is again.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.534 3.397 1 6.5 1 8.4 1 10.1 2.2 11 3.5c.9-1.3 2.6-2.5 4.5-2.5C18.603 1 21 3.534 21 7.191c0 4.105-5.37 8.863-11 14.402z"/></svg>
+      </div>
+      <h3>Comfortable Travel</h3>
+      <p>Choose from AC sleepers, semi-sleepers, and luxury coaches. Filter by amenities that matter most to you.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how-section">
+  <div class="section-header">
+    <div class="section-tag">Simple process</div>
+    <h2 class="section-title">Three Steps to<br/>Your Next Journey</h2>
+  </div>
+  <div class="how-grid">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Search Your Route</h3>
+      <p>Enter your origin, destination, and travel date. We'll instantly surface every available bus with real-time pricing and seat availability.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Pick &amp; Customize</h3>
+      <p>Filter by timing, operator, bus type, or price range. Choose your preferred seat on an interactive seat map.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Pay &amp; Board</h3>
+      <p>Complete payment securely in seconds and receive your e-ticket instantly. Show it on your phone at boarding.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <ng-container *ngIf="auth.isAuthenticated(); else guestCta">
+      <h2>Welcome back, {{ auth.user()?.name || auth.user()?.email }}! 👋</h2>
+      <p>Ready for your next journey? Search for buses and book your seats in seconds.</p>
+      <div class="cta-btns">
+        <a class="btn-white" routerLink="/results">Search Buses Now</a>
+        <a class="btn-ghost" routerLink="/my-bookings">View My Bookings</a>
+      </div>
+    </ng-container>
+    <ng-template #guestCta>
+      <h2>Ready to Hit the Road?</h2>
+      <p>Join over 2 million travelers who book smarter with BusMate. Create your free account in under a minute.</p>
+      <div class="cta-btns">
+        <a class="btn-white" routerLink="/auth" [queryParams]="{tab: 'register'}">Create Free Account</a>
+        <a class="btn-ghost" routerLink="/auth" [queryParams]="{tab: 'login'}">I have an account</a>
+      </div>
+    </ng-template>
+  </div>
+</section>
+
+<app-footer></app-footer>

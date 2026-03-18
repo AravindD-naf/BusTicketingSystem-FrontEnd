@@ -1,0 +1,19 @@
+<div class="sort-bar">
+  <span class="sort-label">Sort by</span>
+
+  <button class="sort-btn" [class.active]="activeSort() === 'departure'" (click)="onSort('departure')">
+    Departure <span class="sort-arrow">↑</span>
+  </button>
+  <button class="sort-btn" [class.active]="activeSort() === 'arrival'" (click)="onSort('arrival')">
+    Arrival
+  </button>
+  <button class="sort-btn" [class.active]="activeSort() === 'price_asc'" (click)="onSort('price_asc')">
+    Price <span class="sort-arrow">↑</span>
+  </button>
+  <button class="sort-btn" [class.active]="activeSort() === 'duration'" (click)="onSort('duration')">
+    Duration
+  </button>
+  <button class="sort-btn" [class.active]="activeSort() === 'rating'" (click)="onSort('rating')">
+    Ratings <span class="sort-arrow">↓</span>
+  </button>
+</div>

@@ -1,0 +1,134 @@
+import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
+import { BusFilter, SortOption } from '../models/filter.model';
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+@Injectable({ providedIn: 'root' })
+export class BusSearchService {
+  private readonly API = environment.apiBase;
+
+  constructor(private http: HttpClient) {}
+
+  allSchedules = signal<any[]>([]);
+  filter = signal<BusFilter>({
+    busTypes: [],
+    maxPrice: 3000,
+    departureTimes: [],
+    operators: [],
+    minRating: 0
+  });
+  sortBy = signal<SortOption>('departure');
+
+  filteredSchedules = computed(() => {
+    const f = this.filter();
+    let result = this.allSchedules().filter((schedule: any) => {
+      if (f.busTypes.length && !f.busTypes.includes(schedule.busType)) return false;
+      if (f.operators.length && !f.operators.includes(schedule.operatorName)) return false;
+      return true;
+    });
+    const sort = this.sortBy();
+    return result.sort((a: any, b: any) => {
+      if (sort === 'price_asc') return (a.baseFare || 0) - (b.baseFare || 0);
+      if (sort === 'price_desc') return (b.baseFare || 0) - (a.baseFare || 0);
+      if (sort === 'departure') return (a.departureTime || '').localeCompare(b.departureTime || '');
+      if (sort === 'arrival') return (a.arrivalTime || '').localeCompare(b.arrivalTime || '');
+      return 0;
+    });
+  });
+
+  updateFilter(partial: Partial<BusFilter>) {
+    this.filter.update(f => ({ ...f, ...partial }));
+  }
+
+  updateSort(sort: SortOption) {
+    this.sortBy.set(sort);
+  }
+
+  // POST /api/v1/booking/schedules/search
+  search(fromCity: string, toCity: string, travelDate: string, passengers: number = 1) {
+    return this.http.post<ApiResponse<any[]>>(`${this.API}/booking/schedules/search`, {
+      fromCity,
+      toCity,
+      travelDate
+    }).pipe(
+      tap(response => {
+        if (response.success && Array.isArray(response.data)) {
+          this.allSchedules.set(response.data);
+        } else {
+          this.allSchedules.set([]);
+        }
+      })
+    );
+  }
+
+  // ── Bus Management (Admin) ──
+
+  // POST /api/v1/buses  (Admin create)
+  createBus(request: { busNumber: string; busType: string; totalSeats: number; operatorName: string }) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/buses`, request);
+  }
+
+  // POST /api/v1/buses/get-all
+  getAllBuses(pageNumber = 1, pageSize = 10) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/buses/get-all`, { pageNumber, pageSize });
+  }
+
+  // POST /api/v1/buses/{id}
+  getBusById(busId: number) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/buses/${busId}`, {});
+  }
+
+  // PUT /api/v1/buses/{id}
+  updateBus(busId: number, request: any) {
+    return this.http.put<ApiResponse<any>>(`${this.API}/buses/${busId}`, request);
+  }
+
+  // DELETE /api/v1/buses/{id}
+  deleteBus(busId: number) {
+    return this.http.delete<ApiResponse<any>>(`${this.API}/buses/${busId}`);
+  }
+
+  // POST /api/v1/buses/search-by-operator
+  searchBusesByOperator(operatorName: string, pageNumber = 1, pageSize = 10) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/buses/search-by-operator`, { operatorName, pageNumber, pageSize });
+  }
+
+  // ── Schedule Management (Admin) ──
+
+  // POST /api/v1/schedule  (Admin create)
+  createSchedule(dto: { routeId: number; busId: number; travelDate: string; departureTime: string; arrivalTime: string }) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/schedule`, dto);
+  }
+
+  // POST /api/v1/schedule/get-all
+  getAllSchedules(pageNumber = 1, pageSize = 10) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/schedule/get-all`, { pageNumber, pageSize });
+  }
+
+  // POST /api/v1/schedule/{id}
+  getScheduleById(scheduleId: number) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/schedule/${scheduleId}`, {});
+  }
+
+  // PUT /api/v1/schedule/{id}
+  updateSchedule(scheduleId: number, dto: any) {
+    return this.http.put<ApiResponse<any>>(`${this.API}/schedule/${scheduleId}`, dto);
+  }
+
+  // DELETE /api/v1/schedule/{id}
+  deleteSchedule(scheduleId: number) {
+    return this.http.delete<ApiResponse<any>>(`${this.API}/schedule/${scheduleId}`);
+  }
+
+  // POST /api/v1/schedule/search
+  searchSchedulesByCity(fromCity: string, toCity: string, travelDate: string) {
+    return this.http.post<ApiResponse<any[]>>(`${this.API}/schedule/search`, { fromCity, toCity, travelDate });
+  }
+}

@@ -1,0 +1,57 @@
+@use "app/shared/styles/variables" as *;
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--off);
+  color: var(--navy);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+section { padding: 100px 5%; }
+
+/* Spinner utility */
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Fade-up animation */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp 0.6s ease forwards; }
+.fade-up:nth-child(2) { animation-delay: 0.1s; }
+.fade-up:nth-child(3) { animation-delay: 0.2s; }
+.fade-up:nth-child(4) { animation-delay: 0.3s; }
+
+/* Global button utilities */
+.btn-primary {
+  background: var(--navy); color: white;
+  border: none; padding: 9px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500;
+  transition: all 0.18s; cursor: pointer;
+}
+.btn-primary:hover { background: var(--navy-light); transform: translateY(-1px); box-shadow: var(--sh-sm); }
+
+.btn-outline {
+  border: 1.5px solid var(--navy);
+  background: transparent; color: var(--navy);
+  padding: 8px 20px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500;
+  transition: all 0.18s; cursor: pointer;
+}
+.btn-outline:hover { background: var(--navy); color: white; }
+
+@media (max-width: 540px) {
+  section { padding: 60px 20px; }
+}

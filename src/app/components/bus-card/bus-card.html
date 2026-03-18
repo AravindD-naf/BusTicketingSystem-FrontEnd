@@ -1,0 +1,61 @@
+<div class="bus-card">
+  <!-- Featured badge -->
+  <div class="featured-strip" *ngIf="bus.featured">
+    <div class="featured-dot"></div>
+    <span>Top Rated · Most Booked Today</span>
+  </div>
+
+  <div class="bus-card-top">
+    <!-- Operator -->
+    <div class="bus-operator">
+      <div class="op-logo">{{ bus.operatorCode }}</div>
+      <div class="op-name">{{ bus.operatorName }}</div>
+      <div class="op-type">{{ bus.busType }}</div>
+    </div>
+
+    <!-- Route timeline -->
+    <div class="bus-route">
+      <div class="time-block">
+        <div class="time">{{ bus.departureTime }}</div>
+        <div class="time-label">Chennai</div>
+      </div>
+      <div class="route-line">
+        <div class="route-line-bar"></div>
+        <div class="duration-tag">{{ durationFormatted }}</div>
+      </div>
+      <div class="time-block">
+        <div class="time">{{ bus.arrivalTime }}</div>
+        <div class="time-label">Bangalore</div>
+      </div>
+    </div>
+
+    <!-- Meta -->
+    <div class="bus-meta">
+      <div class="seats-badge">
+        <span class="seats-dot" [ngClass]="seatsClass"></span>
+        {{ bus.seatsAvailable }} seats left
+      </div>
+      <div class="rating-pill">★ {{ bus.rating }}</div>
+    </div>
+
+    <!-- Price + CTA -->
+    <div class="bus-price-action">
+      <div class="price-wrap">
+        <div class="price-from">starts from</div>
+        <div class="price-val">₹{{ bus.price | number:'1.0-0':'en-IN' }}</div>
+        <div class="price-orig" *ngIf="bus.originalPrice">₹{{ bus.originalPrice | number:'1.0-0':'en-IN' }}</div>
+      </div>
+      <button class="select-btn" (click)="onSelect()">Select Seats →</button>
+    </div>
+  </div>
+
+  <div class="bus-card-bottom">
+    <div class="amenity" *ngFor="let a of bus.amenities">
+      <!-- Simple amenity bullet; keep class names identical -->
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path></svg>
+      {{ a }}
+    </div>
+
+    <div class="card-tag" *ngIf="bus.featured">✦ Free Cancellation</div>
+  </div>
+</div>

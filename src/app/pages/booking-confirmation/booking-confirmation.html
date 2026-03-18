@@ -1,0 +1,75 @@
+<app-navbar></app-navbar>
+
+<main class="confirm-page">
+  <div class="confirm-container">
+
+    <div *ngIf="loading()" class="loading-box">Loading confirmation...</div>
+    <div *ngIf="error()" class="error-box">{{ error() }}</div>
+
+    <div *ngIf="!loading() && !error() && booking()" class="confirm-card">
+      <!-- Navy success header -->
+      <div class="success-header">
+        <span class="success-icon">✅</span>
+        <h1 class="success-title">Booking Confirmed!</h1>
+        <p class="success-sub">Your e-ticket has been booked successfully. Show this at boarding.</p>
+      </div>
+
+      <!-- Booking details table -->
+      <div class="booking-details">
+        <div class="detail-row">
+          <span class="detail-key">Booking ID</span>
+          <span class="detail-val highlight">#{{ booking()?.bookingId }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.source">
+          <span class="detail-key">Route</span>
+          <span class="detail-val">{{ booking()?.source }} → {{ booking()?.destination }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.travelDate">
+          <span class="detail-key">Travel Date</span>
+          <span class="detail-val">{{ booking()?.travelDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.departureTime">
+          <span class="detail-key">Departure</span>
+          <span class="detail-val">{{ booking()?.departureTime }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.arrivalTime">
+          <span class="detail-key">Arrival</span>
+          <span class="detail-val">{{ booking()?.arrivalTime }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.busNumber">
+          <span class="detail-key">Bus</span>
+          <span class="detail-val">{{ booking()?.busNumber }}{{ booking()?.busType ? ' · ' + booking()?.busType : '' }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.operatorName">
+          <span class="detail-key">Operator</span>
+          <span class="detail-val">{{ booking()?.operatorName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Number of Seats</span>
+          <span class="detail-val">{{ booking()?.numberOfSeats }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Total Amount</span>
+          <span class="detail-val price">₹{{ booking()?.totalAmount }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Status</span>
+          <span class="status-badge">{{ booking()?.bookingStatus }}</span>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="action-row">
+        <button class="btn-primary" (click)="goToMyBookings()">
+          <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          My Bookings
+        </button>
+        <button class="btn-secondary" (click)="printTicket()">🖨️ Print Ticket</button>
+        <button class="btn-outline" (click)="goHome()">🏠 Back to Home</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<app-footer></app-footer>

@@ -1,0 +1,66 @@
+@use "../../shared/styles/variables" as *;
+
+.search-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+.search-card-header { margin-bottom: 28px; }
+.search-card-header h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 4px;
+}
+.search-card-header p { font-size: 13px; color: var(--muted); }
+
+.form-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-bottom: 16px;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  letter-spacing: 0.8px; text-transform: uppercase;
+}
+.form-group input, .form-group select {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--navy);
+  background: var(--white);
+  transition: border-color 0.2s; outline: none;
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--navy); }
+.form-group input::placeholder { color: var(--muted); }
+
+.from-to-row { position: relative; }
+.swap-btn {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: 50%; margin-top: -18px; width: 32px; height: 32px;
+  background: var(--navy); border: none; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 14px; z-index: 2; transition: transform 0.3s;
+}
+.swap-btn:hover { transform: translateX(-50%) rotate(180deg); }
+
+.search-btn {
+  width: 100%; background: var(--navy); color: white; border: none;
+  padding: 14px; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 600; letter-spacing: 0.3px;
+  transition: all 0.2s; margin-top: 4px;
+}
+.search-btn:hover {
+  background: var(--navy-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(10,31,68,0.25);
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 540px) {
+  .search-card { padding: 24px; }
+}

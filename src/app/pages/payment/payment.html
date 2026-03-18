@@ -1,0 +1,76 @@
+<app-navbar></app-navbar>
+
+<!-- Route & step bar -->
+<div class="route-bar">
+  <div class="route-info">
+    <div class="route-chip">
+      <svg viewBox="0 0 24 24" width="13" height="13" style="stroke:rgba(255,255,255,.6);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Secure Payment
+    </div>
+  </div>
+  <div class="step-pills">
+    <div class="step-pill done"><span class="step-num">✓</span> Search</div>
+    <div class="step-sep"></div>
+    <div class="step-pill done"><span class="step-num">✓</span> Seats</div>
+    <div class="step-sep"></div>
+    <div class="step-pill done"><span class="step-num">✓</span> Review</div>
+    <div class="step-sep"></div>
+    <div class="step-pill active"><span class="step-num">4</span> Payment</div>
+  </div>
+</div>
+
+<main class="payment-page">
+  <div class="payment-container">
+    <div *ngIf="loading()" class="loading-box">Loading booking details...</div>
+
+    <div *ngIf="!loading()" class="payment-layout">
+      <!-- Left: Payment Form -->
+      <div class="payment-form-card">
+        <h2 class="section-title">Choose Payment Method</h2>
+
+        <form [formGroup]="paymentForm" (ngSubmit)="processPayment()">
+          <div class="method-list">
+            <label
+              *ngFor="let m of paymentMethods"
+              class="method-option"
+              [class.selected]="paymentForm.value.paymentMethod === m.value"
+            >
+              <input type="radio" formControlName="paymentMethod" [value]="m.value" hidden />
+              <span class="method-icon">{{ m.icon }}</span>
+              <span class="method-label">{{ m.label }}</span>
+              <span class="check-dot" *ngIf="paymentForm.value.paymentMethod === m.value">✓</span>
+            </label>
+          </div>
+
+          <div *ngIf="error()" class="error-box">{{ error() }}</div>
+
+          <button type="submit" class="pay-btn" [disabled]="processing()">
+            <span *ngIf="!processing()">Pay ₹{{ booking()?.totalAmount ?? grandTotal() }} →</span>
+            <span *ngIf="processing()">Processing Payment...</span>
+          </button>
+
+          <button type="button" class="back-btn" (click)="goBack()" [disabled]="processing()">
+            ← Back
+          </button>
+        </form>
+      </div>
+
+      <!-- Right: Order Summary -->
+      <div class="order-summary">
+        <h3 class="summary-title">Order Summary</h3>
+        <div class="summary-rows">
+          <div class="summary-row"><span>Booking ID</span><strong>#{{ bookingId() }}</strong></div>
+          <div class="summary-row"><span>Schedule ID</span><span>{{ booking()?.scheduleId }}</span></div>
+          <div class="summary-row"><span>Seats</span><span>{{ booking()?.numberOfSeats ?? selectedSeatCount() }}</span></div>
+          <div class="summary-row divider"><span>Subtotal</span><span>₹{{ totalFare() }}</span></div>
+          <div class="summary-row"><span>Tax (6%)</span><span>₹{{ taxAmount() }}</span></div>
+          <div class="summary-row"><span>Convenience Fee</span><span>₹{{ convFee }}</span></div>
+          <div class="summary-row total"><span>Total Payable</span><strong>₹{{ booking()?.totalAmount ?? grandTotal() }}</strong></div>
+        </div>
+        <div class="secure-badge">🔒 Secure 256-bit encrypted payment</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<app-footer></app-footer>
