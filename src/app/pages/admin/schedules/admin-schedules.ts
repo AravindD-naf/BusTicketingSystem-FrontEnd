@@ -30,7 +30,7 @@ import { RouteService } from '../../../core/services/route.service';
               <td>{{ s.busNumber }} – {{ s.operatorName }}</td>
               <td>{{ s.travelDate | date:'mediumDate' }}</td>
               <td>{{ s.departureTime }}</td>
-              <td>{{ s.arrivalTime }}</td>
+              <td>{{ s.arrivalTime }}<span *ngIf="s.isOvernightArrival" class="overnight-badge">+1</span></td>
               <td><span class="avail-badge">{{ s.availableSeats }}</span></td>
               <td><span class="status-chip" [class.active]="s.isActive">{{ s.isActive ? 'Active' : 'Inactive' }}</span></td>
               <td>
@@ -53,11 +53,12 @@ import { RouteService } from '../../../core/services/route.service';
           </div>
           <form [formGroup]="scheduleForm" (ngSubmit)="saveSchedule()" class="modal-form">
             <label class="form-label">Route *
-              <select class="form-input" formControlName="routeId">
+              <select class="form-input" formControlName="routeId" (change)="onRouteChange($event)">
                 <option value="">Select route</option>
                 <option *ngFor="let r of routes()" [value]="r.routeId">{{ r.source }} → {{ r.destination }}</option>
               </select>
               <span class="field-error" *ngIf="scheduleForm.get('routeId')?.invalid && scheduleForm.get('routeId')?.touched">Required</span>
+              <span class="duration-hint" *ngIf="routeDurationHint()">🕐 Route duration: <strong>{{ routeDurationHint() }}</strong></span>
             </label>
             <label class="form-label">Bus *
               <select class="form-input" formControlName="busId">
@@ -72,10 +73,12 @@ import { RouteService } from '../../../core/services/route.service';
             </label>
             <div class="form-row">
               <label class="form-label">Departure Time *
-                <input class="form-input" type="time" formControlName="departureTime" />
+                <input class="form-input" type="time" formControlName="departureTime" (change)="onDepartureChange($event)" />
+                <span class="field-error" *ngIf="scheduleForm.get('departureTime')?.invalid && scheduleForm.get('departureTime')?.touched">Required</span>
               </label>
-              <label class="form-label">Arrival Time *
-                <input class="form-input" type="time" formControlName="arrivalTime" />
+              <label class="form-label">Arrival Time
+                <input class="form-input" type="time" formControlName="arrivalTime" readonly style="background:#f8fafc;cursor:not-allowed;color:#64748b" />
+                <span class="auto-hint">Auto-calculated from route duration</span>
               </label>
             </div>
             <div class="modal-actions">
@@ -119,6 +122,7 @@ import { RouteService } from '../../../core/services/route.service';
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
     .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
     .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
+    .overnight-badge{background:#fef3c7;color:#d97706;font-size:.7rem;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:5px}
     .duration-row{display:flex;gap:10px}
     .duration-field{display:flex;align-items:center;gap:6px;flex:1}
     .duration-unit{font-size:.82rem;color:#64748b;white-space:nowrap}
@@ -146,6 +150,10 @@ export class AdminSchedules implements OnInit {
   saving = signal(false);
   formError = signal<string | null>(null);
   editingId = signal<number | null>(null);
+  selectedRouteDuration = signal<number | null>(null); // in minutes
+  routeDurationHint = signal<string>('');
+
+  arrivalTotalMinutes: number = 0;
 
   scheduleForm = this.fb.group({
     routeId: [null, Validators.required],
@@ -172,15 +180,33 @@ export class AdminSchedules implements OnInit {
     });
   }
 
-  openModal() { this.scheduleForm.reset(); this.editingId.set(null); this.formError.set(null); this.showModal.set(true); }
+  openModal() {
+  this.scheduleForm.reset();
+  this.editingId.set(null);
+  this.formError.set(null);
+  this.selectedRouteDuration.set(null);
+  this.routeDurationHint.set('');
+  this.arrivalTotalMinutes = 0;
+  this.showModal.set(true);
+}
 
   editSchedule(s: any) {
     this.editingId.set(s.scheduleId);
     this.scheduleForm.patchValue({ routeId: s.routeId, busId: s.busId, travelDate: s.travelDate?.split('T')[0], departureTime: s.departureTime, arrivalTime: s.arrivalTime });
-    this.formError.set(null); this.showModal.set(true);
+    // Set duration hint from the route
+    const route = this.routes().find((r: any) => r.routeId === s.routeId);
+    if (route) {
+      const mins = route.estimatedTravelTimeMinutes;
+      this.selectedRouteDuration.set(mins);
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      this.routeDurationHint.set(h > 0 ? `${h}h ${m}m` : `${m}m`);
+    }
+    this.formError.set(null);
+    this.showModal.set(true);
   }
 
-  closeModal() { this.showModal.set(false); this.editingId.set(null); }
+  closeModal() { this.showModal.set(false); this.editingId.set(null); this.arrivalTotalMinutes = 0; }
 
   saveSchedule() {
     if (this.scheduleForm.invalid) { this.scheduleForm.markAllAsTouched(); return; }
@@ -195,9 +221,17 @@ export class AdminSchedules implements OnInit {
     const departure = v.departureTime
       ? (v.departureTime.length === 5 ? v.departureTime + ':00' : v.departureTime)
       : '';
-    const arrival = v.arrivalTime
-      ? (v.arrivalTime.length === 5 ? v.arrivalTime + ':00' : v.arrivalTime)
-      : '';
+    // For arrival, use total minutes (supports overnight: e.g. 36:15:00 = next day 12:15 AM)
+    let arrival: string;
+    if (this.arrivalTotalMinutes > 0) {
+      const totalH = Math.floor(this.arrivalTotalMinutes / 60);
+      const totalM = this.arrivalTotalMinutes % 60;
+      arrival = `${totalH}:${String(totalM).padStart(2, '0')}:00`;
+    } else {
+      arrival = v.arrivalTime
+        ? (v.arrivalTime.length === 5 ? v.arrivalTime + ':00' : v.arrivalTime)
+        : '';
+    }
 
     const payload = {
       routeId: Number(v.routeId),
@@ -230,5 +264,42 @@ export class AdminSchedules implements OnInit {
   deleteSchedule(id: number) {
     if (!confirm('Delete this schedule?')) return;
     this.busService.deleteSchedule(id).subscribe({ next: () => this.loadSchedules(), error: e => alert(e?.error?.message || 'Delete failed') });
+  }
+
+  onRouteChange(event: Event) {
+    const routeId = Number((event.target as HTMLSelectElement).value);
+    const route = this.routes().find((r: any) => r.routeId === routeId);
+    if (route) {
+      const mins = route.estimatedTravelTimeMinutes;
+      this.selectedRouteDuration.set(mins);
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      this.routeDurationHint.set(h > 0 ? `${h}h ${m}m` : `${m}m`);
+      // Recalculate arrival if departure already set
+      const dep = this.scheduleForm.get('departureTime')?.value;
+      if (dep) this.calculateArrival(dep as string, mins);
+    } else {
+      this.selectedRouteDuration.set(null);
+      this.routeDurationHint.set('');
+    }
+  }
+
+  onDepartureChange(event: Event) {
+    const dep = (event.target as HTMLInputElement).value;
+    const mins = this.selectedRouteDuration();
+    if (dep && mins) this.calculateArrival(dep, mins);
+  }
+
+  calculateArrival(departureTime: string, durationMinutes: number) {
+    const [hStr, mStr] = departureTime.split(':');
+    const depMins = Number(hStr) * 60 + Number(mStr);
+    const totalArrMins = depMins + durationMinutes;
+    // Display: wrap at 24h for the time input (shows clock time)
+    const displayH = Math.floor(totalArrMins / 60) % 24;
+    const displayM = totalArrMins % 60;
+    const displayStr = `${String(displayH).padStart(2, '0')}:${String(displayM).padStart(2, '0')}`;
+    // Store total minutes for backend (so overnight journeys send e.g. "36:15:00")
+    this.arrivalTotalMinutes = totalArrMins;
+    this.scheduleForm.patchValue({ arrivalTime: displayStr });
   }
 }
