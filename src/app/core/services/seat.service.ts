@@ -17,6 +17,7 @@ export interface BackendSeatLayout {
   scheduleId: number;
   busId: number;
   busNumber: string;
+  baseFare: number;
   totalSeats: number;
   availableSeats: number;
   lockedSeats: number;

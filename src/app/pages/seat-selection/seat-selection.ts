@@ -65,8 +65,9 @@ export class SeatSelection implements OnInit {
   }
 
   toggleSeat(seat: any) {
-    this.seatService.toggleBackendSeat(seat);
-  }
+  const price = this.busInfo()?.baseFare || 0;
+  this.seatService.toggleBackendSeat(seat, price);
+}
 
   isSelected(seatNumber: string): boolean {
     return this.seatService.isSelectedByNumber(seatNumber);

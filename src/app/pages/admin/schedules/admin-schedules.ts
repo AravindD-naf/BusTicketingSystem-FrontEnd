@@ -153,7 +153,7 @@ export class AdminSchedules implements OnInit {
   selectedRouteDuration = signal<number | null>(null); // in minutes
   routeDurationHint = signal<string>('');
 
-  arrivalTotalMinutes: number = 0;
+  arrivalTotalMinutes = 0;
 
   scheduleForm = this.fb.group({
     routeId: [null, Validators.required],
