@@ -6,11 +6,13 @@ import { Footer } from '../../components/footer/footer';
 import { BusSearchService } from '../../core/services/bus-search.service';
 import { HttpErrorHandlerService } from '../../core/services/http-error-handler.service';
 import { SortOption } from '../../core/models/filter.model';
+import { FilterSidebar } from '../../components/filter-sidebar/filter-sidebar';
+
 
 @Component({
   selector: 'app-search-results',
   standalone: true,
-  imports: [CommonModule, Navbar, Footer],
+  imports: [CommonModule, Navbar, Footer, FilterSidebar],
   templateUrl: './search-results.html',
   styleUrl: './search-results.css',
 })

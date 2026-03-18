@@ -70,61 +70,7 @@
 <div class="page-body">
 
   <!-- ── FILTER SIDEBAR ── -->
-  <aside class="sidebar">
-    <div class="sidebar-head">
-      <h3>Filters</h3>
-      <button class="clear-btn">Clear all</button>
-    </div>
-    <div class="filter-section">
-      <div class="filter-title">Bus Type</div>
-      <div class="check-group">
-        <div class="check-item"><label><input type="checkbox" checked> AC</label><span class="check-count">14</span></div>
-        <div class="check-item"><label><input type="checkbox"> Non-AC</label><span class="check-count">10</span></div>
-        <div class="check-item"><label><input type="checkbox" checked> Sleeper</label><span class="check-count">8</span></div>
-        <div class="check-item"><label><input type="checkbox"> Seater</label><span class="check-count">16</span></div>
-        <div class="check-item"><label><input type="checkbox"> Volvo</label><span class="check-count">5</span></div>
-      </div>
-    </div>
-    <div class="filter-section">
-      <div class="filter-title">Departure Time</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="border:1.5px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;transition:all .18s;background:white">
-          <div style="font-size:15px;margin-bottom:2px">🌅</div>
-          <div style="font-size:10px;font-weight:600;color:var(--navy);letter-spacing:.3px">MORNING</div>
-          <div style="font-size:9px;color:var(--muted)">6 – 12 AM</div>
-        </div>
-        <div style="border:1.5px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;background:white">
-          <div style="font-size:15px;margin-bottom:2px">☀️</div>
-          <div style="font-size:10px;font-weight:600;color:var(--navy);letter-spacing:.3px">AFTERNOON</div>
-          <div style="font-size:9px;color:var(--muted)">12 – 6 PM</div>
-        </div>
-        <div style="border:1.5px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;background:white">
-          <div style="font-size:15px;margin-bottom:2px">🌆</div>
-          <div style="font-size:10px;font-weight:600;color:var(--navy);letter-spacing:.3px">EVENING</div>
-          <div style="font-size:9px;color:var(--muted)">6 – 10 PM</div>
-        </div>
-        <div style="border:1.5px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;background:white">
-          <div style="font-size:15px;margin-bottom:2px">🌙</div>
-          <div style="font-size:10px;font-weight:600;color:var(--navy);letter-spacing:.3px">NIGHT</div>
-          <div style="font-size:9px;color:var(--muted)">10 PM – 6</div>
-        </div>
-      </div>
-    </div>
-    <div class="filter-section">
-      <div class="filter-title">Ratings</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1.5px solid var(--navy);background:var(--navy-faint);border-radius:8px;cursor:pointer">
-          <span style="color:var(--navy);font-size:13px;letter-spacing:-1px">★★★★★</span><span style="font-size:12px;color:var(--muted)">5★ only</span>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer">
-          <span style="color:var(--navy);font-size:13px;letter-spacing:-1px">★★★★☆</span><span style="font-size:12px;color:var(--muted)">4★ & above</span>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer">
-          <span style="color:var(--navy);font-size:13px;letter-spacing:-1px">★★★☆☆</span><span style="font-size:12px;color:var(--muted)">3★ & above</span>
-        </div>
-      </div>
-    </div>
-  </aside>
+  <app-filter-sidebar></app-filter-sidebar>
 
   <!-- ── RESULTS COLUMN ── -->
   <div class="results-col">
@@ -202,7 +148,7 @@
           <div class="bus-price-action">
             <div>
               <div class="price-from">starts from</div>
-              <div class="price-val">₹{{ s.route?.baseFare || s.baseFare }}</div>
+              <div class="price-val">₹{{ s.baseFare | number:'1.0-0':'en-IN' }}</div>
             </div>
             <button class="select-btn" (click)="onSelectBus(s.scheduleId)" [disabled]="s.availableSeats === 0">
               {{ s.availableSeats === 0 ? 'Sold Out' : 'Select Seats →' }}

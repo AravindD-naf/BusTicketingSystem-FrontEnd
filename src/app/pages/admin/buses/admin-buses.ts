@@ -63,8 +63,8 @@ import { BusSearchService } from '../../../core/services/bus-search.service';
                 <option value="Non-AC Sleeper">Non-AC Sleeper</option>
                 <option value="AC Seater">AC Seater</option>
                 <option value="Non-AC Seater">Non-AC Seater</option>
-                <option value="Volvo AC">Volvo AC</option>
-                <option value="Luxury">Luxury</option>
+                <option value="Volvo AC Sleeper">Volvo AC Sleeper</option>
+                <option value="AC Semi-Sleeper">AC Semi-Sleeper</option>
               </select>
               <span class="field-error" *ngIf="busForm.get('busType')?.invalid && busForm.get('busType')?.touched">Required</span>
             </label>

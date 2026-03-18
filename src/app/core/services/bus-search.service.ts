@@ -29,10 +29,39 @@ export class BusSearchService {
   filteredSchedules = computed(() => {
     const f = this.filter();
     let result = this.allSchedules().filter((schedule: any) => {
+
+      // Bus type filter
       if (f.busTypes.length && !f.busTypes.includes(schedule.busType)) return false;
+
+      // Operator filter
       if (f.operators.length && !f.operators.includes(schedule.operatorName)) return false;
+
+      // Price filter
+      if (f.maxPrice && (schedule.baseFare || 0) > f.maxPrice) return false;
+
+      // Rating filter — treat missing/zero rating as 4.5 (unrated buses still show)
+      if (f.minRating > 0) {
+        const busRating = (schedule.rating && schedule.rating > 0) ? schedule.rating : 4.5;
+        if (busRating < f.minRating) return false;
+      }
+
+      // Departure time filter
+      if (f.departureTimes.length) {
+        const dep = schedule.departureTime || '';
+        const h = parseInt(dep.split(':')[0], 10);
+        const matches = f.departureTimes.some((t: string) => {
+          if (t === 'morning')   return h >= 6  && h < 12;
+          if (t === 'afternoon') return h >= 12 && h < 18;
+          if (t === 'evening')   return h >= 18 && h < 22;
+          if (t === 'night')     return h >= 22 || h < 6;
+          return false;
+        });
+        if (!matches) return false;
+      }
+
       return true;
     });
+
     const sort = this.sortBy();
     return result.sort((a: any, b: any) => {
       if (sort === 'price_asc') return (a.baseFare || 0) - (b.baseFare || 0);

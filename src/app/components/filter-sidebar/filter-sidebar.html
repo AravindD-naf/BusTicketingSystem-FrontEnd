@@ -70,12 +70,12 @@
   <div class="filter-section">
     <div class="filter-title">Bus Operators</div>
     <div class="operator-list">
-      <label class="op-item" *ngFor="let op of operators">
+      <label class="op-item" *ngFor="let op of operators()">
         <input type="checkbox"
-               [checked]="selectedOperators.includes(op)"
-               (change)="selectedOperators = ($event.target).checked
-                         ? [...selectedOperators, op]
-                         : selectedOperators.filter(o => o !== op); applyFilter();">
+              [checked]="selectedOperators.includes(op)"
+              (change)="selectedOperators = ($event.target).checked
+                        ? [...selectedOperators, op]
+                        : selectedOperators.filter(o => o !== op); applyFilter();">
         {{ op }}
       </label>
     </div>
