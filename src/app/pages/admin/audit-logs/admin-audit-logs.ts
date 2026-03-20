@@ -46,7 +46,7 @@ import { AuditLogService } from '../../../core/services/audit-log.service';
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <tr><th>ID</th><th>Entity</th><th>Action</th><th>Changed By</th><th>IP Address</th><th>Date &amp; Time</th><th>Details</th></tr>
+            <tr><th>#</th><th>Entity</th><th>Action</th><th>Changed By</th><th>IP Address</th><th>Date &amp; Time</th><th>Details</th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let log of logs(); let i = index">

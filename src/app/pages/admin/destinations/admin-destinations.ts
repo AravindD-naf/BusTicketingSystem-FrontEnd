@@ -20,7 +20,7 @@ import { DestinationService } from '../../../core/services/destination.service';
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <tr><th>ID</th><th>Destination Name</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>#</th><th>Destination Name</th><th>Description</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let d of destinations(); let i = index">

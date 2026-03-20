@@ -20,7 +20,7 @@ import { SourceService } from '../../../core/services/source.service';
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <tr><th>ID</th><th>Source Name</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>#</th><th>Source Name</th><th>Description</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let s of sources(); let i = index">

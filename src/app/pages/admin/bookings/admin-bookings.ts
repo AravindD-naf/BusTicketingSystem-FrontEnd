@@ -31,21 +31,23 @@ import { PaymentService } from '../../../core/services/payment.service';
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <tr><th>ID</th><th>Booking ID</th><th>Schedule</th><th>Seats</th><th>Total (₹)</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>#</th><th>Booking ID</th><th>Schedule</th><th>Seats</th><th>Fare (₹)</th><th>Tax (₹)</th><th>Total (₹)</th><th>Date</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let b of filteredBookings(); let i = index">
               <td>{{ i + 1 }}</td>
-              <td><strong>#{{ b.bookingId }}</strong></td>
+              <td><strong>{{ b.bookingId }}</strong></td>
               <td>{{ b.scheduleId }}</td>
               <td>{{ b.numberOfSeats || '—' }}</td>
               <td>₹{{ b.totalAmount }}</td>
+              <td>₹{{ getTax(b.totalAmount) }} <span class="tax-note">+₹{{ CONVENIENCE_FEE }}</span></td>
+              <td><strong>₹{{ getGrandTotal(b.totalAmount) }}</strong></td>
               <td>{{ b.bookingDate | date:'mediumDate' }}</td>
-              <td><span class="status-chip" [class]="getStatusClass(b.bookingStatus)">{{ b.bookingStatus }}</span></td>
+              <td><span [class]="getStatusClass(b.bookingStatus, b.cancellationReason)">{{ getStatusLabel(b.bookingStatus, b.cancellationReason) }}</span></td>
               <td>
                 <button class="btn-view" (click)="viewBooking(b)">👁️ View</button>
                 <button class="btn-cancel" *ngIf="b.bookingStatus === 'Confirmed'" (click)="cancelBooking(b.bookingId)">❌ Cancel</button>
-                <button class="btn-refund" *ngIf="b.bookingStatus === 'Cancelled'" (click)="openRefundModal(b)">💰 Refund</button>
+                <button class="btn-refund" *ngIf="b.bookingStatus === 'Cancelled' && !b.cancellationReason" (click)="openRefundModal(b)">💰 Refund</button>
               </td>
             </tr>
             <tr *ngIf="filteredBookings().length === 0">
@@ -67,7 +69,11 @@ import { PaymentService } from '../../../core/services/payment.service';
             <div class="detail-row"><span class="detail-key">Schedule ID</span><span>{{ selectedBooking()?.scheduleId }}</span></div>
             <div class="detail-row"><span class="detail-key">Seats</span><span>{{ selectedBooking()?.numberOfSeats }}</span></div>
             <div class="detail-row"><span class="detail-key">Total Amount</span><span>₹{{ selectedBooking()?.totalAmount }}</span></div>
-            <div class="detail-row"><span class="detail-key">Status</span><span class="status-chip" [class]="getStatusClass(selectedBooking()?.bookingStatus)">{{ selectedBooking()?.bookingStatus }}</span></div>
+            <div class="detail-row"><span class="detail-key">Seat Fare</span><span>₹{{ selectedBooking()?.totalAmount }}</span></div>
+            <div class="detail-row"><span class="detail-key">GST & Taxes (6%)</span><span>₹{{ getTax(selectedBooking()?.totalAmount ?? 0) }}</span></div>
+            <div class="detail-row"><span class="detail-key">Convenience Fee</span><span>₹{{ CONVENIENCE_FEE }}</span></div>
+            <div class="detail-row"><span class="detail-key">Total Paid</span><strong>₹{{ getGrandTotal(selectedBooking()?.totalAmount ?? 0) }}</strong></div>
+            <div class="detail-row"><span class="detail-key">Status</span><span [class]="getStatusClass(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason)">{{ getStatusLabel(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason) }}</span></div>
             <div class="detail-row"><span class="detail-key">Source</span><span>{{ selectedBooking()?.source || '—' }}</span></div>
             <div class="detail-row"><span class="detail-key">Destination</span><span>{{ selectedBooking()?.destination || '—' }}</span></div>
             <div class="detail-row"><span class="detail-key">Travel Date</span><span>{{ selectedBooking()?.travelDate | date:'mediumDate' }}</span></div>
@@ -128,6 +134,8 @@ import { PaymentService } from '../../../core/services/payment.service';
     .status-chip{padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:500}
     .status-confirmed{background:#dcfce7;color:#16a34a} .status-pending{background:#fef9c3;color:#ca8a04}
     .status-cancelled{background:#fee2e2;color:#dc2626} .status-default{background:#f1f5f9;color:#64748b}
+    .status-expired { background: #fff3e0; color: #e65100; }
+    .tax-note {font-size: .7rem;color: #64748b;margin-left: 2px;}
     .empty-row{text-align:center;color:#94a3b8;padding:32px!important}
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100}
     .modal{background:#fff;border-radius:14px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto}
@@ -178,6 +186,8 @@ export class AdminBookings implements OnInit {
 
   refundForm = this.fb.group({ refundId: [null], isApproved: [true], reason: [''] });
 
+  readonly CONVENIENCE_FEE = 20;
+
   ngOnInit() { this.loadBookings(); }
 
   loadBookings() {
@@ -216,12 +226,41 @@ export class AdminBookings implements OnInit {
     });
   }
 
-  getStatusClass(status: string): string {
+  getTax(amount: number): number {
+    return Math.round(amount * 0.06);
+  }
+
+  getGrandTotal(amount: number): number {
+    return amount + this.getTax(amount) + this.CONVENIENCE_FEE;
+  }
+
+
+  // getStatusClass(status: string): string {
+  //   switch (status?.toLowerCase()) {
+  //     case 'confirmed': return 'status-chip status-confirmed';
+  //     case 'pending': return 'status-chip status-pending';
+  //     case 'cancelled': return 'status-chip status-cancelled';
+  //     default: return 'status-chip status-default';
+  //   }
+  // }
+  getStatusClass(status: string, cancellationReason?: string): string {
     switch (status?.toLowerCase()) {
-      case 'confirmed': return 'status-chip status-confirmed';
-      case 'pending': return 'status-chip status-pending';
-      case 'cancelled': return 'status-chip status-cancelled';
-      default: return 'status-chip status-default';
+      case 'confirmed':          return 'status-chip status-confirmed';
+      case 'pending':            return 'status-chip status-pending';
+      case 'cancelled':
+        // If it has an expiry reason = auto-expired (never paid)
+        return cancellationReason
+          ? 'status-chip status-expired'
+          : 'status-chip status-cancelled';
+      case 'paymentfailed':      return 'status-chip status-failed';
+      default:                   return 'status-chip status-default';
     }
+  }
+
+  getStatusLabel(status: string, cancellationReason?: string): string {
+    if (status?.toLowerCase() === 'cancelled' && cancellationReason) {
+      return 'Expired';
+    }
+    return status;
   }
 }

@@ -83,7 +83,7 @@
         <div class="dl-row"><span>Schedule ID</span><span>{{ selectedBooking()?.scheduleId }}</span></div>
         <div class="dl-row"><span>Number of Seats</span><span>{{ selectedBooking()?.numberOfSeats }}</span></div>
         <div class="dl-row"><span>Total Amount</span><span style="font-weight:700;color:#16a34a">₹{{ selectedBooking()?.totalAmount }}</span></div>
-        <div class="dl-row"><span>Status</span><span class="status-badge" [class]="getStatusClass(selectedBooking()?.bookingStatus)">{{ selectedBooking()?.bookingStatus }}</span></div>
+        <div class="dl-row"><span>Status</span><span class="status-badge" [class]="getStatusClass(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason)">{{ getStatusLabel(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason) }}</span></div>
         <div class="dl-row" *ngIf="selectedBooking()?.travelDate"><span>Travel Date</span><span>{{ formatDate(selectedBooking()?.travelDate) }}</span></div>
         <div class="dl-row" *ngIf="selectedBooking()?.departureTime"><span>Departure</span><span>{{ selectedBooking()?.departureTime }}</span></div>
         <div class="dl-row" *ngIf="selectedBooking()?.busNumber"><span>Bus Number</span><span>{{ selectedBooking()?.busNumber }}</span></div>

@@ -129,6 +129,14 @@
 .badge-cancelled { background: #fee2e2; color: #dc2626; }
 .badge-pending { background: #fef9c3; color: #ca8a04; }
 .badge-default { background: var(--off); color: var(--muted); }
+.badge-expired {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
 
 /* Modal */
 .modal-overlay {

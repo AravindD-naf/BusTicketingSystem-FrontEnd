@@ -21,7 +21,7 @@ import { RouteService } from '../../../core/services/route.service';
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <tr><th>ID</th><th>Route</th><th>Bus</th><th>Travel Date</th><th>Departure</th><th>Arrival</th><th>Avail. Seats</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>#</th><th>Route</th><th>Bus</th><th>Travel Date</th><th>Departure</th><th>Arrival</th><th>Avail. Seats</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let s of schedules(); let i = index">

@@ -25,7 +25,7 @@ import { RouteService } from '../../../core/services/route.service';
         <table class="data-table">
           <thead>
             <!-- <tr><th>ID</th><th>Source</th><th>Destination</th><th>Distance (km)</th><th>Duration (min)</th><th>Base Fare (₹)</th><th>Status</th><th>Actions</th></tr> -->
-            <tr><th>ID</th><th>Source</th><th>Destination</th><th>Distance (km)</th><th>Duration</th><th>Base Fare (₹)</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>#</th><th>Source</th><th>Destination</th><th>Distance (km)</th><th>Duration</th><th>Base Fare (₹)</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let route of filteredRoutes(); let i = index">

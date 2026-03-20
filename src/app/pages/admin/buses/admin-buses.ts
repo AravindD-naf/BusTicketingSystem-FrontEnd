@@ -21,7 +21,7 @@ import { BusSearchService } from '../../../core/services/bus-search.service';
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th><th>Bus Number</th><th>Type</th><th>Operator</th><th>Total Seats</th><th>Status</th><th>Actions</th>
+              <th>#</th><th>Bus Number</th><th>Type</th><th>Operator</th><th>Total Seats</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
           <tbody>
