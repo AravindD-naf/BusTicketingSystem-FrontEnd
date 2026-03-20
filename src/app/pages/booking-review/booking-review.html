@@ -57,10 +57,10 @@
       <div class="fare-card">
         <h3 class="card-title">💰 Fare Summary</h3>
         <div class="fare-rows">
-          <div class="fare-row"><span>Base Fare</span><span>₹{{ booking()?.totalAmount ?? totalFare() }}</span></div>
-          <div class="fare-row" *ngIf="totalFare() > 0"><span>Tax (6%)</span><span>₹{{ taxAmount() }}</span></div>
-          <div class="fare-row" *ngIf="totalFare() > 0"><span>Convenience Fee</span><span>₹{{ convFee }}</span></div>
-          <div class="fare-row total"><span>Total Payable</span><strong>₹{{ booking()?.totalAmount ?? grandTotal() }}</strong></div>
+          <div class="fare-row"><span>Base Fare</span><span>₹{{totalFare()}}</span></div>
+          <div class="fare-row"><span>GST & Taxes (6%)</span><span>₹{{ taxAmount() }}</span></div>
+          <div class="fare-row"><span>Convenience Fee</span><span>₹{{ convFee }}</span></div>
+          <div class="fare-row total"><span>Total Payable</span><strong>₹{{grandTotal()}}</strong></div>
         </div>
 
         <div class="action-row">

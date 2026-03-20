@@ -126,32 +126,94 @@
   border-left: 3px solid #dc2626;
 }
 
-/* Order summary */
-.order-summary {
+/* Booking summary */
+.booking-summary {
   background: var(--white);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   overflow: hidden;
   height: fit-content;
-  position: sticky; top: 80px;
+  position: sticky;
+  top: 80px;
   box-shadow: var(--sh-sm);
 }
+
+.summary-header {
+  background: var(--navy);
+  padding: 14px 20px;
+}
+
 .summary-title {
   font-family: 'Fraunces', serif;
-  font-size: 16px; font-weight: 700; color: var(--navy); margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
 }
-.summary-rows { display: flex; flex-direction: column; gap: 10px; }
-.summary-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--navy); }
-.summary-row.divider { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; }
-.summary-row.total {
-  border-top: 2px solid var(--navy); padding-top: 12px;
-  font-weight: 700; color: var(--navy); font-size: 15px;
+
+.summary-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.summary-row strong {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.fare-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fare-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--navy);
+}
+
+.fare-total {
+  border-top: 2px solid var(--navy);
+  padding-top: 12px;
+  margin-top: 4px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.fare-total strong {
+  font-size: 17px;
+  color: var(--navy);
 }
 
 .secure-badge {
-  margin-top: 20px; text-align: center;
-  font-size: 12px; color: var(--muted);
-  display: flex; align-items: center; justify-content: center; gap: 5px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
 }
 
 @media (max-width: 640px) {

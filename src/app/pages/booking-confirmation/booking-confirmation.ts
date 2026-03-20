@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Navbar } from '../../components/navbar/navbar';
@@ -23,6 +23,13 @@ export class BookingConfirmation implements OnInit {
   loading   = signal(true);
   booking   = signal<any>(null);
   error     = signal<string | null>(null);
+
+
+  // Fare breakdown computed from backend totalAmount (base fare)
+  readonly convenienceFee = 20;
+  baseFare    = computed(() => this.booking()?.totalAmount ?? 0);
+  taxAmount   = computed(() => Math.round(this.baseFare() * 0.06));
+  grandTotal  = computed(() => this.baseFare() + this.taxAmount() + this.convenienceFee);
 
   ngOnInit() {
     const id = this.route.snapshot.params['bookingId'];

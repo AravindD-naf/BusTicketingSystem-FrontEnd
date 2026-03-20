@@ -10,6 +10,9 @@ export class SourceService {
   getAllSources(pageNumber = 1, pageSize = 100) {
     return this.http.post<any>(`${this.API}/sources/get-all`, { pageNumber, pageSize });
   }
+  getByCity(cityName: string) {
+    return this.http.get<any>(`${this.API}/sources/by-city/${encodeURIComponent(cityName)}`);
+  }
   getSourceById(id: number) {
     return this.http.post<any>(`${this.API}/sources/${id}`, {});
   }

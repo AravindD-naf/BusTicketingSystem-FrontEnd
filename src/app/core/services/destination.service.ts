@@ -10,6 +10,9 @@ export class DestinationService {
   getAllDestinations(pageNumber = 1, pageSize = 100) {
     return this.http.post<any>(`${this.API}/destinations/get-all`, { pageNumber, pageSize });
   }
+  getByCity(cityName: string) {
+    return this.http.get<any>(`${this.API}/destinations/by-city/${encodeURIComponent(cityName)}`);
+  }
   getDestinationById(id: number) {
     return this.http.post<any>(`${this.API}/destinations/${id}`, {});
   }

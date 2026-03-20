@@ -48,9 +48,22 @@
           <span class="detail-key">Number of Seats</span>
           <span class="detail-val">{{ booking()?.numberOfSeats }}</span>
         </div>
+        <!-- REPLACE WITH -->
         <div class="detail-row">
-          <span class="detail-key">Total Amount</span>
-          <span class="detail-val price">₹{{ booking()?.totalAmount }}</span>
+          <span class="detail-key">Seat Fare</span>
+          <span class="detail-val">₹{{ baseFare() }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">GST & Taxes (6%)</span>
+          <span class="detail-val">₹{{ taxAmount() }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Convenience Fee</span>
+          <span class="detail-val">₹{{ convenienceFee }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Total Paid</span>
+          <span class="detail-val price">₹{{ grandTotal() }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-key">Status</span>

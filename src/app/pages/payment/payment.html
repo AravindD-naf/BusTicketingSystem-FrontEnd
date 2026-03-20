@@ -45,7 +45,7 @@
           <div *ngIf="error()" class="error-box">{{ error() }}</div>
 
           <button type="submit" class="pay-btn" [disabled]="processing()">
-            <span *ngIf="!processing()">Pay ₹{{ booking()?.totalAmount ?? grandTotal() }} →</span>
+            <span *ngIf="!processing()">Pay ₹{{grandTotal()}} →</span>
             <span *ngIf="processing()">Processing Payment...</span>
           </button>
 
@@ -55,17 +55,24 @@
         </form>
       </div>
 
-      <!-- Right: Order Summary -->
-      <div class="order-summary">
-        <h3 class="summary-title">Order Summary</h3>
-        <div class="summary-rows">
-          <div class="summary-row"><span>Booking ID</span><strong>#{{ bookingId() }}</strong></div>
-          <div class="summary-row"><span>Schedule ID</span><span>{{ booking()?.scheduleId }}</span></div>
-          <div class="summary-row"><span>Seats</span><span>{{ booking()?.numberOfSeats ?? selectedSeatCount() }}</span></div>
-          <div class="summary-row divider"><span>Subtotal</span><span>₹{{ totalFare() }}</span></div>
-          <div class="summary-row"><span>Tax (6%)</span><span>₹{{ taxAmount() }}</span></div>
-          <div class="summary-row"><span>Convenience Fee</span><span>₹{{ convFee }}</span></div>
-          <div class="summary-row total"><span>Total Payable</span><strong>₹{{ booking()?.totalAmount ?? grandTotal() }}</strong></div>
+      <!-- Right: Booking Summary -->
+      <div class="booking-summary">
+        <div class="summary-header">
+        <h3 class="summary-title">Booking Summary</h3>
+        </div>
+        <div class="summary-body">
+          <div class="summary-rows">
+            <div class="summary-row"><span>Booking ID</span><strong>#{{ bookingId() }}</strong></div>
+            <div class="summary-row"><span>Schedule ID</span><span>{{ booking()?.scheduleId }}</span></div>
+            <div class="summary-row"><span>Seats</span><span>{{ booking()?.numberOfSeats ?? selectedSeatCount() }}</span></div>
+            </div>
+
+            <div class="fare-rows">
+            <div class="fare-row"><span>Seat Fare</span><span>₹{{ totalFare() }}</span></div>
+          <div class="fare-row"><span>GST & Taxes (6%)</span><span>₹{{ taxAmount() }}</span></div>
+          <div class="fare-row"><span>Convenience Fee</span><span>₹{{ convFee }}</span></div>
+          <div class="fare-row fare-total"><span>Total Payable</span><strong>₹{{grandTotal()}}</strong></div>
+          </div>
         </div>
         <div class="secure-badge">🔒 Secure 256-bit encrypted payment</div>
       </div>

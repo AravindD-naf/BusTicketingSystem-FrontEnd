@@ -53,9 +53,9 @@ export class AuthService {
       || claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
     const role = claims['role']
       || claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-    const name = claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];;
+    const name = claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
 
-    this.user.set({ id, email, role, name });
+    this.user.set({ id, email, role, name }); 
   }
 
   register(payload: RegisterRequest) {

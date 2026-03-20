@@ -100,16 +100,12 @@
           </div>
         </div>
         <div class="card-body">
-
-          <!-- Legend -->
           <div class="legend-strip">
             <div class="legend-item"><div class="legend-dot" style="background:#22a855"></div>Available</div>
             <div class="legend-item"><div class="legend-dot" style="background:#0A1F44"></div>Selected</div>
             <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Locked</div>
             <div class="legend-item"><div class="legend-dot" style="background:#c9d5e8"></div>Booked</div>
           </div>
-
-          <!-- Seat grid -->
           <div class="seat-layout-wrap">
             <div class="driver-box">
               <div class="driver-wheel">
@@ -139,16 +135,12 @@
                         <rect *ngIf="isSelected(seat.seatNumber)" x="1" y="1" width="40" height="42" rx="7" fill="none" stroke="white" stroke-width="2.5"/>
                       </svg>
                     </div>
-                    <div class="seat-label" [class.sold]="seat.seatStatus !== 'Available'">
-                      {{ seat.seatNumber }}
-                    </div>
+                    <div class="seat-label" [class.sold]="seat.seatStatus !== 'Available'">{{ seat.seatNumber }}</div>
                   </div>
                 </ng-container>
               </div>
             </div>
           </div>
-
-          <!-- Selection bar -->
           <div class="sel-bar">
             <div class="sel-bar-left">
               <span class="sel-label">Selected:</span>
@@ -159,7 +151,60 @@
             </div>
             <div class="sel-total">₹{{ selectedSeats().length > 0 ? totalFare() : 0 }}</div>
           </div>
+        </div>
+      </div>
 
+      <!-- BOARDING & DROP POINTS -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <div class="card-head-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0A1F44" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <div class="card-title">Boarding &amp; Drop Points</div>
+              <div class="card-sub">Choose your pickup and drop-off location</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div *ngIf="sources().length === 0 && destinations().length === 0" style="text-align:center;padding:20px 0;color:#7a8ba6;font-size:13px">
+            No boarding/drop points configured. Add them via Admin → Sources &amp; Destinations.
+          </div>
+
+          <div class="boarding-grid" *ngIf="sources().length > 0 || destinations().length > 0">
+
+            <!-- Boarding Point -->
+            <div class="boarding-field" *ngIf="sources().length > 0">
+              <label class="boarding-label">Boarding Point</label>
+              <select class="boarding-select" (change)="onBoardingChange($event)">
+                <option *ngFor="let s of sources()" [value]="s.sourceId">{{ s.sourceName }}</option>
+              </select>
+              <div class="point-info" *ngIf="selectedBoarding()">
+                <div class="point-dot" style="background:#22a855"></div>
+                <div class="point-text">
+                  <strong>{{ selectedBoarding().sourceName }}</strong>
+                  <span *ngIf="selectedBoarding().description">{{ selectedBoarding().description }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Drop Point -->
+            <div class="boarding-field" *ngIf="destinations().length > 0">
+              <label class="boarding-label">Drop Point</label>
+              <select class="boarding-select" (change)="onDropChange($event)">
+                <option *ngFor="let d of destinations()" [value]="d.destinationId">{{ d.destinationName }}</option>
+              </select>
+              <div class="point-info" *ngIf="selectedDrop()">
+                <div class="point-dot" style="background:#dc2626"></div>
+                <div class="point-text">
+                  <strong>{{ selectedDrop().destinationName }}</strong>
+                  <span *ngIf="selectedDrop().description">{{ selectedDrop().description }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
 
@@ -292,6 +337,20 @@
               </div>
               <span class="sr-empty" *ngIf="selectedSeats().length === 0">None selected</span>
             </span>
+          </div>
+          <div class="summary-row" *ngIf="selectedBoarding()">
+            <span class="sr-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7a8ba6" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
+              Boarding
+            </span>
+            <span class="sr-val">{{ selectedBoarding().sourceName }}</span>
+          </div>
+          <div class="summary-row" *ngIf="selectedDrop()">
+            <span class="sr-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7a8ba6" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Drop
+            </span>
+            <span class="sr-val">{{ selectedDrop().destinationName }}</span>
           </div>
           <div class="summary-row">
             <span class="sr-label">
