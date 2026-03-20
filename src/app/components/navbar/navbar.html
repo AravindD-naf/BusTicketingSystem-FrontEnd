@@ -21,7 +21,7 @@
         <div class="nav-user-menu">
           <div class="user-profile">
             <div class="profile-avatar">{{ getInitials() }}</div>
-            <span class="user-name">{{ auth.user()?.name || auth.user()?.email }}</span>
+            <span class="user-name">{{ auth.user()?.name}}</span>
           </div>
           <button class="btn-logout" (click)="logout()">
             <svg viewBox="0 0 24 24" width="13" height="13"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>

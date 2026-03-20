@@ -75,6 +75,42 @@
 .seat-label { font-size: 10px; font-weight: 600; color: var(--muted); line-height: 1; text-align: center; }
 .seat-label.sold { color: var(--muted2); }
 
+.lock-timer-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff7ed;
+  border: 1.5px solid #f59e0b;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #92400e;
+  margin-bottom: 14px;
+}
+
+.lock-timer-banner strong {
+  font-size: 15px;
+  color: #b45309;
+  font-variant-numeric: tabular-nums;
+  min-width: 38px;
+  display: inline-block;
+}
+
+.lock-expired-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fee2e2;
+  border: 1.5px solid #ef4444;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #991b1b;
+  margin-bottom: 14px;
+}
+
 /* ── SELECTION BAR ── */
 .sel-bar { margin-top: 4px; padding: 13px 16px; background: var(--navy-faint); border: 1.5px solid var(--navy); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 .sel-bar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

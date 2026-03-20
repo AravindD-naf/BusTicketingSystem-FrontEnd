@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormArray, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormArray, Validators, FormGroup } from '@angular/forms';
 import { SeatService } from '../../core/services/seat.service';
 import { BookingService } from '../../core/services/booking.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -52,6 +52,14 @@ export class SeatSelection implements OnInit {
   taxAmount     = this.seatService.taxAmount;
   totalAmount   = this.seatService.totalAmount;
 
+  // Lock expiry countdown
+  lockExpiresAt = signal<Date | null>(null);
+  lockCountdown = signal<string>('');
+  lockExpired   = signal(false);
+
+  private refreshInterval: any = null;
+  private countdownInterval: any = null;
+
   // 4 seats per row with aisle gap: [s, s, null, s, s]
   seatRows = computed(() => {
     const all = this.seats();
@@ -100,6 +108,11 @@ export class SeatSelection implements OnInit {
     this.loadDropPoints();
     this.seatService.clearSelection();
     this.fetchSeats();
+
+    // Auto-refresh seat layout every 30 seconds to pick up lock expirations
+    this.refreshInterval = setInterval(() => {
+      this.silentRefreshSeats();
+    }, 30000);
   }
 
   // Calls GET /api/v1/sources/by-city/{fromCity}
@@ -150,6 +163,11 @@ export class SeatSelection implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+  }
+
   fetchSeats() {
     this.loading.set(true);
     this.error.set(null);
@@ -176,46 +194,42 @@ export class SeatSelection implements OnInit {
 
   readonly MAX_SEATS = 6;
 
+  // Silent refresh — no loading spinner, just updates the seat data
+  silentRefreshSeats() {
+    this.seatService.loadSeats(this.scheduleId()).subscribe({
+      next: () => {
+        // If lock has expired on the backend, clear selections that are no longer locked
+        if (this.lockExpired()) {
+          this.seatService.clearSelection();
+          this.passengersArray.clear();
+          this.stopCountdown();
+        }
+      },
+      error: () => {} // silently ignore refresh errors
+    });
+  }
+
   toggleSeat(seat: any) {
     if (!seat || seat.seatStatus !== 'Available') return;
+    const wasSelected = this.seatService.isSelectedByNumber(seat.seatNumber);
+    const price = this.busInfo()?.baseFare || 0;
+    this.seatService.toggleBackendSeat(seat, price);
 
-    const alreadySelected = this.seatService.isSelectedByNumber(seat.seatNumber);
-
-    if (alreadySelected) {
-      // DESELECT — remove from seat service and remove passenger form
-      this.seatService.toggleBackendSeat(seat, 0);
+    if (wasSelected) {
       const idx = this.passengersArray.controls.findIndex(
         c => c.get('seatNumber')?.value === seat.seatNumber
       );
       if (idx >= 0) this.passengersArray.removeAt(idx);
-      return;
+    } else {
+      const user = this.authService.user();
+      const isFirst = this.passengersArray.length === 0;
+      this.passengersArray.push(this.fb.group({
+        seatNumber: [seat.seatNumber],
+        name:   [isFirst ? (user?.name || '') : '', Validators.required],
+        age:    ['', [Validators.required, Validators.min(1), Validators.max(120)]],
+        gender: ['', Validators.required],
+      }));
     }
-
-    // SELECTING — check limit BEFORE adding anything
-    if (this.selectedSeats().length >= this.MAX_SEATS) {
-      alert(`Cannot book more than ${this.MAX_SEATS} seats in a single booking.`);
-      return;
-    }
-
-    // Guard against duplicate passenger form for same seat
-    const alreadyHasForm = this.passengersArray.controls.some(
-      c => c.get('seatNumber')?.value === seat.seatNumber
-    );
-    if (alreadyHasForm) return;
-
-    // Add to seat service
-    const price = this.busInfo()?.baseFare || 0;
-    this.seatService.toggleBackendSeat(seat, price);
-
-    // Add passenger form
-    const user = this.authService.user();
-    const isFirst = this.passengersArray.length === 0;
-    this.passengersArray.push(this.fb.group({
-      seatNumber: [seat.seatNumber],
-      name:   [isFirst ? (user?.name || '') : '', Validators.required],
-      age:    ['', [Validators.required, Validators.min(1), Validators.max(120)]],
-      gender: ['', Validators.required],
-    }));
   }
 
   isSelected(seatNumber: string): boolean {
@@ -233,6 +247,45 @@ export class SeatSelection implements OnInit {
     return (num.substring(0, 2) || 'BU').toUpperCase();
   }
 
+  // Start the 5-minute countdown after seats are locked
+  private startLockCountdown(expiresAt: Date) {
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+    this.lockExpiresAt.set(expiresAt);
+    this.lockExpired.set(false);
+
+    this.countdownInterval = setInterval(() => {
+      const now = new Date();
+      const diff = expiresAt.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        this.lockCountdown.set('00:00');
+        this.lockExpired.set(true);
+        clearInterval(this.countdownInterval);
+        this.countdownInterval = null;
+        // Clear selections since lock has expired
+        this.seatService.clearSelection();
+        this.passengersArray.clear();
+        this.lockExpiresAt.set(null);
+        // Refresh seat layout to show updated statuses
+        this.silentRefreshSeats();
+      } else {
+        const mins = Math.floor(diff / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+        this.lockCountdown.set(
+          `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+        );
+      }
+    }, 1000);
+  }
+
+  private stopCountdown() {
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+    this.countdownInterval = null;
+    this.lockExpiresAt.set(null);
+    this.lockCountdown.set('');
+    this.lockExpired.set(false);
+  }
+
   onProceed() {
     if (this.selectedSeats().length === 0) {
       alert('Please select at least one seat.');
@@ -245,8 +298,15 @@ export class SeatSelection implements OnInit {
     }
     this.booking.set(true);
     const seatNumbers = this.selectedSeats().map(s => s.seatNumber);
+
     this.seatService.lockSeats(this.scheduleId(), seatNumbers).subscribe({
-      next: () => {
+      next: (lockResp: any) => {
+        // Start 5-minute countdown from the lock expiry time
+        const expiresAt = lockResp?.data?.lockExpiresAt
+          ? new Date(lockResp.data.lockExpiresAt)
+          : new Date(Date.now() + 5 * 60 * 1000);
+        this.startLockCountdown(expiresAt);
+
         this.bookingService.createBooking({
           scheduleId: this.scheduleId(),
           seatNumbers
@@ -254,6 +314,7 @@ export class SeatSelection implements OnInit {
           next: (resp: any) => {
             this.booking.set(false);
             if (resp?.success && resp?.data?.bookingId) {
+              this.stopCountdown(); // booking created — no need for countdown
               this.router.navigate(['/booking-review', resp.data.bookingId]);
             } else {
               alert(resp?.message || 'Booking failed. Please try again.');

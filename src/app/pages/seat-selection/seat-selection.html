@@ -86,6 +86,20 @@
         </div>
       </div>
 
+      <!-- Lock expiry timer banner — shown after seats are locked -->
+      <div class="lock-timer-banner" *ngIf="lockExpiresAt() && !lockExpired()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Seats locked! Complete your booking within
+        <strong>{{ lockCountdown() }}</strong>
+        or they will be released.
+      </div>
+
+      <!-- Expired warning -->
+      <div class="lock-expired-banner" *ngIf="lockExpired()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Your seat lock has expired. Please re-select your seats.
+      </div>
+
       <!-- SEAT SELECTION CARD -->
       <div class="card">
         <div class="card-head">
