@@ -67,6 +67,11 @@
             (click)="cancelBooking(b.bookingId)">
             Cancel Booking
           </button>
+          <button class="btn-rate"
+            *ngIf="b.bookingStatus?.toLowerCase() === 'confirmed'"
+            (click)="openRating(b.bookingId)">
+            ⭐ Rate
+          </button>
         </div>
       </div>
     </div>
@@ -89,6 +94,31 @@
         <div class="dl-row" *ngIf="selectedBooking()?.busNumber"><span>Bus Number</span><span>{{ selectedBooking()?.busNumber }}</span></div>
         <div class="dl-row" *ngIf="selectedBooking()?.operatorName"><span>Operator</span><span>{{ selectedBooking()?.operatorName }}</span></div>
         <div class="dl-row" *ngIf="selectedBooking()?.source"><span>Route</span><span>{{ selectedBooking()?.source }} → {{ selectedBooking()?.destination }}</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- Rating Modal -->
+  <div class="modal-overlay" *ngIf="ratingBookingId()" (click)="closeRating()">
+    <div class="rating-modal" (click)="$event.stopPropagation()">
+      <h3>Rate Your Journey</h3>
+      <p>How was your experience? Tap a star to rate.</p>
+
+      <div class="star-row">
+        <span *ngFor="let star of [1,2,3,4,5]"
+          class="star-btn"
+          [class.filled]="star <= selectedRating()"
+          (click)="selectedRating.set(star)">★</span>
+      </div>
+
+      <div *ngIf="ratingSuccess()" class="rating-success">
+        ✅ Thank you for your rating!
+      </div>
+
+      <div class="rating-actions" *ngIf="!ratingSuccess()">
+        <button class="btn-secondary" (click)="closeRating()">Cancel</button>
+        <button class="btn-primary" (click)="submitRating()" [disabled]="ratingSubmitting() || selectedRating() === 0">
+          {{ ratingSubmitting() ? 'Submitting...' : 'Submit Rating' }}
+        </button>
       </div>
     </div>
   </div>

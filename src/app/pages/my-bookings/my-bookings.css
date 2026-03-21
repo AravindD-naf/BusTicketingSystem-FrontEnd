@@ -159,6 +159,17 @@
   font-family: 'Fraunces', serif;
   font-size: 18px; font-weight: 700; color: var(--navy); margin: 0;
 }
+.btn-rate { background:#fef9c3;color:#ca8a04;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:500; }
+.btn-rate:hover { background:#fef08a; }
+.rating-modal { background:#fff;border-radius:16px;padding:28px;width:340px;max-width:95vw;text-align:center; }
+.rating-modal h3 { font-size:1.1rem;font-weight:700;color:#0A1F44;margin:0 0 6px; }
+.rating-modal p { font-size:.875rem;color:#64748b;margin:0 0 20px; }
+.star-row { display:flex;justify-content:center;gap:10px;margin-bottom:20px; }
+.star-btn { font-size:2rem;cursor:pointer;color:#e2e8f0;transition:color .15s;line-height:1; }
+.star-btn.filled { color:#f59e0b; }
+.star-btn:hover { color:#f59e0b; }
+.rating-success { color:#16a34a;font-weight:600;font-size:.9rem;margin-bottom:16px; }
+.rating-actions { display:flex;gap:10px;justify-content:center; }
 .close-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--muted); }
 .close-btn:hover { color: var(--navy); }
 .detail-list { display: flex; flex-direction: column; gap: 0; }

@@ -5,6 +5,8 @@ import { BookingService } from '../../core/services/booking.service';
 import { HttpErrorHandlerService } from '../../core/services/http-error-handler.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { Footer } from '../../components/footer/footer';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment.prod';
 
 @Component({
   selector: 'app-my-bookings',
@@ -17,11 +19,16 @@ export class MyBookings implements OnInit {
   private bookingService = inject(BookingService);
   private router         = inject(Router);
   private errHandler     = inject(HttpErrorHandlerService);
+  private http = inject(HttpClient);
 
   bookings        = signal<any[]>([]);
   loading         = signal(false);
   error           = signal<string | null>(null);
   selectedBooking = signal<any>(null);
+  ratingBookingId = signal<number | null>(null);
+  selectedRating  = signal<number>(0);
+  ratingSubmitting = signal(false);
+  ratingSuccess   = signal(false);
 
   ngOnInit() { this.loadBookings(); }
 
@@ -45,6 +52,33 @@ export class MyBookings implements OnInit {
       error: (err) => {
         this.error.set(this.errHandler.getErrorMessage(err));
         this.loading.set(false);
+      }
+    });
+  }
+
+  openRating(bookingId: number) {
+    this.ratingBookingId.set(bookingId);
+    this.selectedRating.set(0);
+    this.ratingSuccess.set(false);
+  }
+
+  closeRating() { this.ratingBookingId.set(null); }
+
+  submitRating() {
+    if (this.selectedRating() === 0) { alert('Please select a star rating.'); return; }
+    this.ratingSubmitting.set(true);
+    this.http.post<any>(
+      `${environment.apiBase}/booking/${this.ratingBookingId()}/rate`,
+      { rating: this.selectedRating() }
+    ).subscribe({
+      next: () => {
+        this.ratingSubmitting.set(false);
+        this.ratingSuccess.set(true);
+        setTimeout(() => this.closeRating(), 1500);
+      },
+      error: (err) => {
+        this.ratingSubmitting.set(false);
+        alert(this.errHandler.getErrorMessage(err));
       }
     });
   }
