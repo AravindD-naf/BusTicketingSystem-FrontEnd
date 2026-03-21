@@ -314,8 +314,20 @@
   padding: 11px 24px;
   display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
 }
-.amenity { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
-.amenity svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 1.8; flex-shrink: 0; }
+.amenity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.amenity-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
 .card-tag {
   margin-left: auto;
   display: inline-flex; align-items: center; gap: 5px;

@@ -12,7 +12,6 @@ import { PaymentService } from '../../../core/services/payment.service';
     <div>
       <div class="page-header">
         <h2 class="page-heading">Booking Management</h2>
-        <span class="total-badge">Total: {{ bookings().length }}</span>
       </div>
 
       <div class="filter-row">
@@ -23,6 +22,11 @@ import { PaymentService } from '../../../core/services/payment.service';
           <option value="Pending">Pending</option>
           <option value="Cancelled">Cancelled</option>
         </select>
+        <select class="filter-select" (change)="onPageSizeChange($event)">
+          <option value="10">10 per page</option>
+          <option value="25">25 per page</option>
+          <option value="50">50 per page</option>
+        </select>
       </div>
 
       <div *ngIf="loading()" class="info-box">Loading bookings...</div>
@@ -31,12 +35,23 @@ import { PaymentService } from '../../../core/services/payment.service';
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <tr><th>#</th><th>Booking ID</th><th>Schedule</th><th>Seats</th><th>Fare (₹)</th><th>Tax (₹)</th><th>Total (₹)</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+              <th style="width:52px;text-align:center;">#</th>
+              <th>Booking ID</th>
+              <th>Schedule</th>
+              <th>Seats</th>
+              <th>Fare (₹)</th>
+              <th>Tax (₹)</th>
+              <th>Total (₹)</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody>
             <tr *ngFor="let b of filteredBookings(); let i = index">
-              <td>{{ i + 1 }}</td>
-              <td><strong>{{ b.bookingId }}</strong></td>
+              <td style="width:52px;text-align:center;color:#94a3b8;font-size:.8rem;">{{ rangeStart() + i }}</td>
+              <td><strong>#{{ b.bookingId }}</strong></td>
               <td>{{ b.scheduleId }}</td>
               <td>{{ b.numberOfSeats || '—' }}</td>
               <td>₹{{ b.totalAmount }}</td>
@@ -51,10 +66,35 @@ import { PaymentService } from '../../../core/services/payment.service';
               </td>
             </tr>
             <tr *ngIf="filteredBookings().length === 0">
-              <td colspan="8" class="empty-row">No bookings found.</td>
+              <td colspan="10" class="empty-row">No bookings found.</td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Results summary — OUTSIDE table-wrap -->
+      <div class="results-summary" *ngIf="!loading() && totalCount() > 0">
+        Showing {{ rangeStart() }}–{{ rangeEnd() }} of <strong>{{ totalCount() }}</strong> bookings
+      </div>
+
+      <!-- Pagination — OUTSIDE table-wrap -->
+      <div class="pagination-bar" *ngIf="totalPages() > 1">
+        <button class="page-btn" (click)="goToPage(1)" [disabled]="currentPage() === 1">«</button>
+        <button class="page-btn" (click)="prevPage()" [disabled]="currentPage() === 1">← Prev</button>
+        <div class="page-numbers">
+          <button
+            *ngFor="let p of visiblePages()"
+            class="page-num"
+            [class.active]="p === currentPage()"
+            [class.ellipsis]="p === -1"
+            [disabled]="p === -1"
+            (click)="p !== -1 && goToPage(p)">
+            {{ p === -1 ? '...' : p }}
+          </button>
+        </div>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages()">Next →</button>
+        <button class="page-btn" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()">»</button>
+        <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
       </div>
 
       <!-- View Modal -->
@@ -64,21 +104,85 @@ import { PaymentService } from '../../../core/services/payment.service';
             <h3>Booking #{{ selectedBooking()?.bookingId }} Details</h3>
             <button class="close-btn" (click)="selectedBooking.set(null)">✕</button>
           </div>
+
+          <div *ngIf="detailLoading()" style="text-align:center;padding:20px;color:#64748b;font-size:.875rem">
+            Loading full details...
+          </div>
+
           <div class="detail-grid">
-            <div class="detail-row"><span class="detail-key">Booking ID</span><span>{{ selectedBooking()?.bookingId }}</span></div>
-            <div class="detail-row"><span class="detail-key">Schedule ID</span><span>{{ selectedBooking()?.scheduleId }}</span></div>
-            <div class="detail-row"><span class="detail-key">Seats</span><span>{{ selectedBooking()?.numberOfSeats }}</span></div>
-            <div class="detail-row"><span class="detail-key">Total Amount</span><span>₹{{ selectedBooking()?.totalAmount }}</span></div>
-            <div class="detail-row"><span class="detail-key">Seat Fare</span><span>₹{{ selectedBooking()?.totalAmount }}</span></div>
-            <div class="detail-row"><span class="detail-key">GST & Taxes (6%)</span><span>₹{{ getTax(selectedBooking()?.totalAmount ?? 0) }}</span></div>
-            <div class="detail-row"><span class="detail-key">Convenience Fee</span><span>₹{{ CONVENIENCE_FEE }}</span></div>
-            <div class="detail-row"><span class="detail-key">Total Paid</span><strong>₹{{ getGrandTotal(selectedBooking()?.totalAmount ?? 0) }}</strong></div>
-            <div class="detail-row"><span class="detail-key">Status</span><span [class]="getStatusClass(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason)">{{ getStatusLabel(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason) }}</span></div>
-            <div class="detail-row"><span class="detail-key">Source</span><span>{{ selectedBooking()?.source || '—' }}</span></div>
-            <div class="detail-row"><span class="detail-key">Destination</span><span>{{ selectedBooking()?.destination || '—' }}</span></div>
-            <div class="detail-row"><span class="detail-key">Travel Date</span><span>{{ selectedBooking()?.travelDate | date:'mediumDate' }}</span></div>
-            <div class="detail-row"><span class="detail-key">Bus Number</span><span>{{ selectedBooking()?.busNumber || '—' }}</span></div>
-            <div class="detail-row"><span class="detail-key">Operator</span><span>{{ selectedBooking()?.operatorName || '—' }}</span></div>
+            <div class="detail-section-title">Booking Info</div>
+            <div class="detail-row">
+              <span class="detail-key">Booking ID</span>
+              <span>#{{ selectedBooking()?.bookingId }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Status</span>
+              <span [class]="getStatusClass(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason)">
+                {{ getStatusLabel(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason) }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Booked On</span>
+              <span>{{ selectedBooking()?.bookingDate | date:'mediumDate' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Seats</span>
+              <span>{{ selectedBooking()?.numberOfSeats }}</span>
+            </div>
+
+            <div class="detail-section-title">Journey Info</div>
+            <div class="detail-row">
+              <span class="detail-key">Source</span>
+              <span>{{ selectedBooking()?.source || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Destination</span>
+              <span>{{ selectedBooking()?.destination || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Travel Date</span>
+              <span>{{ selectedBooking()?.travelDate ? (selectedBooking()?.travelDate | date:'mediumDate') : '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Departure</span>
+              <span>{{ selectedBooking()?.departureTime || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Arrival</span>
+              <span>{{ selectedBooking()?.arrivalTime || '—' }}</span>
+            </div>
+
+            <div class="detail-section-title">Bus Info</div>
+            <div class="detail-row">
+              <span class="detail-key">Bus Number</span>
+              <span>{{ selectedBooking()?.busNumber || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Bus Type</span>
+              <span>{{ selectedBooking()?.busType || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Operator</span>
+              <span>{{ selectedBooking()?.operatorName || '—' }}</span>
+            </div>
+
+            <div class="detail-section-title">Fare Breakdown</div>
+            <div class="detail-row">
+              <span class="detail-key">Seat Fare</span>
+              <span>₹{{ selectedBooking()?.totalAmount }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">GST & Taxes (6%)</span>
+              <span>₹{{ getTax(selectedBooking()?.totalAmount ?? 0) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Convenience Fee</span>
+              <span>₹{{ CONVENIENCE_FEE }}</span>
+            </div>
+            <div class="detail-row" style="font-weight:700;font-size:.95rem">
+              <span class="detail-key">Total Paid</span>
+              <span style="color:#0A1F44">₹{{ getGrandTotal(selectedBooking()?.totalAmount ?? 0) }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -116,10 +220,10 @@ import { PaymentService } from '../../../core/services/payment.service';
   styles: [`
     .page-header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
     .page-heading{font-size:1.4rem;font-weight:700;color:#0A1F44;margin:0}
-    .total-badge{background:#f1f5f9;color:#64748b;padding:4px 12px;border-radius:20px;font-size:.8rem}
     .filter-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
     .search-input,.filter-select{border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 14px;font-size:.875rem;outline:none}
-    .search-input{flex:1;min-width:200px} .search-input:focus,.filter-select:focus{border-color:#3b82f6}
+    .search-input{flex:1;min-width:200px}
+    .search-input:focus,.filter-select:focus{border-color:#3b82f6}
     .btn-primary{background:#1d4ed8;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:.875rem}
     .btn-primary:disabled{opacity:.6;cursor:not-allowed}
     .btn-secondary{background:#f1f5f9;color:#374151;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:.875rem}
@@ -132,16 +236,22 @@ import { PaymentService } from '../../../core/services/payment.service';
     .data-table td{padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#1e293b}
     .data-table tr:last-child td{border-bottom:none}
     .status-chip{padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:500}
-    .status-confirmed{background:#dcfce7;color:#16a34a} .status-pending{background:#fef9c3;color:#ca8a04}
-    .status-cancelled{background:#fee2e2;color:#dc2626} .status-default{background:#f1f5f9;color:#64748b}
-    .status-expired { background: #fff3e0; color: #e65100; }
-    .tax-note {font-size: .7rem;color: #64748b;margin-left: 2px;}
+    .status-confirmed{background:#dcfce7;color:#16a34a}
+    .status-pending{background:#fef9c3;color:#ca8a04}
+    .status-cancelled{background:#fee2e2;color:#dc2626}
+    .status-expired{background:#fff3e0;color:#e65100}
+    .status-failed{background:#fce7f3;color:#9d174d}
+    .status-default{background:#f1f5f9;color:#64748b}
+    .tax-note{font-size:.7rem;color:#64748b;margin-left:2px;}
     .empty-row{text-align:center;color:#94a3b8;padding:32px!important}
+    .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
+    .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100}
     .modal{background:#fff;border-radius:14px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto}
     .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
     .modal-header h3{font-size:1.1rem;font-weight:600;margin:0;color:#0A1F44}
     .close-btn{background:none;border:none;cursor:pointer;font-size:1.1rem;color:#64748b}
+    .detail-section-title{font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;padding:10px 0 4px;border-bottom:1px solid #f1f5f9;margin-bottom:2px;}
     .detail-grid{display:flex;flex-direction:column;gap:10px}
     .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:.875rem}
     .detail-key{color:#64748b;font-weight:500}
@@ -150,22 +260,18 @@ import { PaymentService } from '../../../core/services/payment.service';
     .form-input{border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:.875rem;outline:none}
     .form-input:focus{border-color:#3b82f6}
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
-    .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
-    .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
-    .duration-row{display:flex;gap:10px}
-    .duration-field{display:flex;align-items:center;gap:6px;flex:1}
-    .duration-unit{font-size:.82rem;color:#64748b;white-space:nowrap}
-    .duration-row{display:flex;gap:10px}
-    .duration-field{display:flex;align-items:center;gap:6px;flex:1}
-    .duration-unit{font-size:.82rem;color:#64748b;white-space:nowrap}
-    .toggle-row{padding:10px 14px;background:#f8fafc;border-radius:10px;border:1.5px solid #e2e8f0}
-    .toggle-label{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
-    .toggle-checkbox{display:none}
-    .toggle-track{width:44px;height:24px;background:#cbd5e1;border-radius:12px;position:relative;transition:background .25s;flex-shrink:0}
-    .toggle-checkbox:checked ~ .toggle-track{background:#22c55e}
-    .toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-    .toggle-checkbox:checked ~ .toggle-track .toggle-thumb{transform:translateX(20px)}
-    .toggle-text{font-size:.85rem;font-weight:500;color:#374151}
+    .results-summary{font-size:.82rem;color:#64748b;margin:12px 0 8px;text-align:center;}
+    .results-summary strong{color:#0A1F44;}
+    .pagination-bar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap;margin-top:8px;padding:12px 0;}
+    .page-btn{background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 14px;font-size:.8rem;font-weight:600;color:#0A1F44;cursor:pointer;transition:all .18s;white-space:nowrap;}
+    .page-btn:hover:not(:disabled){border-color:#3b82f6;color:#1d4ed8;}
+    .page-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .page-numbers{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+    .page-num{min-width:34px;height:34px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .page-num:hover:not(:disabled):not(.ellipsis){border-color:#3b82f6;color:#1d4ed8;}
+    .page-num.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;}
+    .page-num.ellipsis{border:none;background:none;cursor:default;color:#94a3b8;}
+    .page-info{font-size:.8rem;color:#64748b;white-space:nowrap;flex-shrink:0;}
   `]
 })
 export class AdminBookings implements OnInit {
@@ -173,27 +279,41 @@ export class AdminBookings implements OnInit {
   private paymentService = inject(PaymentService);
   private fb = inject(FormBuilder);
 
-  bookings = signal<any[]>([]);
+  bookings        = signal<any[]>([]);
   filteredBookings = signal<any[]>([]);
   selectedBooking = signal<any>(null);
   showRefundModal = signal(false);
-  loading = signal(true);
-  error = signal<string | null>(null);
-  saving = signal(false);
-  formError = signal<string | null>(null);
-  searchQuery = '';
-  statusFilter = '';
+  loading         = signal(true);
+  error           = signal<string | null>(null);
+  saving          = signal(false);
+  formError       = signal<string | null>(null);
+  detailLoading   = signal(false);
+  detailError     = signal<string | null>(null);
+  searchQuery     = '';
+  statusFilter    = '';
 
-  refundForm = this.fb.group({ refundId: [null], isApproved: [true], reason: [''] });
+  // Pagination
+  pageSize    = signal(10);
+  currentPage = signal(1);
+  totalCount  = signal(0);
+  totalPages  = signal(0);
 
   readonly CONVENIENCE_FEE = 20;
+
+  refundForm = this.fb.group({ refundId: [null], isApproved: [true], reason: [''] });
 
   ngOnInit() { this.loadBookings(); }
 
   loadBookings() {
     this.loading.set(true);
-    this.bookingService.getAllBookings(1, 200).subscribe({
-      next: (r: any) => { const d = Array.isArray(r.data) ? r.data : []; this.bookings.set(d); this.applyFilter(); this.loading.set(false); },
+    this.bookingService.getAllBookings(this.currentPage(), this.pageSize()).subscribe({
+      next: (r: any) => {
+        const data = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        this.bookings.set(data);
+        this.updatePagination(r.data?.totalCount ?? data.length);
+        this.applyFilter();
+        this.loading.set(false);
+      },
       error: e => { this.error.set(e?.error?.message || 'Failed to load bookings'); this.loading.set(false); }
     });
   }
@@ -208,11 +328,34 @@ export class AdminBookings implements OnInit {
   onSearch(e: Event) { this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase(); this.applyFilter(); }
   onStatusFilter(e: Event) { this.statusFilter = (e.target as HTMLSelectElement).value; this.applyFilter(); }
 
-  viewBooking(b: any) { this.selectedBooking.set(b); }
+  onPageSizeChange(e: Event) {
+    this.pageSize.set(Number((e.target as HTMLSelectElement).value));
+    this.currentPage.set(1);
+    this.loadBookings();
+  }
+
+  viewBooking(b: any) {
+    this.selectedBooking.set(b);
+    this.detailLoading.set(true);
+    this.detailError.set(null);
+    this.bookingService.getBookingById(b.bookingId).subscribe({
+      next: (r: any) => {
+        this.selectedBooking.set({ ...b, ...(r?.data ?? r) });
+        this.detailLoading.set(false);
+      },
+      error: () => {
+        this.detailLoading.set(false);
+        this.detailError.set('Could not load full booking details.');
+      }
+    });
+  }
 
   cancelBooking(id: number) {
     if (!confirm('Cancel this booking?')) return;
-    this.bookingService.cancelBooking(id).subscribe({ next: () => this.loadBookings(), error: e => alert(e?.error?.message || 'Cancel failed') });
+    this.bookingService.cancelBooking(id).subscribe({
+      next: () => { this.currentPage.set(1); this.loadBookings(); },
+      error: e => alert(e?.error?.message || 'Cancel failed')
+    });
   }
 
   openRefundModal(b: any) { this.refundForm.reset({ isApproved: true }); this.formError.set(null); this.showRefundModal.set(true); }
@@ -226,41 +369,46 @@ export class AdminBookings implements OnInit {
     });
   }
 
-  getTax(amount: number): number {
-    return Math.round(amount * 0.06);
+  // Pagination methods
+  updatePagination(total: number) {
+    this.totalCount.set(total);
+    this.totalPages.set(Math.ceil(total / this.pageSize()));
+  }
+  rangeStart() { return (this.currentPage() - 1) * this.pageSize() + 1; }
+  rangeEnd()   { return Math.min(this.currentPage() * this.pageSize(), this.totalCount()); }
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadBookings();
+  }
+  nextPage() { this.goToPage(this.currentPage() + 1); }
+  prevPage() { this.goToPage(this.currentPage() - 1); }
+  visiblePages(): number[] {
+    const total = this.totalPages(), current = this.currentPage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: number[] = [1];
+    if (current > 4) pages.push(-1);
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+    if (current < total - 3) pages.push(-1);
+    pages.push(total);
+    return pages;
   }
 
-  getGrandTotal(amount: number): number {
-    return amount + this.getTax(amount) + this.CONVENIENCE_FEE;
-  }
+  getTax(amount: number): number { return Math.round(amount * 0.06); }
+  getGrandTotal(amount: number): number { return amount + this.getTax(amount) + this.CONVENIENCE_FEE; }
 
-
-  // getStatusClass(status: string): string {
-  //   switch (status?.toLowerCase()) {
-  //     case 'confirmed': return 'status-chip status-confirmed';
-  //     case 'pending': return 'status-chip status-pending';
-  //     case 'cancelled': return 'status-chip status-cancelled';
-  //     default: return 'status-chip status-default';
-  //   }
-  // }
   getStatusClass(status: string, cancellationReason?: string): string {
     switch (status?.toLowerCase()) {
-      case 'confirmed':          return 'status-chip status-confirmed';
-      case 'pending':            return 'status-chip status-pending';
-      case 'cancelled':
-        // If it has an expiry reason = auto-expired (never paid)
-        return cancellationReason
-          ? 'status-chip status-expired'
-          : 'status-chip status-cancelled';
-      case 'paymentfailed':      return 'status-chip status-failed';
-      default:                   return 'status-chip status-default';
+      case 'confirmed':   return 'status-chip status-confirmed';
+      case 'pending':     return 'status-chip status-pending';
+      case 'cancelled':   return cancellationReason ? 'status-chip status-expired' : 'status-chip status-cancelled';
+      case 'paymentfailed': return 'status-chip status-failed';
+      default:            return 'status-chip status-default';
     }
   }
 
   getStatusLabel(status: string, cancellationReason?: string): string {
-    if (status?.toLowerCase() === 'cancelled' && cancellationReason) {
-      return 'Expired';
-    }
+    if (status?.toLowerCase() === 'cancelled' && cancellationReason) return 'Expired';
     return status;
   }
 }

@@ -15,17 +15,31 @@ import { RouteService } from '../../../core/services/route.service';
         <button class="btn-primary" (click)="openModal()">➕ Add Schedule</button>
       </div>
 
+      <div class="search-bar">
+        <input class="search-input" placeholder="Search by route, bus number or operator..." (input)="onSearch($event)" />
+      </div>
+
       <div *ngIf="loading()" class="info-box">Loading schedules...</div>
       <div *ngIf="error()" class="error-box">{{ error() }}</div>
 
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <tr><th>#</th><th>Route</th><th>Bus</th><th>Travel Date</th><th>Departure</th><th>Arrival</th><th>Avail. Seats</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+              <th style="width:52px;text-align:center;">#</th>
+              <th>Route</th>
+              <th>Bus</th>
+              <th>Travel Date</th>
+              <th>Departure</th>
+              <th>Arrival</th>
+              <th>Avail. Seats</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let s of schedules(); let i = index">
-              <td>{{ i + 1 }}</td>
+            <tr *ngFor="let s of filteredSchedules(); let i = index">
+              <td style="width:52px;text-align:center;color:#94a3b8;font-size:.8rem;">{{ rangeStart() + i }}</td>
               <td>{{ s.source || s.routeId }} → {{ s.destination }}</td>
               <td>{{ s.busNumber }} – {{ s.operatorName }}</td>
               <td>{{ s.travelDate | date:'mediumDate' }}</td>
@@ -45,6 +59,32 @@ import { RouteService } from '../../../core/services/route.service';
         </table>
       </div>
 
+      <!-- Results summary — OUTSIDE table-wrap -->
+      <div class="results-summary" *ngIf="!loading() && totalCount() > 0">
+        Showing {{ rangeStart() }}–{{ rangeEnd() }} of <strong>{{ totalCount() }}</strong> schedules
+      </div>
+
+      <!-- Pagination — OUTSIDE table-wrap -->
+      <div class="pagination-bar" *ngIf="totalPages() > 1">
+        <button class="page-btn" (click)="goToPage(1)" [disabled]="currentPage() === 1">«</button>
+        <button class="page-btn" (click)="prevPage()" [disabled]="currentPage() === 1">← Prev</button>
+        <div class="page-numbers">
+          <button
+            *ngFor="let p of visiblePages()"
+            class="page-num"
+            [class.active]="p === currentPage()"
+            [class.ellipsis]="p === -1"
+            [disabled]="p === -1"
+            (click)="p !== -1 && goToPage(p)">
+            {{ p === -1 ? '...' : p }}
+          </button>
+        </div>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages()">Next →</button>
+        <button class="page-btn" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()">»</button>
+        <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+      </div>
+
+      <!-- Modal -->
       <div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
@@ -83,7 +123,9 @@ import { RouteService } from '../../../core/services/route.service';
             </div>
             <div class="modal-actions">
               <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
-              <button type="submit" class="btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : (editingId() ? 'Update' : 'Add Schedule') }}</button>
+              <button type="submit" class="btn-primary" [disabled]="saving()">
+                {{ saving() ? 'Saving...' : (editingId() ? 'Update' : 'Add Schedule') }}
+              </button>
             </div>
             <div *ngIf="formError()" class="error-box" style="margin-top:8px">{{ formError() }}</div>
           </form>
@@ -108,6 +150,9 @@ import { RouteService } from '../../../core/services/route.service';
     .status-chip{padding:3px 10px;border-radius:20px;font-size:.75rem;background:#fee2e2;color:#dc2626}
     .status-chip.active{background:#dcfce7;color:#16a34a}
     .empty-row{text-align:center;color:#94a3b8;padding:32px!important}
+    .overnight-badge{background:#fef3c7;color:#d97706;font-size:.7rem;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:5px}
+    .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
+    .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100}
     .modal{background:#fff;border-radius:14px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto}
     .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
@@ -119,87 +164,126 @@ import { RouteService } from '../../../core/services/route.service';
     .form-input{border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:.875rem;outline:none}
     .form-input:focus{border-color:#3b82f6}
     .field-error{color:#dc2626;font-size:.75rem}
+    .auto-hint{font-size:.72rem;color:#94a3b8;font-style:italic}
+    .duration-hint{font-size:.78rem;color:#0A1F44;margin-top:2px}
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
-    .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
-    .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
-    .overnight-badge{background:#fef3c7;color:#d97706;font-size:.7rem;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:5px}
     .duration-row{display:flex;gap:10px}
     .duration-field{display:flex;align-items:center;gap:6px;flex:1}
     .duration-unit{font-size:.82rem;color:#64748b;white-space:nowrap}
-    .toggle-row{padding:10px 14px;background:#f8fafc;border-radius:10px;border:1.5px solid #e2e8f0}
-    .toggle-label{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
-    .toggle-checkbox{display:none}
-    .toggle-track{width:44px;height:24px;background:#cbd5e1;border-radius:12px;position:relative;transition:background .25s;flex-shrink:0}
-    .toggle-checkbox:checked ~ .toggle-track{background:#22c55e}
-    .toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-    .toggle-checkbox:checked ~ .toggle-track .toggle-thumb{transform:translateX(20px)}
-    .toggle-text{font-size:.85rem;font-weight:500;color:#374151}
+    .results-summary{font-size:.82rem;color:#64748b;margin:12px 0 8px;text-align:center;}
+    .results-summary strong{color:#0A1F44;}
+    .pagination-bar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap;margin-top:8px;padding:12px 0;}
+    .page-btn{background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 14px;font-size:.8rem;font-weight:600;color:#0A1F44;cursor:pointer;transition:all .18s;white-space:nowrap;}
+    .page-btn:hover:not(:disabled){border-color:#3b82f6;color:#1d4ed8;}
+    .page-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .page-numbers{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+    .page-num{min-width:34px;height:34px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .page-num:hover:not(:disabled):not(.ellipsis){border-color:#3b82f6;color:#1d4ed8;}
+    .page-num.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;}
+    .page-num.ellipsis{border:none;background:none;cursor:default;color:#94a3b8;}
+    .page-info{font-size:.8rem;color:#64748b;white-space:nowrap;flex-shrink:0;}
+    .search-bar{margin-bottom:16px;}
+    .search-input{width:100%;max-width:400px;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 14px;font-size:.875rem;outline:none;}
+    .search-input:focus{border-color:#3b82f6;}
   `]
 })
 export class AdminSchedules implements OnInit {
-  private busService = inject(BusSearchService);
+  private busService   = inject(BusSearchService);
   private routeService = inject(RouteService);
-  private fb = inject(FormBuilder);
+  private fb           = inject(FormBuilder);
 
   schedules = signal<any[]>([]);
-  buses = signal<any[]>([]);
-  routes = signal<any[]>([]);
-  loading = signal(true);
-  error = signal<string | null>(null);
+  filteredSchedules = signal<any[]>([]);
+  searchQuery       = '';
+  buses     = signal<any[]>([]);
+  routes    = signal<any[]>([]);
+  loading   = signal(true);
+  error     = signal<string | null>(null);
   showModal = signal(false);
-  saving = signal(false);
+  saving    = signal(false);
   formError = signal<string | null>(null);
   editingId = signal<number | null>(null);
-  selectedRouteDuration = signal<number | null>(null); // in minutes
-  routeDurationHint = signal<string>('');
+  selectedRouteDuration = signal<number | null>(null);
+  routeDurationHint     = signal<string>('');
+
+  // Pagination
+  pageSize    = signal(10);
+  currentPage = signal(1);
+  totalCount  = signal(0);
+  totalPages  = signal(0);
 
   arrivalTotalMinutes = 0;
 
   scheduleForm = this.fb.group({
-    routeId: [null, Validators.required],
-    busId: [null, Validators.required],
-    travelDate: ['', Validators.required],
+    routeId:       [null, Validators.required],
+    busId:         [null, Validators.required],
+    travelDate:    ['', Validators.required],
     departureTime: ['', Validators.required],
-    arrivalTime: ['', Validators.required]
+    arrivalTime:   ['', Validators.required]
   });
 
   ngOnInit() {
     this.loadSchedules();
-    // this.busService.getAllBuses(1, 200).subscribe({ next: r => this.buses.set(Array.isArray(r.data) ? r.data : (r.data?.items ?? [])) });
-    this.busService.getAllBuses(1, 200).subscribe({ next: r => { const all = Array.isArray(r.data) ? r.data : (r.data?.items ?? []); this.buses.set(all.filter((b: any) => b.isActive)); } });
-    this.routeService.getAllRoutes(1, 200).subscribe({ next: r => this.routes.set(Array.isArray(r.data) ? r.data : (r.data?.items ?? [])) });
+    this.busService.getAllBuses(1, 200).subscribe({
+      next: r => {
+        const all = Array.isArray(r.data) ? r.data : (r.data?.items ?? []);
+        this.buses.set(all.filter((b: any) => b.isActive));
+      }
+    });
+    this.routeService.getAllRoutes(1, 200).subscribe({
+      next: r => this.routes.set(Array.isArray(r.data) ? r.data : (r.data?.items ?? []))
+    });
   }
 
   loadSchedules() {
     this.loading.set(true);
-    this.busService.getAllSchedules(1, 200).subscribe({
-      // next: r => { this.schedules.set(Array.isArray(r.data) ? r.data : []); this.loading.set(false); },
-      next: r => { this.schedules.set(Array.isArray(r.data) ? r.data : (r.data?.items ?? [])); this.loading.set(false); },
-
+    this.busService.getAllSchedules(this.currentPage(), this.pageSize()).subscribe({
+      next: r => {
+        const data = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        this.schedules.set(data);
+        this.filteredSchedules.set(data);
+        this.updatePagination(r.data?.totalCount ?? data.length);
+        this.loading.set(false);
+      },
       error: e => { this.error.set(e?.error?.message || 'Failed to load schedules'); this.loading.set(false); }
     });
   }
 
   openModal() {
-  this.scheduleForm.reset();
-  this.editingId.set(null);
-  this.formError.set(null);
-  this.selectedRouteDuration.set(null);
-  this.routeDurationHint.set('');
-  this.arrivalTotalMinutes = 0;
-  this.showModal.set(true);
-}
+    this.scheduleForm.reset();
+    this.editingId.set(null);
+    this.formError.set(null);
+    this.selectedRouteDuration.set(null);
+    this.routeDurationHint.set('');
+    this.arrivalTotalMinutes = 0;
+    this.showModal.set(true);
+  }
+
+  onSearch(event: Event) {
+    const q = (event.target as HTMLInputElement).value.toLowerCase();
+    this.searchQuery = q;
+    this.filteredSchedules.set(
+      this.schedules().filter(s =>
+        s.source?.toLowerCase().includes(q) ||
+        s.destination?.toLowerCase().includes(q) ||
+        s.busNumber?.toLowerCase().includes(q) ||
+        s.operatorName?.toLowerCase().includes(q)
+      )
+    );
+  }
 
   editSchedule(s: any) {
     this.editingId.set(s.scheduleId);
-    this.scheduleForm.patchValue({ routeId: s.routeId, busId: s.busId, travelDate: s.travelDate?.split('T')[0], departureTime: s.departureTime, arrivalTime: s.arrivalTime });
-    // Set duration hint from the route
+    this.scheduleForm.patchValue({
+      routeId: s.routeId, busId: s.busId,
+      travelDate: s.travelDate?.split('T')[0],
+      departureTime: s.departureTime, arrivalTime: s.arrivalTime
+    });
     const route = this.routes().find((r: any) => r.routeId === s.routeId);
     if (route) {
       const mins = route.estimatedTravelTimeMinutes;
       this.selectedRouteDuration.set(mins);
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
+      const h = Math.floor(mins / 60), m = mins % 60;
       this.routeDurationHint.set(h > 0 ? `${h}h ${m}m` : `${m}m`);
     }
     this.formError.set(null);
@@ -210,18 +294,14 @@ export class AdminSchedules implements OnInit {
 
   saveSchedule() {
     if (this.scheduleForm.invalid) { this.scheduleForm.markAllAsTouched(); return; }
-    this.saving.set(true); this.formError.set(null);
+    this.saving.set(true);
+    this.formError.set(null);
     const v = this.scheduleForm.value as any;
 
-    // travelDate from <input type="date"> gives "yyyy-MM-dd" → convert to ISO DateTime
-    // departureTime/arrivalTime from <input type="time"> gives "HH:mm" → append ":00" for TimeSpan
     const travelDateIso = v.travelDate
-      ? new Date(v.travelDate + 'T00:00:00').toISOString()
-      : '';
+      ? new Date(v.travelDate + 'T00:00:00').toISOString() : '';
     const departure = v.departureTime
-      ? (v.departureTime.length === 5 ? v.departureTime + ':00' : v.departureTime)
-      : '';
-    // For arrival, use total minutes (supports overnight: e.g. 36:15:00 = next day 12:15 AM)
+      ? (v.departureTime.length === 5 ? v.departureTime + ':00' : v.departureTime) : '';
     let arrival: string;
     if (this.arrivalTotalMinutes > 0) {
       const totalH = Math.floor(this.arrivalTotalMinutes / 60);
@@ -229,16 +309,12 @@ export class AdminSchedules implements OnInit {
       arrival = `${totalH}:${String(totalM).padStart(2, '0')}:00`;
     } else {
       arrival = v.arrivalTime
-        ? (v.arrivalTime.length === 5 ? v.arrivalTime + ':00' : v.arrivalTime)
-        : '';
+        ? (v.arrivalTime.length === 5 ? v.arrivalTime + ':00' : v.arrivalTime) : '';
     }
 
     const payload = {
-      routeId: Number(v.routeId),
-      busId: Number(v.busId),
-      travelDate: travelDateIso,
-      departureTime: departure,
-      arrivalTime: arrival
+      routeId: Number(v.routeId), busId: Number(v.busId),
+      travelDate: travelDateIso, departureTime: departure, arrivalTime: arrival
     };
 
     const id = this.editingId();
@@ -247,13 +323,11 @@ export class AdminSchedules implements OnInit {
       : this.busService.createSchedule(payload);
 
     req$.subscribe({
-      next: () => { this.saving.set(false); this.closeModal(); this.loadSchedules(); },
-      error: (e) => {
+      next: () => { this.saving.set(false); this.closeModal(); this.currentPage.set(1); this.loadSchedules(); },
+      error: e => {
         this.saving.set(false);
-        // Handle both ASP.NET ModelState errors and custom error messages
         const err = e?.error;
-        const msg = err?.message
-          || err?.title
+        const msg = err?.message || err?.title
           || (err?.errors ? Object.values(err.errors).flat().join(', ') : null)
           || 'Save failed';
         this.formError.set(msg);
@@ -263,7 +337,35 @@ export class AdminSchedules implements OnInit {
 
   deleteSchedule(id: number) {
     if (!confirm('Delete this schedule?')) return;
-    this.busService.deleteSchedule(id).subscribe({ next: () => this.loadSchedules(), error: e => alert(e?.error?.message || 'Delete failed') });
+    this.busService.deleteSchedule(id).subscribe({
+      next: () => { this.currentPage.set(1); this.loadSchedules(); },
+      error: e => alert(e?.error?.message || 'Delete failed')
+    });
+  }
+
+  // Pagination methods
+  updatePagination(total: number) {
+    this.totalCount.set(total);
+    this.totalPages.set(Math.ceil(total / this.pageSize()));
+  }
+  rangeStart() { return (this.currentPage() - 1) * this.pageSize() + 1; }
+  rangeEnd()   { return Math.min(this.currentPage() * this.pageSize(), this.totalCount()); }
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadSchedules();
+  }
+  nextPage() { this.goToPage(this.currentPage() + 1); }
+  prevPage() { this.goToPage(this.currentPage() - 1); }
+  visiblePages(): number[] {
+    const total = this.totalPages(), current = this.currentPage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: number[] = [1];
+    if (current > 4) pages.push(-1);
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+    if (current < total - 3) pages.push(-1);
+    pages.push(total);
+    return pages;
   }
 
   onRouteChange(event: Event) {
@@ -272,10 +374,8 @@ export class AdminSchedules implements OnInit {
     if (route) {
       const mins = route.estimatedTravelTimeMinutes;
       this.selectedRouteDuration.set(mins);
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
+      const h = Math.floor(mins / 60), m = mins % 60;
       this.routeDurationHint.set(h > 0 ? `${h}h ${m}m` : `${m}m`);
-      // Recalculate arrival if departure already set
       const dep = this.scheduleForm.get('departureTime')?.value;
       if (dep) this.calculateArrival(dep as string, mins);
     } else {
@@ -294,11 +394,9 @@ export class AdminSchedules implements OnInit {
     const [hStr, mStr] = departureTime.split(':');
     const depMins = Number(hStr) * 60 + Number(mStr);
     const totalArrMins = depMins + durationMinutes;
-    // Display: wrap at 24h for the time input (shows clock time)
     const displayH = Math.floor(totalArrMins / 60) % 24;
     const displayM = totalArrMins % 60;
     const displayStr = `${String(displayH).padStart(2, '0')}:${String(displayM).padStart(2, '0')}`;
-    // Store total minutes for backend (so overnight journeys send e.g. "36:15:00")
     this.arrivalTotalMinutes = totalArrMins;
     this.scheduleForm.patchValue({ arrivalTime: displayStr });
   }

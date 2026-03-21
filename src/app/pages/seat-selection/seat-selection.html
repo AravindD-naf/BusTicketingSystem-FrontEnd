@@ -155,6 +155,13 @@
               </div>
             </div>
           </div>
+          <div class="seats-required-hint" *ngIf="requiredSeats() > 1">
+            Select exactly <strong>{{ requiredSeats() }}</strong> seats for your {{ requiredSeats() }} passengers
+            <span [class.hint-done]="selectedSeats().length === requiredSeats()"
+                  [class.hint-warn]="selectedSeats().length > 0 && selectedSeats().length < requiredSeats()">
+              ({{ selectedSeats().length }}/{{ requiredSeats() }} selected)
+            </span>
+          </div>
           <div class="sel-bar">
             <div class="sel-bar-left">
               <span class="sel-label">Selected:</span>

@@ -102,6 +102,9 @@ export class FilterSidebar {
   ] as const;
 
   maxPrice = 3000;
+  get sliderPercent(): number {
+    return ((this.maxPrice - 400) / (3000 - 400)) * 100;
+  }
   selectedTypes: string[] = [];
   selectedTimes: string[] = [];
   selectedOperators: string[] = [];

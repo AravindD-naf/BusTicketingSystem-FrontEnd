@@ -7,12 +7,28 @@
   <div class="from-to-row">
     <div class="form-row">
       <div class="form-group">
-        <label>From</label>
-        <input type="text" placeholder="Chennai" formControlName="from" />
+        <label>FROM</label>
+        <input
+          type="text"
+          placeholder="Chennai"
+          formControlName="from"
+          [class.input-error]="searchForm.get('from')?.invalid && searchForm.get('from')?.touched"
+        />
+        <span class="field-error" *ngIf="searchForm.get('from')?.invalid && searchForm.get('from')?.touched">
+          Please enter origin city
+        </span>
       </div>
       <div class="form-group">
-        <label>To</label>
-        <input type="text" placeholder="Bangalore" formControlName="to" />
+        <label>TO</label>
+        <input
+          type="text"
+          placeholder="Bangalore"
+          formControlName="to"
+          [class.input-error]="searchForm.get('to')?.invalid && searchForm.get('to')?.touched"
+        />
+        <span class="field-error" *ngIf="searchForm.get('to')?.invalid && searchForm.get('to')?.touched">
+          Please enter destination city
+        </span>
       </div>
     </div>
     <button type="button" class="swap-btn" (click)="swapCities()">⇄</button>
@@ -20,16 +36,26 @@
 
   <div class="form-row">
     <div class="form-group">
-      <label>Date</label>
-      <input type="date" id="travel-date" formControlName="date" />
+      <label>DATE</label>
+      <input
+        type="date"
+        id="travel-date"
+        formControlName="date"
+        [class.input-error]="searchForm.get('date')?.invalid && searchForm.get('date')?.touched"
+      />
+      <span class="field-error" *ngIf="searchForm.get('date')?.invalid && searchForm.get('date')?.touched">
+        Please select a travel date
+      </span>
     </div>
     <div class="form-group">
-      <label>Passengers</label>
+      <label>PASSENGERS</label>
       <select formControlName="passengers">
         <option [value]="1">1 Adult</option>
         <option [value]="2">2 Adults</option>
         <option [value]="3">3 Adults</option>
         <option [value]="4">4 Adults</option>
+        <option [value]="5">5 Adults</option>
+        <option [value]="6">6 Adults</option>
       </select>
     </div>
   </div>

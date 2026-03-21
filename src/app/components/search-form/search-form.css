@@ -57,6 +57,18 @@
   box-shadow: 0 6px 20px rgba(10,31,68,0.25);
 }
 
+.input-error {
+  border-color: #ef4444 !important;
+  background: #fff5f5;
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: .75rem;
+  margin-top: 4px;
+  display: block;
+}
+
 /* Responsive */
 @media (max-width: 860px) {
   .form-row { grid-template-columns: 1fr; }

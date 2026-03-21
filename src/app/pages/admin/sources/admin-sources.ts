@@ -14,17 +14,27 @@ import { SourceService } from '../../../core/services/source.service';
         <button class="btn-primary" (click)="openModal()">➕ Add Source</button>
       </div>
 
+      <div class="search-bar">
+        <input class="search-input" placeholder="Search by source name..." (input)="onSearch($event)" />
+      </div>
+
       <div *ngIf="loading()" class="info-box">Loading sources...</div>
       <div *ngIf="error()" class="error-box">{{ error() }}</div>
 
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <tr><th>#</th><th>Source Name</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+              <th style="width:52px;text-align:center;">#</th>
+              <th>Source Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let s of sources(); let i = index">
-              <td>{{ i + 1 }}</td>
+            <tr *ngFor="let s of filteredSources(); let i = index">
+              <td style="width:52px;text-align:center;color:#94a3b8;font-size:.8rem;">{{ rangeStart() + i }}</td>
               <td><strong>{{ s.sourceName }}</strong></td>
               <td>{{ s.description || '—' }}</td>
               <td><span class="status-chip" [class.active]="s.isActive !== false">{{ s.isActive !== false ? 'Active' : 'Inactive' }}</span></td>
@@ -40,6 +50,32 @@ import { SourceService } from '../../../core/services/source.service';
         </table>
       </div>
 
+      <!-- Results summary — OUTSIDE table-wrap -->
+      <div class="results-summary" *ngIf="!loading() && totalCount() > 0">
+        Showing {{ rangeStart() }}–{{ rangeEnd() }} of <strong>{{ totalCount() }}</strong> sources
+      </div>
+
+      <!-- Pagination — OUTSIDE table-wrap -->
+      <div class="pagination-bar" *ngIf="totalPages() > 1">
+        <button class="page-btn" (click)="goToPage(1)" [disabled]="currentPage() === 1">«</button>
+        <button class="page-btn" (click)="prevPage()" [disabled]="currentPage() === 1">← Prev</button>
+        <div class="page-numbers">
+          <button
+            *ngFor="let p of visiblePages()"
+            class="page-num"
+            [class.active]="p === currentPage()"
+            [class.ellipsis]="p === -1"
+            [disabled]="p === -1"
+            (click)="p !== -1 && goToPage(p)">
+            {{ p === -1 ? '...' : p }}
+          </button>
+        </div>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages()">Next →</button>
+        <button class="page-btn" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()">»</button>
+        <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+      </div>
+
+      <!-- Modal -->
       <div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
@@ -60,7 +96,9 @@ import { SourceService } from '../../../core/services/source.service';
             </label>
             <div class="modal-actions">
               <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
-              <button type="submit" class="btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : (editingId() ? 'Update' : 'Add Source') }}</button>
+              <button type="submit" class="btn-primary" [disabled]="saving()">
+                {{ saving() ? 'Saving...' : (editingId() ? 'Update' : 'Add Source') }}
+              </button>
             </div>
             <div *ngIf="formError()" class="error-box" style="margin-top:8px">{{ formError() }}</div>
           </form>
@@ -84,6 +122,8 @@ import { SourceService } from '../../../core/services/source.service';
     .status-chip{padding:3px 10px;border-radius:20px;font-size:.75rem;background:#fee2e2;color:#dc2626}
     .status-chip.active{background:#dcfce7;color:#16a34a}
     .empty-row{text-align:center;color:#94a3b8;padding:32px!important}
+    .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
+    .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100}
     .modal{background:#fff;border-radius:14px;padding:24px;width:440px;max-width:95vw}
     .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
@@ -91,74 +131,142 @@ import { SourceService } from '../../../core/services/source.service';
     .close-btn{background:none;border:none;cursor:pointer;font-size:1.1rem;color:#64748b}
     .modal-form{display:flex;flex-direction:column;gap:14px}
     .form-label{display:flex;flex-direction:column;gap:5px;font-size:.85rem;font-weight:500;color:#374151}
-    .toggle-row{flex-direction:row!important;align-items:center;justify-content:space-between}
+    .toggle-row{flex-direction:row!important;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1.5px solid #e2e8f0}
     .form-input{border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:.875rem;outline:none;font-family:inherit;resize:vertical}
     .form-input:focus{border-color:#3b82f6}
     .field-error{color:#dc2626;font-size:.75rem}
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
-    .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
-    .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
-    .duration-row{display:flex;gap:10px}
-    .duration-field{display:flex;align-items:center;gap:6px;flex:1}
-    .duration-unit{font-size:.82rem;color:#64748b;white-space:nowrap}
-    .toggle-row{padding:10px 14px;background:#f8fafc;border-radius:10px;border:1.5px solid #e2e8f0}
-    .toggle-label{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
-    .toggle-checkbox{display:none}
-    .toggle-track{width:44px;height:24px;background:#cbd5e1;border-radius:12px;position:relative;transition:background .25s;flex-shrink:0}
-    .toggle-checkbox:checked ~ .toggle-track{background:#22c55e}
-    .toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-    .toggle-checkbox:checked ~ .toggle-track .toggle-thumb{transform:translateX(20px)}
-    .toggle-text{font-size:.85rem;font-weight:500;color:#374151}
+    .results-summary{font-size:.82rem;color:#64748b;margin:12px 0 8px;text-align:center;}
+    .results-summary strong{color:#0A1F44;}
+    .pagination-bar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap;margin-top:8px;padding:12px 0;}
+    .page-btn{background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 14px;font-size:.8rem;font-weight:600;color:#0A1F44;cursor:pointer;transition:all .18s;white-space:nowrap;}
+    .page-btn:hover:not(:disabled){border-color:#3b82f6;color:#1d4ed8;}
+    .page-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .page-numbers{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+    .page-num{min-width:34px;height:34px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .page-num:hover:not(:disabled):not(.ellipsis){border-color:#3b82f6;color:#1d4ed8;}
+    .page-num.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;}
+    .page-num.ellipsis{border:none;background:none;cursor:default;color:#94a3b8;}
+    .page-info{font-size:.8rem;color:#64748b;white-space:nowrap;flex-shrink:0;}
+    .search-bar{margin-bottom:16px;}
+    .search-input{width:100%;max-width:400px;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 14px;font-size:.875rem;outline:none;}
+    .search-input:focus{border-color:#3b82f6;}
   `]
 })
 export class AdminSources implements OnInit {
   private sourceService = inject(SourceService);
   private fb = inject(FormBuilder);
 
-  sources = signal<any[]>([]);
-  loading = signal(true);
-  error = signal<string | null>(null);
+  sources   = signal<any[]>([]);
+  filteredSources = signal<any[]>([]);
+  searchQuery     = '';
+  loading   = signal(true);
+  error     = signal<string | null>(null);
   showModal = signal(false);
-  saving = signal(false);
+  saving    = signal(false);
   formError = signal<string | null>(null);
   editingId = signal<number | null>(null);
 
-  sourceForm = this.fb.group({ sourceName: ['', Validators.required], description: [''], isActive: [true] });
+  // Pagination
+  pageSize    = signal(10);
+  currentPage = signal(1);
+  totalCount  = signal(0);
+  totalPages  = signal(0);
+
+  sourceForm = this.fb.group({
+    sourceName:  ['', Validators.required],
+    description: [''],
+    isActive:    [true]
+  });
 
   ngOnInit() { this.loadSources(); }
 
   loadSources() {
     this.loading.set(true);
-    this.sourceService.getAllSources(1, 200).subscribe({
-      next: r => { this.sources.set(Array.isArray(r.data) ? r.data : []); this.loading.set(false); },
+    this.sourceService.getAllSources(this.currentPage(), this.pageSize()).subscribe({
+      next: r => {
+        const data = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        this.sources.set(data);
+        this.filteredSources.set(data);
+        this.updatePagination(r.data?.totalCount ?? data.length);
+        this.loading.set(false);
+      },
       error: e => { this.error.set(e?.error?.message || 'Failed to load sources'); this.loading.set(false); }
     });
   }
 
-  openModal() { this.sourceForm.reset({ sourceName:'', description:'', isActive:true }); this.editingId.set(null); this.formError.set(null); this.showModal.set(true); }
+  openModal() {
+    this.sourceForm.reset({ sourceName: '', description: '', isActive: true });
+    this.editingId.set(null);
+    this.formError.set(null);
+    this.showModal.set(true);
+  }
+
+  onSearch(event: Event) {
+    const q = (event.target as HTMLInputElement).value.toLowerCase();
+    this.searchQuery = q;
+    this.filteredSources.set(
+      this.sources().filter(s =>
+        s.sourceName?.toLowerCase().includes(q) ||
+        s.description?.toLowerCase().includes(q)
+      )
+    );
+  }
 
   editSource(s: any) {
     this.editingId.set(s.sourceId);
     this.sourceForm.patchValue({ sourceName: s.sourceName, description: s.description, isActive: s.isActive !== false });
-    this.formError.set(null); this.showModal.set(true);
+    this.formError.set(null);
+    this.showModal.set(true);
   }
 
   closeModal() { this.showModal.set(false); this.editingId.set(null); }
 
   saveSource() {
     if (this.sourceForm.invalid) { this.sourceForm.markAllAsTouched(); return; }
-    this.saving.set(true); this.formError.set(null);
+    this.saving.set(true);
+    this.formError.set(null);
     const v = this.sourceForm.value as any;
     const id = this.editingId();
-    const req$ = id ? this.sourceService.updateSource(id, v) : this.sourceService.createSource(v);
+    const req$ = id
+      ? this.sourceService.updateSource(id, v)
+      : this.sourceService.createSource(v);
     req$.subscribe({
-      next: () => { this.saving.set(false); this.closeModal(); this.loadSources(); },
+      next: () => { this.saving.set(false); this.closeModal(); this.currentPage.set(1); this.loadSources(); },
       error: e => { this.saving.set(false); this.formError.set(e?.error?.message || 'Save failed'); }
     });
   }
 
   deleteSource(id: number) {
     if (!confirm('Delete this source?')) return;
-    this.sourceService.deleteSource(id).subscribe({ next: () => this.loadSources(), error: e => alert(e?.error?.message || 'Delete failed') });
+    this.sourceService.deleteSource(id).subscribe({
+      next: () => { this.currentPage.set(1); this.loadSources(); },
+      error: e => alert(e?.error?.message || 'Delete failed')
+    });
+  }
+
+  // Pagination methods
+  updatePagination(total: number) {
+    this.totalCount.set(total);
+    this.totalPages.set(Math.ceil(total / this.pageSize()));
+  }
+  rangeStart() { return (this.currentPage() - 1) * this.pageSize() + 1; }
+  rangeEnd()   { return Math.min(this.currentPage() * this.pageSize(), this.totalCount()); }
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadSources();
+  }
+  nextPage() { this.goToPage(this.currentPage() + 1); }
+  prevPage() { this.goToPage(this.currentPage() - 1); }
+  visiblePages(): number[] {
+    const total = this.totalPages(), current = this.currentPage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: number[] = [1];
+    if (current > 4) pages.push(-1);
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+    if (current < total - 3) pages.push(-1);
+    pages.push(total);
+    return pages;
   }
 }

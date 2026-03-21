@@ -48,8 +48,7 @@
 .price-labels span{ font-size:13px; font-weight:600; color:var(--navy); }
 input[type=range].price-slider{
   width:100%; -webkit-appearance:none; height:3px;
-  background:linear-gradient(to right, var(--navy) 60%, var(--border) 60%);
-  border-radius:2px; outline:none;
+  border-radius:2px; outline:none; cursor:pointer;
 }
 input[type=range].price-slider::-webkit-slider-thumb{
   -webkit-appearance:none; width:16px; height:16px; border-radius:50%;

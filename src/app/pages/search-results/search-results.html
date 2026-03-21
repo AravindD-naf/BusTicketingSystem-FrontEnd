@@ -138,10 +138,10 @@
           <!-- Seats + Rating -->
           <div class="bus-meta">
             <div class="seats-badge">
-              <span class="seats-dot" [class.few]="s.availableSeats <= 10 && s.availableSeats > 5" [class.low]="s.availableSeats <= 5"></span>
+              <span class="seats-dot" [class.few]="s.availableSeats <= 5 && s.availableSeats > 2" [class.low]="s.availableSeats <= 2"></span>
               {{ s.availableSeats }} seats left
             </div>
-            <div class="rating-pill">★ 4.5</div>
+            <div class="rating-pill">★ {{ (s.rating && s.rating > 0) ? s.rating.toFixed(1) : 'New' }}</div>
           </div>
 
           <!-- Price + CTA -->
@@ -158,23 +158,11 @@
 
         <!-- Amenities bar -->
         <div class="bus-card-bottom">
-          <div class="amenity">
-            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm-1 14.93V17a1 1 0 002 0v-.07A8 8 0 0020 12"/></svg>
-            WiFi
-          </div>
-          <div class="amenity">
-            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81"/></svg>
-            Charging Point
-          </div>
-          <div class="amenity">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-            Live Tracking
-          </div>
-          <div class="amenity">
-            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Blanket
-          </div>
-          <div class="card-tag" *ngIf="s.availableSeats <= 5">🔥 Only {{ s.availableSeats }} left!</div>
+          <div class="amenity"><span class="amenity-dot"></span>WiFi</div>
+          <div class="amenity"><span class="amenity-dot"></span>Charging Point</div>
+          <div class="amenity"><span class="amenity-dot"></span>Live Tracking</div>
+          <div class="amenity"><span class="amenity-dot"></span>Blanket</div>
+          <div class="card-tag" *ngIf="s.availableSeats <= 5">Only {{ s.availableSeats }} left!</div>
           <div class="card-tag" *ngIf="s.availableSeats > 5">✦ Free Cancellation</div>
         </div>
 

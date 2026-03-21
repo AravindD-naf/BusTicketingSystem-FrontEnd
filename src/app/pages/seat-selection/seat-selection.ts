@@ -36,6 +36,7 @@ export class SeatSelection implements OnInit {
   from          = signal<string>('');
   to            = signal<string>('');
   date          = signal<string>('');
+  requiredSeats = signal<number>(1);
 
   // Boarding & drop signals
   sources          = signal<any[]>([]);
@@ -98,6 +99,7 @@ export class SeatSelection implements OnInit {
     this.from.set(qp['from'] || '');
     this.to.set(qp['to'] || '');
     this.date.set(qp['date'] || '');
+    this.requiredSeats.set(Math.max(1, +qp['passengers'] || 1));
 
     const user = this.authService.user();
     if (user?.email) {
@@ -211,8 +213,16 @@ export class SeatSelection implements OnInit {
 
   toggleSeat(seat: any) {
     if (!seat || seat.seatStatus !== 'Available') return;
+
     const wasSelected = this.seatService.isSelectedByNumber(seat.seatNumber);
     const price = this.busInfo()?.baseFare || 0;
+
+    // If trying to add but already at required count — show warning
+    if (!wasSelected && this.selectedSeats().length >= this.requiredSeats()) {
+      alert(`You selected ${this.requiredSeats()} passenger(s). Please deselect a seat before choosing another.`);
+      return;
+    }
+
     this.seatService.toggleBackendSeat(seat, price);
 
     if (wasSelected) {
@@ -287,10 +297,19 @@ export class SeatSelection implements OnInit {
   }
 
   onProceed() {
-    if (this.selectedSeats().length === 0) {
-      alert('Please select at least one seat.');
+    const required = this.requiredSeats();
+    const selected = this.selectedSeats().length;
+
+    if (selected === 0) {
+      alert(`Please select ${required} seat(s) for your ${required} passenger(s).`);
       return;
     }
+
+    if (selected < required) {
+      alert(`You have selected ${required} passenger(s) but only ${selected} seat(s). Please select ${required - selected} more seat(s).`);
+      return;
+    }
+    
     if (this.passengerForm.invalid) {
       this.passengerForm.markAllAsTouched();
       alert('Please fill in all passenger details and contact information.');

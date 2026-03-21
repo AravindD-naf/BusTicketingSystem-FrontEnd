@@ -24,12 +24,20 @@ import { RouteService } from '../../../core/services/route.service';
       <div class="table-wrap" *ngIf="!loading()">
         <table class="data-table">
           <thead>
-            <!-- <tr><th>ID</th><th>Source</th><th>Destination</th><th>Distance (km)</th><th>Duration (min)</th><th>Base Fare (₹)</th><th>Status</th><th>Actions</th></tr> -->
-            <tr><th>#</th><th>Source</th><th>Destination</th><th>Distance (km)</th><th>Duration</th><th>Base Fare (₹)</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+              <th style="width:52px;text-align:center;">#</th>
+              <th>Source</th>
+              <th>Destination</th>
+              <th>Distance (km)</th>
+              <th>Duration</th>
+              <th>Base Fare (₹)</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody>
             <tr *ngFor="let route of filteredRoutes(); let i = index">
-              <td>{{ i + 1 }}</td>
+              <td style="width:52px;text-align:center;color:#94a3b8;font-size:.8rem;">{{ rangeStart() + i }}</td>
               <td><strong>{{ route.source }}</strong></td>
               <td><strong>{{ route.destination }}</strong></td>
               <td>{{ route.distance }}</td>
@@ -48,6 +56,32 @@ import { RouteService } from '../../../core/services/route.service';
         </table>
       </div>
 
+      <!-- Results summary — OUTSIDE table-wrap -->
+      <div class="results-summary" *ngIf="!loading() && totalCount() > 0">
+        Showing {{ rangeStart() }}–{{ rangeEnd() }} of <strong>{{ totalCount() }}</strong> routes
+      </div>
+
+      <!-- Pagination — OUTSIDE table-wrap -->
+      <div class="pagination-bar" *ngIf="totalPages() > 1">
+        <button class="page-btn" (click)="goToPage(1)" [disabled]="currentPage() === 1">«</button>
+        <button class="page-btn" (click)="prevPage()" [disabled]="currentPage() === 1">← Prev</button>
+        <div class="page-numbers">
+          <button
+            *ngFor="let p of visiblePages()"
+            class="page-num"
+            [class.active]="p === currentPage()"
+            [class.ellipsis]="p === -1"
+            [disabled]="p === -1"
+            (click)="p !== -1 && goToPage(p)">
+            {{ p === -1 ? '...' : p }}
+          </button>
+        </div>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages()">Next →</button>
+        <button class="page-btn" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()">»</button>
+        <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+      </div>
+
+      <!-- Modal -->
       <div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
@@ -70,25 +104,27 @@ import { RouteService } from '../../../core/services/route.service';
                 <input class="form-input" type="number" formControlName="distance" placeholder="350" />
               </label>
               <label class="form-label">Est. Duration *
-            <div class="duration-row">
-              <div class="duration-field">
-                <input class="form-input" type="number" formControlName="durationHours" placeholder="0" min="0" />
-                <span class="duration-unit">hrs</span>
-              </div>
-              <div class="duration-field">
-                <input class="form-input" type="number" formControlName="durationMinutes" placeholder="0" min="0" max="59" />
-                <span class="duration-unit">min</span>
-              </div>
-            </div>
-            <span class="field-error" *ngIf="(routeForm.get('durationHours')?.value ?? 0) == 0 && (routeForm.get('durationMinutes')?.value ?? 0) == 0 && routeForm.touched">Duration must be greater than 0</span>
-          </label>
+                <div class="duration-row">
+                  <div class="duration-field">
+                    <input class="form-input" type="number" formControlName="durationHours" placeholder="0" min="0" />
+                    <span class="duration-unit">hrs</span>
+                  </div>
+                  <div class="duration-field">
+                    <input class="form-input" type="number" formControlName="durationMinutes" placeholder="0" min="0" max="59" />
+                    <span class="duration-unit">min</span>
+                  </div>
+                </div>
+                <span class="field-error" *ngIf="(routeForm.get('durationHours')?.value ?? 0) == 0 && (routeForm.get('durationMinutes')?.value ?? 0) == 0 && routeForm.touched">Duration must be greater than 0</span>
+              </label>
             </div>
             <label class="form-label">Base Fare (₹) *
               <input class="form-input" type="number" formControlName="baseFare" placeholder="500" />
             </label>
             <div class="modal-actions">
               <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
-              <button type="submit" class="btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : (editingId() ? 'Update' : 'Add Route') }}</button>
+              <button type="submit" class="btn-primary" [disabled]="saving()">
+                {{ saving() ? 'Saving...' : (editingId() ? 'Update' : 'Add Route') }}
+              </button>
             </div>
             <div *ngIf="formError()" class="error-box" style="margin-top:8px">{{ formError() }}</div>
           </form>
@@ -115,6 +151,8 @@ import { RouteService } from '../../../core/services/route.service';
     .status-chip{padding:3px 10px;border-radius:20px;font-size:.75rem;background:#fee2e2;color:#dc2626}
     .status-chip.active{background:#dcfce7;color:#16a34a}
     .empty-row{text-align:center;color:#94a3b8;padding:32px!important}
+    .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
+    .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100}
     .modal{background:#fff;border-radius:14px;padding:24px;width:480px;max-width:95vw}
     .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
@@ -127,87 +165,148 @@ import { RouteService } from '../../../core/services/route.service';
     .form-input:focus{border-color:#3b82f6}
     .field-error{color:#dc2626;font-size:.75rem}
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
-    .info-box{padding:12px 16px;background:#eff6ff;border-radius:8px;color:#1d4ed8;font-size:.875rem;margin-bottom:16px}
-    .error-box{padding:12px 16px;background:#fee2e2;border-radius:8px;color:#dc2626;font-size:.875rem;margin-bottom:16px}
     .duration-row{display:flex;gap:10px}
     .duration-field{display:flex;align-items:center;gap:6px;flex:1}
     .duration-unit{font-size:.82rem;color:#64748b;white-space:nowrap}
-    .toggle-row{padding:10px 14px;background:#f8fafc;border-radius:10px;border:1.5px solid #e2e8f0}
-    .toggle-label{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
-    .toggle-checkbox{display:none}
-    .toggle-track{width:44px;height:24px;background:#cbd5e1;border-radius:12px;position:relative;transition:background .25s;flex-shrink:0}
-    .toggle-checkbox:checked ~ .toggle-track{background:#22c55e}
-    .toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-    .toggle-checkbox:checked ~ .toggle-track .toggle-thumb{transform:translateX(20px)}
-    .toggle-text{font-size:.85rem;font-weight:500;color:#374151}
+    .results-summary{font-size:.82rem;color:#64748b;margin:12px 0 8px;text-align:center;}
+    .results-summary strong{color:#0A1F44;}
+    .pagination-bar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap;margin-top:8px;padding:12px 0;}
+    .page-btn{background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 14px;font-size:.8rem;font-weight:600;color:#0A1F44;cursor:pointer;transition:all .18s;white-space:nowrap;}
+    .page-btn:hover:not(:disabled){border-color:#3b82f6;color:#1d4ed8;}
+    .page-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .page-numbers{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+    .page-num{min-width:34px;height:34px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .page-num:hover:not(:disabled):not(.ellipsis){border-color:#3b82f6;color:#1d4ed8;}
+    .page-num.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;}
+    .page-num.ellipsis{border:none;background:none;cursor:default;color:#94a3b8;}
+    .page-info{font-size:.8rem;color:#64748b;white-space:nowrap;flex-shrink:0;}
   `]
 })
 export class AdminRoutes implements OnInit {
   private routeService = inject(RouteService);
   private fb = inject(FormBuilder);
 
-  routes = signal<any[]>([]);
+  routes         = signal<any[]>([]);
   filteredRoutes = signal<any[]>([]);
-  loading = signal(true);
-  error = signal<string | null>(null);
-  showModal = signal(false);
-  saving = signal(false);
-  formError = signal<string | null>(null);
-  editingId = signal<number | null>(null);
+  loading        = signal(true);
+  error          = signal<string | null>(null);
+  showModal      = signal(false);
+  saving         = signal(false);
+  formError      = signal<string | null>(null);
+  editingId      = signal<number | null>(null);
+
+  // Pagination
+  pageSize    = signal(10);
+  currentPage = signal(1);
+  totalCount  = signal(0);
+  totalPages  = signal(0);
 
   routeForm = this.fb.group({
-    source: ['', Validators.required],
-    destination: ['', Validators.required],
-    distance: [null, [Validators.required, Validators.min(0.1)]],
-    durationHours: [0, [Validators.required, Validators.min(0)]],
+    source:          ['', Validators.required],
+    destination:     ['', Validators.required],
+    distance:        [null, [Validators.required, Validators.min(0.1)]],
+    durationHours:   [0, [Validators.required, Validators.min(0)]],
     durationMinutes: [0, [Validators.required, Validators.min(0), Validators.max(59)]],
-    baseFare: [null, [Validators.required, Validators.min(0)]]
+    baseFare:        [null, [Validators.required, Validators.min(0)]]
   });
 
   ngOnInit() { this.loadRoutes(); }
 
   loadRoutes() {
     this.loading.set(true);
-    this.routeService.getAllRoutes(1, 200).subscribe({
-      // next: r => { const d = Array.isArray(r.data) ? r.data : []; this.routes.set(d); this.filteredRoutes.set(d); this.loading.set(false); },
-      next: r => { const d = Array.isArray(r.data) ? r.data : (r.data?.items ?? []); this.routes.set(d); this.filteredRoutes.set(d); this.loading.set(false); },
+    this.routeService.getAllRoutes(this.currentPage(), this.pageSize()).subscribe({
+      next: r => {
+        const data = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        this.routes.set(data);
+        this.filteredRoutes.set(data);
+        this.updatePagination(r.data?.totalCount ?? data.length);
+        this.loading.set(false);
+      },
       error: e => { this.error.set(e?.error?.message || 'Failed to load routes'); this.loading.set(false); }
     });
   }
 
   onSearch(event: Event) {
     const q = (event.target as HTMLInputElement).value.toLowerCase();
-    this.filteredRoutes.set(this.routes().filter(r => r.source?.toLowerCase().includes(q) || r.destination?.toLowerCase().includes(q)));
+    this.filteredRoutes.set(
+      this.routes().filter(r =>
+        r.source?.toLowerCase().includes(q) ||
+        r.destination?.toLowerCase().includes(q)
+      )
+    );
   }
 
-  openModal() { this.routeForm.reset({ source:'', destination:'', distance: null, durationHours: 0, durationMinutes: 0, baseFare: null }); this.editingId.set(null); this.formError.set(null); this.showModal.set(true); }
+  openModal() {
+    this.routeForm.reset({ source: '', destination: '', distance: null, durationHours: 0, durationMinutes: 0, baseFare: null });
+    this.editingId.set(null);
+    this.formError.set(null);
+    this.showModal.set(true);
+  }
+
   editRoute(r: any) {
     this.editingId.set(r.routeId);
     const totalMins = r.estimatedTravelTimeMinutes || 0;
-    this.routeForm.patchValue({ source: r.source, destination: r.destination, distance: r.distance, durationHours: Math.floor(totalMins / 60), durationMinutes: totalMins % 60, baseFare: r.baseFare });
-    this.formError.set(null); this.showModal.set(true);
+    this.routeForm.patchValue({
+      source: r.source, destination: r.destination, distance: r.distance,
+      durationHours: Math.floor(totalMins / 60), durationMinutes: totalMins % 60,
+      baseFare: r.baseFare
+    });
+    this.formError.set(null);
+    this.showModal.set(true);
   }
 
   closeModal() { this.showModal.set(false); this.editingId.set(null); }
 
   saveRoute() {
-  if (this.routeForm.invalid) { this.routeForm.markAllAsTouched(); return; }
-  const v = this.routeForm.value as any;
-  const totalMinutes = (Number(v.durationHours) * 60) + Number(v.durationMinutes);
-  if (totalMinutes <= 0) { this.formError.set('Duration must be greater than 0'); return; }
-  this.saving.set(true); this.formError.set(null);
-  const payload = { source: v.source, destination: v.destination, distance: v.distance, estimatedTravelTimeMinutes: totalMinutes, baseFare: v.baseFare };
-  const id = this.editingId();
-  const req$ = id ? this.routeService.updateRoute(id, payload) : this.routeService.createRoute(payload);
+    if (this.routeForm.invalid) { this.routeForm.markAllAsTouched(); return; }
+    const v = this.routeForm.value as any;
+    const totalMinutes = (Number(v.durationHours) * 60) + Number(v.durationMinutes);
+    if (totalMinutes <= 0) { this.formError.set('Duration must be greater than 0'); return; }
+    this.saving.set(true);
+    this.formError.set(null);
+    const payload = {
+      source: v.source, destination: v.destination,
+      distance: v.distance, estimatedTravelTimeMinutes: totalMinutes, baseFare: v.baseFare
+    };
+    const id = this.editingId();
+    const req$ = id ? this.routeService.updateRoute(id, payload) : this.routeService.createRoute(payload);
     req$.subscribe({
-      next: () => { this.saving.set(false); this.closeModal(); this.loadRoutes(); },
+      next: () => { this.saving.set(false); this.closeModal(); this.currentPage.set(1); this.loadRoutes(); },
       error: e => { this.saving.set(false); this.formError.set(e?.error?.message || 'Save failed'); }
     });
   }
 
   deleteRoute(id: number) {
     if (!confirm('Delete this route?')) return;
-    this.routeService.deleteRoute(id).subscribe({ next: () => this.loadRoutes(), error: e => alert(e?.error?.message || 'Delete failed') });
+    this.routeService.deleteRoute(id).subscribe({
+      next: () => { this.currentPage.set(1); this.loadRoutes(); },
+      error: e => alert(e?.error?.message || 'Delete failed')
+    });
+  }
+
+  // Pagination methods
+  updatePagination(total: number) {
+    this.totalCount.set(total);
+    this.totalPages.set(Math.ceil(total / this.pageSize()));
+  }
+  rangeStart() { return (this.currentPage() - 1) * this.pageSize() + 1; }
+  rangeEnd()   { return Math.min(this.currentPage() * this.pageSize(), this.totalCount()); }
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadRoutes();
+  }
+  nextPage() { this.goToPage(this.currentPage() + 1); }
+  prevPage() { this.goToPage(this.currentPage() - 1); }
+  visiblePages(): number[] {
+    const total = this.totalPages(), current = this.currentPage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: number[] = [1];
+    if (current > 4) pages.push(-1);
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+    if (current < total - 3) pages.push(-1);
+    pages.push(total);
+    return pages;
   }
 
   formatDuration(minutes: number): string {

@@ -11,10 +11,12 @@ import { AuthService } from '../../core/services/auth.service';
     <div class="admin-shell">
       <aside class="sidebar" [class.collapsed]="collapsed()">
         <div class="sidebar-header">
-          <span class="brand">🚌</span>
+          <!-- <span class="brand">🚌</span> -->
           <span class="brand-name" *ngIf="!collapsed()">BusMate Admin</span>
-          <button class="collapse-btn" (click)="collapsed.update(v=>!v)">{{ collapsed() ? '☰' : '✕' }}</button>
         </div>
+        <button class="toggle-btn" (click)="collapsed.update(v=>!v)" [title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+          {{ collapsed() ? '☰' : '✕' }}
+        </button>
         <nav class="nav">
           <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">
             <span>📊</span><span *ngIf="!collapsed()" class="label">Dashboard</span>
@@ -67,12 +69,31 @@ import { AuthService } from '../../core/services/auth.service';
   `,
   styles: [`
     .admin-shell{display:flex;min-height:100vh;font-family:'Inter',sans-serif;background:#f1f5f9}
-    .sidebar{width:220px;background:#0A1F44;color:#fff;display:flex;flex-direction:column;transition:width .25s;flex-shrink:0}
+    .sidebar{width:220px;background:#0A1F44;color:#fff;display:flex;flex-direction:column;transition:width .25s;flex-shrink:0;position:relative;}
     .sidebar.collapsed{width:56px}
     .sidebar-header{display:flex;align-items:center;gap:10px;padding:18px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
     .brand{font-size:1.4rem;flex-shrink:0}
     .brand-name{font-size:.95rem;font-weight:700;white-space:nowrap;overflow:hidden}
-    .collapse-btn{margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;padding:2px}
+    .toggle-btn{
+      position:absolute;
+      top:14px;
+      right:-14px;
+      width:28px;
+      height:28px;
+      background:#1e3a6e;
+      border:2px solid rgba(255,255,255,0.15);
+      border-radius:50%;
+      color:#fff;
+      cursor:pointer;
+      font-size:.85rem;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:20;
+      transition:background .2s;
+      box-shadow:0 2px 6px rgba(0,0,0,.3);
+    }
+    .toggle-btn:hover{background:#2d5299;}
     .nav{flex:1;padding:10px 0;overflow-y:auto}
     .nav-link{display:flex;align-items:center;gap:12px;padding:11px 14px;color:#cbd5e1;text-decoration:none;transition:all .2s;white-space:nowrap;overflow:hidden;font-size:.875rem}
     .nav-link:hover,.nav-link.active{background:rgba(255,255,255,.1);color:#fff}

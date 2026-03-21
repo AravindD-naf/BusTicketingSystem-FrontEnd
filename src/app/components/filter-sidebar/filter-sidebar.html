@@ -28,7 +28,8 @@
         <span>₹{{ maxPrice | number:'1.0-0':'en-IN' }}</span>
       </div>
       <input type="range" class="price-slider" min="400" max="3000" [value]="maxPrice"
-             (input)="onPriceChange(($event.target).valueAsNumber)"/>
+       [style.background]="'linear-gradient(to right, var(--navy) ' + sliderPercent + '%, var(--border) ' + sliderPercent + '%)'"
+       (input)="onPriceChange(($event.target).valueAsNumber)"/>
     </div>
   </div>
 
