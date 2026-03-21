@@ -9,7 +9,7 @@
 
     <div class="nav-links" [class.open]="mobileOpen()">
       <a routerLink="/" class="nav-link">Home</a>
-      <a routerLink="/results" class="nav-link">Search Buses</a>
+      <a class="nav-link" style="cursor:pointer" (click)="goToSearch()">Search Buses</a>
 
       @if (auth.isAuthenticated()) {
         @if (auth.user()?.role !== 'Admin') {

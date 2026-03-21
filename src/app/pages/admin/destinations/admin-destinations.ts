@@ -43,8 +43,10 @@ import { DestinationService } from '../../../core/services/destination.service';
                 <button class="btn-delete" (click)="deleteDestination(d.destinationId)">🗑️ Delete</button>
               </td>
             </tr>
-            <tr *ngIf="destinations().length === 0">
-              <td colspan="5" class="empty-row">No destinations found.</td>
+            <tr *ngIf="filteredDestinations().length === 0">
+              <td colspan="5" class="empty-row">
+                {{ searchQuery ? 'No destinations match your search.' : 'No destinations found.' }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -188,7 +190,12 @@ export class AdminDestinations implements OnInit {
         const data = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
         this.destinations.set(data);
         this.filteredDestinations.set(data);
-        this.updatePagination(r.data?.totalCount ?? data.length);
+        // ── Read totalCount from multiple possible locations ──
+        const total = r.data?.totalCount
+          ?? r.data?.total
+          ?? r.totalCount
+          ?? data.length;
+        this.updatePagination(total);
         this.loading.set(false);
       },
       error: e => { this.error.set(e?.error?.message || 'Failed to load destinations'); this.loading.set(false); }

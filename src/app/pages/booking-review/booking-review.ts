@@ -63,6 +63,33 @@ export class BookingReview implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/results']);
+    // Read the stored seat context
+    const raw = sessionStorage.getItem('seat_context');
+
+    if (raw) {
+      const ctx = JSON.parse(raw);
+
+      // Mark that we are returning — seat-selection will preserve locked seats
+      sessionStorage.setItem('returning_from_review', String(ctx.scheduleId));
+
+      this.router.navigate(['/seat-selection', ctx.scheduleId], {
+        queryParams: {
+          from:       ctx.from,
+          to:         ctx.to,
+          date:       ctx.date,
+          passengers: ctx.passengers
+        }
+      });
+    } else {
+      // Fallback — try to get scheduleId from booking object
+      const scheduleId = this.booking()?.scheduleId;
+      if (scheduleId) {
+        sessionStorage.setItem('returning_from_review', String(scheduleId));
+        this.router.navigate(['/seat-selection', scheduleId]);
+      } else {
+        // Last resort — go to home
+        this.router.navigate(['/']);
+      }
+    }
   }
 }

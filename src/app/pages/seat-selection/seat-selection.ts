@@ -87,6 +87,36 @@ export class SeatSelection implements OnInit {
     return this.passengerForm.get('passengers') as FormArray;
   }
 
+  // ngOnInit() {
+  //   const id = this.route.snapshot.params['scheduleId'];
+  //   if (!id || isNaN(+id)) {
+  //     this.error.set('Invalid schedule ID.');
+  //     this.loading.set(false);
+  //     return;
+  //   }
+  //   this.scheduleId.set(+id);
+  //   const qp = this.route.snapshot.queryParams;
+  //   this.from.set(qp['from'] || '');
+  //   this.to.set(qp['to'] || '');
+  //   this.date.set(qp['date'] || '');
+  //   this.requiredSeats.set(Math.max(1, +qp['passengers'] || 1));
+
+  //   const user = this.authService.user();
+  //   if (user?.email) {
+  //     this.passengerForm.patchValue({ contactEmail: user.email });
+  //   }
+
+  //   this.loadBoardingPoints();
+  //   this.loadDropPoints();
+  //   this.seatService.clearSelection();
+  //   this.fetchSeats();
+
+  //   // Auto-refresh seat layout every 30 seconds to pick up lock expirations
+  //   this.refreshInterval = setInterval(() => {
+  //     this.silentRefreshSeats();
+  //   }, 30000);
+  // }
+
   ngOnInit() {
     const id = this.route.snapshot.params['scheduleId'];
     if (!id || isNaN(+id)) {
@@ -101,20 +131,34 @@ export class SeatSelection implements OnInit {
     this.date.set(qp['date'] || '');
     this.requiredSeats.set(Math.max(1, +qp['passengers'] || 1));
 
+    // ── STORE search context so booking-review can navigate back correctly ──
+    sessionStorage.setItem('seat_context', JSON.stringify({
+      scheduleId: +id,
+      from: this.from(),
+      to: this.to(),
+      date: this.date(),
+      passengers: this.requiredSeats()
+    }));
+
+    // Pre-fill contact email
     const user = this.authService.user();
     if (user?.email) {
       this.passengerForm.patchValue({ contactEmail: user.email });
     }
 
-    this.loadBoardingPoints();
-    this.loadDropPoints();
-    this.seatService.clearSelection();
-    this.fetchSeats();
+    // ── Only clear selection if NOT returning from booking-review ──
+    // If seats are already locked for this schedule, preserve them
+  const alreadyLockedForThisSchedule =
+    sessionStorage.getItem('returning_from_review') === String(+id);
 
-    // Auto-refresh seat layout every 30 seconds to pick up lock expirations
-    this.refreshInterval = setInterval(() => {
-      this.silentRefreshSeats();
-    }, 30000);
+  if (alreadyLockedForThisSchedule) {
+    sessionStorage.setItem('was_returning', 'true'); // used in fetchSeats
+  } else {
+    this.seatService.clearSelection();
+  }
+  sessionStorage.removeItem('returning_from_review');
+
+    this.fetchSeats();
   }
 
   // Calls GET /api/v1/sources/by-city/{fromCity}
@@ -170,11 +214,47 @@ export class SeatSelection implements OnInit {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
   }
 
+  // fetchSeats() {
+  //   this.loading.set(true);
+  //   this.error.set(null);
+  //   this.seatService.loadSeats(this.scheduleId()).subscribe({
+  //     next: () => this.loading.set(false),
+  //     error: (err) => {
+  //       this.error.set(this.errHandler.getErrorMessage(err));
+  //       this.loading.set(false);
+  //     }
+  //   });
+  // }
   fetchSeats() {
     this.loading.set(true);
     this.error.set(null);
     this.seatService.loadSeats(this.scheduleId()).subscribe({
-      next: () => this.loading.set(false),
+      next: () => {
+        this.loading.set(false);
+
+        // ── If returning from review, re-select the locked seats in the signal ──
+        const returning = sessionStorage.getItem('was_returning');
+        if (returning) {
+          sessionStorage.removeItem('was_returning');
+          const price = this.busInfo()?.baseFare || 0;
+          const lockedByUser = this.seats().filter(
+            (s: any) => s.seatStatus === 'Locked'
+          );
+          if (lockedByUser.length > 0 && this.seatService.selectedSeats().length === 0) {
+            lockedByUser.forEach((seat: any) => {
+              this.seatService.toggleBackendSeat(seat, price);
+              const user = this.authService.user();
+              const isFirst = this.passengersArray.length === 0;
+              this.passengersArray.push(this.fb.group({
+                seatNumber: [seat.seatNumber],
+                name:   [isFirst ? (user?.name || '') : '', Validators.required],
+                age:    ['', [Validators.required, Validators.min(1), Validators.max(120)]],
+                gender: ['', Validators.required],
+              }));
+            });
+          }
+        }
+      },
       error: (err) => {
         this.error.set(this.errHandler.getErrorMessage(err));
         this.loading.set(false);
@@ -333,12 +413,13 @@ export class SeatSelection implements OnInit {
           next: (resp: any) => {
             this.booking.set(false);
             if (resp?.success && resp?.data?.bookingId) {
-              this.stopCountdown(); // booking created — no need for countdown
+              // ── Mark schedule so back button works ──
+              sessionStorage.setItem('returning_from_review', String(this.scheduleId()));
               this.router.navigate(['/booking-review', resp.data.bookingId]);
-            } else {
-              alert(resp?.message || 'Booking failed. Please try again.');
-            }
-          },
+              } else {
+                alert(resp?.message || 'Booking failed. Please try again.');
+              }
+            },
           error: (err) => {
             this.booking.set(false);
             alert(this.errHandler.getErrorMessage(err));

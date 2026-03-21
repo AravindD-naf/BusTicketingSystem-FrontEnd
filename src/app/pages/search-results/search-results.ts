@@ -50,7 +50,16 @@ export class SearchResults implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.busSearchService.search(this.from(), this.to(), this.date(), this.passengers()).subscribe({
-      next: () => this.loading.set(false),
+      next: () => {
+        this.loading.set(false);
+        // ── STORE last search so navbar can restore it ──
+        sessionStorage.setItem('last_search', JSON.stringify({
+          from:       this.from(),
+          to:         this.to(),
+          date:       this.date(),
+          passengers: this.passengers()
+        }));
+      },
       error: (err) => {
         this.error.set(this.errHandler.getErrorMessage(err));
         this.loading.set(false);

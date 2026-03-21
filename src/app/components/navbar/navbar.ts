@@ -20,6 +20,30 @@ export class Navbar {
   onScroll() { this.scrolled.set(window.scrollY > 20); }
 
   toggleMobile() { this.mobileOpen.update(v => !v); }
+ 
+  goToSearch() {
+    // Try to restore last search from sessionStorage
+    const raw = sessionStorage.getItem('last_search');
+    if (raw) {
+      try {
+        const ctx = JSON.parse(raw);
+        if (ctx.from && ctx.to && ctx.date) {
+          this.router.navigate(['/results'], {
+            queryParams: {
+              from:       ctx.from,
+              to:         ctx.to,
+              date:       ctx.date,
+              passengers: ctx.passengers ?? 1
+            }
+          });
+          return;
+        }
+      } catch { /* ignore parse errors */ }
+    }
+
+    // No saved search — go to home where the search form is
+    this.router.navigate(['/']);
+  }
 
   logout() {
     localStorage.removeItem('bg_token');

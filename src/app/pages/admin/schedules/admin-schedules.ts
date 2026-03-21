@@ -260,16 +260,35 @@ export class AdminSchedules implements OnInit {
   }
 
   onSearch(event: Event) {
-    const q = (event.target as HTMLInputElement).value.toLowerCase();
+    const q = (event.target as HTMLInputElement).value.trim();
     this.searchQuery = q;
-    this.filteredSchedules.set(
-      this.schedules().filter(s =>
-        s.source?.toLowerCase().includes(q) ||
-        s.destination?.toLowerCase().includes(q) ||
-        s.busNumber?.toLowerCase().includes(q) ||
-        s.operatorName?.toLowerCase().includes(q)
-      )
-    );
+    this.currentPage.set(1);
+
+    if (!q) {
+      // Empty search — reload normal page
+      this.loadSchedules();
+      return;
+    }
+
+    // Search across all pages via backend
+    this.loading.set(true);
+    this.busService.getAllSchedules(1, 200).subscribe({
+      next: r => {
+        const all = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        const lower = q.toLowerCase();
+        const filtered = all.filter((s: any) =>
+          s.source?.toLowerCase().includes(lower) ||
+          s.destination?.toLowerCase().includes(lower) ||
+          s.busNumber?.toLowerCase().includes(lower) ||
+          s.operatorName?.toLowerCase().includes(lower)
+        );
+        this.schedules.set(filtered);
+        this.filteredSchedules.set(filtered);
+        this.updatePagination(filtered.length);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
   }
 
   editSchedule(s: any) {
@@ -277,7 +296,8 @@ export class AdminSchedules implements OnInit {
     this.scheduleForm.patchValue({
       routeId: s.routeId, busId: s.busId,
       travelDate: s.travelDate?.split('T')[0],
-      departureTime: s.departureTime, arrivalTime: s.arrivalTime
+      departureTime: s.departureTime?.substring(0, 5), // HH:MM only
+      arrivalTime: s.arrivalTime?.substring(0, 5) 
     });
     const route = this.routes().find((r: any) => r.routeId === s.routeId);
     if (route) {
@@ -285,6 +305,27 @@ export class AdminSchedules implements OnInit {
       this.selectedRouteDuration.set(mins);
       const h = Math.floor(mins / 60), m = mins % 60;
       this.routeDurationHint.set(h > 0 ? `${h}h ${m}m` : `${m}m`);
+    }
+    // This ensures overnight flag is preserved correctly on save
+    const depStr = s.departureTime?.substring(0, 5); // "HH:MM"
+    const routeDuration = this.routes()
+      .find((r: any) => r.routeId === s.routeId)?.estimatedTravelTimeMinutes;
+
+    if (depStr && routeDuration) {
+      this.calculateArrival(depStr, routeDuration);
+    } else {
+      // Fallback: if overnight, manually set arrivalTotalMinutes
+      if (s.isOvernightArrival && s.arrivalTime) {
+        const [ah, am] = s.arrivalTime.split(':').map(Number);
+        const [dh, dm] = (s.departureTime || '0:0').split(':').map(Number);
+        const depMins = dh * 60 + dm;
+        const arrMins = ah * 60 + am;
+        this.arrivalTotalMinutes = arrMins < depMins
+          ? 1440 - depMins + arrMins
+          : 1440 + arrMins;
+      } else {
+        this.arrivalTotalMinutes = 0;
+      }
     }
     this.formError.set(null);
     this.showModal.set(true);
@@ -299,7 +340,7 @@ export class AdminSchedules implements OnInit {
     const v = this.scheduleForm.value as any;
 
     const travelDateIso = v.travelDate
-      ? new Date(v.travelDate + 'T00:00:00').toISOString() : '';
+      ? v.travelDate + 'T00:00:00' : '';
     const departure = v.departureTime
       ? (v.departureTime.length === 5 ? v.departureTime + ':00' : v.departureTime) : '';
     let arrival: string;
