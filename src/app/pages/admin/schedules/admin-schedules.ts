@@ -39,7 +39,7 @@ import { RouteService } from '../../../core/services/route.service';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let s of filteredSchedules(); let i = index">
+            <tr *ngFor="let s of schedules(); let i = index">
               <td style="width:52px;text-align:center;color:#94a3b8;font-size:.8rem;">{{ rangeStart() + i }}</td>
               <td>{{ s.source || s.routeId }} → {{ s.destination }}</td>
               <td>{{ s.busNumber }} – {{ s.operatorName }}</td>
@@ -118,10 +118,19 @@ import { RouteService } from '../../../core/services/route.service';
                 <input class="form-input" type="time" formControlName="departureTime" (change)="onDepartureChange($event)" />
                 <span class="field-error" *ngIf="scheduleForm.get('departureTime')?.invalid && scheduleForm.get('departureTime')?.touched">Required</span>
               </label>
-              <label class="form-label">Arrival Time
-                <input class="form-input" type="time" formControlName="arrivalTime" readonly style="background:#f8fafc;cursor:not-allowed;color:#64748b" />
-                <span class="auto-hint">Auto-calculated from route duration</span>
+              <label class="form-label">Arrival Time *
+                <input class="form-input" type="time" formControlName="arrivalTime" />
+                <span class="auto-hint">
+                  Auto-filled from route duration — you can override this for express/slow services
+                </span>
+                <span class="field-error" *ngIf="scheduleForm.get('arrivalTime')?.invalid && scheduleForm.get('arrivalTime')?.touched">Required</span>
               </label>
+            </div>
+            <div class="duration-preview" *ngIf="scheduleForm.get('departureTime')?.value && scheduleForm.get('arrivalTime')?.value">
+              🕐 Duration: <strong>{{ getFormDuration() }}</strong>
+              <span *ngIf="routeDurationHint()" class="duration-hint-note">
+                (Route default: {{ routeDurationHint() }})
+              </span>
             </div>
             <label class="form-label">Fare per Seat (₹) *
               <input class="form-input" type="number" formControlName="fare" placeholder="e.g. 500" min="0" />
@@ -192,6 +201,8 @@ import { RouteService } from '../../../core/services/route.service';
     .search-bar{margin-bottom:16px;}
     .search-input{width:100%;max-width:400px;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 14px;font-size:.875rem;outline:none;}
     .search-input:focus{border-color:#3b82f6;}
+    .duration-preview{font-size:.8rem;color:#0A1F44;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:7px 12px;margin-top:-4px;}
+    .duration-hint-note{color:#64748b;margin-left:6px;}
   `]
 })
 export class AdminSchedules implements OnInit {
@@ -200,7 +211,6 @@ export class AdminSchedules implements OnInit {
   private fb           = inject(FormBuilder);
 
   schedules = signal<any[]>([]);
-  filteredSchedules = signal<any[]>([]);
   searchQuery       = '';
   buses     = signal<any[]>([]);
   routes    = signal<any[]>([]);
@@ -245,12 +255,17 @@ export class AdminSchedules implements OnInit {
 
   loadSchedules() {
     this.loading.set(true);
-    this.busService.getAllSchedules(this.currentPage(), this.pageSize()).subscribe({
+    const obs$ = this.searchQuery
+      ? this.busService.searchSchedules(this.searchQuery, this.currentPage(), this.pageSize())
+      : this.busService.getAllSchedules(this.currentPage(), this.pageSize());
+
+    obs$.subscribe({
       next: r => {
         const data = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
         this.schedules.set(data);
-        this.filteredSchedules.set(data);
-        this.updatePagination(r.data?.totalCount ?? data.length);
+        // this.updatePagination(r.data?.totalCount ?? data.length);
+        const total = typeof r.data?.totalCount === 'number' ? r.data.totalCount : data.length;
+        this.updatePagination(total);
         this.loading.set(false);
       },
       error: e => { this.error.set(e?.error?.message || 'Failed to load schedules'); this.loading.set(false); }
@@ -267,36 +282,42 @@ export class AdminSchedules implements OnInit {
     this.showModal.set(true);
   }
 
+  // onSearch(event: Event) {
+  //   const q = (event.target as HTMLInputElement).value.trim();
+  //   this.searchQuery = q;
+  //   this.currentPage.set(1);
+
+  //   if (!q) {
+  //     // Empty search — reload normal page
+  //     this.loadSchedules();
+  //     return;
+  //   }
+
+  //   // Search across all pages via backend
+  //   this.loading.set(true);
+  //   this.busService.getAllSchedules(1, 200).subscribe({
+  //     next: r => {
+  //       const all = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+  //       const lower = q.toLowerCase();
+  //       const filtered = all.filter((s: any) =>
+  //         s.source?.toLowerCase().includes(lower) ||
+  //         s.destination?.toLowerCase().includes(lower) ||
+  //         s.busNumber?.toLowerCase().includes(lower) ||
+  //         s.operatorName?.toLowerCase().includes(lower)
+  //       );
+  //       this.schedules.set(filtered);
+  //       this.filteredSchedules.set(filtered);
+  //       this.updatePagination(filtered.length);
+  //       this.loading.set(false);
+  //     },
+  //     error: () => this.loading.set(false)
+  //   });
+  // }
   onSearch(event: Event) {
     const q = (event.target as HTMLInputElement).value.trim();
     this.searchQuery = q;
     this.currentPage.set(1);
-
-    if (!q) {
-      // Empty search — reload normal page
-      this.loadSchedules();
-      return;
-    }
-
-    // Search across all pages via backend
-    this.loading.set(true);
-    this.busService.getAllSchedules(1, 200).subscribe({
-      next: r => {
-        const all = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
-        const lower = q.toLowerCase();
-        const filtered = all.filter((s: any) =>
-          s.source?.toLowerCase().includes(lower) ||
-          s.destination?.toLowerCase().includes(lower) ||
-          s.busNumber?.toLowerCase().includes(lower) ||
-          s.operatorName?.toLowerCase().includes(lower)
-        );
-        this.schedules.set(filtered);
-        this.filteredSchedules.set(filtered);
-        this.updatePagination(filtered.length);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false)
-    });
+    this.loadSchedules();
   }
 
   editSchedule(s: any) {
@@ -340,6 +361,21 @@ export class AdminSchedules implements OnInit {
     this.showModal.set(true);
   }
 
+  getFormDuration(): string {
+    const dep = this.scheduleForm.get('departureTime')?.value as string;
+    const arr = this.scheduleForm.get('arrivalTime')?.value as string;
+    if (!dep || !arr) return '';
+    const [dh, dm] = dep.split(':').map(Number);
+    const [ah, am] = arr.split(':').map(Number);
+    const depMins = dh * 60 + dm;
+    let arrMins = ah * 60 + am;
+    let diff = arrMins - depMins;
+    if (diff <= 0) diff += 1440; // overnight
+    const h = Math.floor(diff / 60);
+    const m = diff % 60;
+    return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`;
+  }
+
   closeModal() { this.showModal.set(false); this.editingId.set(null); this.arrivalTotalMinutes = 0; }
 
   saveSchedule() {
@@ -352,15 +388,8 @@ export class AdminSchedules implements OnInit {
       ? v.travelDate + 'T00:00:00' : '';
     const departure = v.departureTime
       ? (v.departureTime.length === 5 ? v.departureTime + ':00' : v.departureTime) : '';
-    let arrival: string;
-    if (this.arrivalTotalMinutes > 0) {
-      const totalH = Math.floor(this.arrivalTotalMinutes / 60);
-      const totalM = this.arrivalTotalMinutes % 60;
-      arrival = `${totalH}:${String(totalM).padStart(2, '0')}:00`;
-    } else {
-      arrival = v.arrivalTime
-        ? (v.arrivalTime.length === 5 ? v.arrivalTime + ':00' : v.arrivalTime) : '';
-    }
+    const arrival = v.arrivalTime
+    ? (v.arrivalTime.length === 5 ? v.arrivalTime + ':00' : v.arrivalTime) : '';
 
     const payload = {
         routeId: Number(v.routeId), busId: Number(v.busId),
@@ -374,7 +403,7 @@ export class AdminSchedules implements OnInit {
       : this.busService.createSchedule(payload);
 
     req$.subscribe({
-      next: () => { this.saving.set(false); this.closeModal(); this.currentPage.set(1); this.loadSchedules(); },
+      next: () => { this.saving.set(false); this.closeModal(); this.loadSchedules(); },
       error: e => {
         this.saving.set(false);
         const err = e?.error;
@@ -386,10 +415,35 @@ export class AdminSchedules implements OnInit {
     });
   }
 
+ 
+  // deleteSchedule(id: number) {
+  //   if (!confirm('Delete this schedule? This cannot be undone.')) return;
+  //   this.busService.deleteSchedule(id).subscribe({
+  //     next: () => {
+  //       // If the deleted item was the only one on this page, step back one page
+  //       if (this.schedules().length === 1 && this.currentPage() > 1) {
+  //         this.currentPage.update(p => p - 1);
+  //       }
+  //       this.loadSchedules();
+  //     },
+  //     error: e => alert(e?.error?.message || 'Delete failed')
+  //   });
+  // }
   deleteSchedule(id: number) {
-    if (!confirm('Delete this schedule?')) return;
+    if (!confirm('Delete this schedule? This cannot be undone.')) return;
+
     this.busService.deleteSchedule(id).subscribe({
-      next: () => { this.currentPage.set(1); this.loadSchedules(); },
+      next: () => {
+        // ✅ Decrease total count locally
+        this.totalCount.update(c => Math.max(0, c - 1));
+
+        // ✅ Fix page when last item of page is deleted
+        if (this.schedules().length === 1 && this.currentPage() > 1) {
+          this.currentPage.update(p => p - 1);
+        }
+
+        this.loadSchedules();
+      },
       error: e => alert(e?.error?.message || 'Delete failed')
     });
   }

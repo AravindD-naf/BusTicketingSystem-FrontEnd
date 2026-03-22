@@ -19,6 +19,7 @@ import { PaymentService } from '../../../core/services/payment.service';
         <select class="filter-select" (change)="onStatusFilter($event)">
           <option value="">All Status</option>
           <option value="Confirmed">Confirmed</option>
+          <option value="Expired">Expired</option>
           <option value="Pending">Pending</option>
           <option value="Cancelled">Cancelled</option>
         </select>

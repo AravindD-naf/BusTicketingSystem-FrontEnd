@@ -71,22 +71,25 @@ export class BusSearchService {
         return parseInt(p[0], 10) * 60 + parseInt(p[1] || '0', 10);
     };
 
-    // Helper: duration in minutes (handles overnight)
-    const duration = (s: any): number => {
-        const dep = toMins(s.departureTime);
-        const arr = toMins(s.arrivalTime);
-        const diff = arr - dep;
-        return diff < 0 ? diff + 24 * 60 : diff;
-    };
+    // Use durationMinutes from backend (already computed correctly for overnight journeys)
+    // Fall back to computing from dep/arr if field not present
+    const getDuration = (s: any): number =>
+      s.durationMinutes > 0
+        ? s.durationMinutes
+        : (() => {
+            const dep = toMins(s.departureTime);
+            const arr = toMins(s.arrivalTime);
+            const diff = arr - dep;
+            return diff < 0 ? diff + 24 * 60 : diff;
+          })();
 
-    // Spread into new array so Angular signal detects the change
     return [...result].sort((a: any, b: any) => {
-        if (sort === 'price_asc')  return (a.baseFare || 0) - (b.baseFare || 0);
-        if (sort === 'price_desc') return (b.baseFare || 0) - (a.baseFare || 0);
-        if (sort === 'departure')  return toMins(a.departureTime) - toMins(b.departureTime);
-        if (sort === 'arrival')    return toMins(a.arrivalTime)   - toMins(b.arrivalTime);
-        if (sort === 'duration')   return duration(a) - duration(b);
-        return 0;
+      if (sort === 'price_asc')  return (a.baseFare || 0) - (b.baseFare || 0);
+      if (sort === 'price_desc') return (b.baseFare || 0) - (a.baseFare || 0);
+      if (sort === 'departure')  return toMins(a.departureTime) - toMins(b.departureTime);
+      if (sort === 'arrival')    return toMins(a.arrivalTime)   - toMins(b.arrivalTime);
+      if (sort === 'duration')   return getDuration(a) - getDuration(b);
+      return 0;
     });
   });
 
@@ -157,6 +160,11 @@ export class BusSearchService {
   // POST /api/v1/schedule/get-all
   getAllSchedules(pageNumber = 1, pageSize = 10) {
     return this.http.post<ApiResponse<any>>(`${this.API}/schedule/get-all`, { pageNumber, pageSize });
+  }
+
+  // POST /api/v1/schedule/search-admin  (keyword search with pagination)
+  searchSchedules(keyword: string, pageNumber = 1, pageSize = 10) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/schedule/get-all`, { pageNumber, pageSize, keyword });
   }
 
   // POST /api/v1/schedule/{id}

@@ -103,18 +103,26 @@ export class SearchResults implements OnInit {
     return t;
   }
 
-  formatDuration(dep: string, arr: string): string {
-    if (!dep || !arr) return '';
-    try {
-      const toMins = (t: string) => {
-        const p = t.split(':');
-        return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
-      };
-      let diff = toMins(arr) - toMins(dep);
-      if (diff < 0) diff += 24 * 60; // handle overnight
-      return `${Math.floor(diff / 60)}h ${diff % 60}m`;
-    } catch {
-      return '';
-    }
-  }
+  formatDuration(dep: string, arr: string, durationMinutes?: number): string {
+  // Use pre-computed duration from backend if available (accurate for overnight)
+  const mins = durationMinutes && durationMinutes > 0
+    ? durationMinutes
+    : (() => {
+        if (!dep || !arr) return 0;
+        try {
+          const toMins = (t: string) => {
+            const p = t.split(':');
+            return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+          };
+          let diff = toMins(arr) - toMins(dep);
+          if (diff < 0) diff += 24 * 60;
+          return diff;
+        } catch { return 0; }
+      })();
+
+  if (!mins) return '';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`;
+}
 }
