@@ -155,7 +155,7 @@ export class AdminDashboard implements OnInit {
     this.busService.getAllSchedules(1, 200).subscribe({
       next: r => {
         this.stats.update(s => ({
-          ...s, schedules: Array.isArray(r.data) ? r.data.length : (r.data?.items?.length ?? r.data?.totalCount ?? 0)
+          ...s, schedules: Array.isArray(r.data) ? r.data.length : (r.data?.totalCount ?? r.data?.items?.length ?? 0)
         }));
         this.loading.set(false);
       },

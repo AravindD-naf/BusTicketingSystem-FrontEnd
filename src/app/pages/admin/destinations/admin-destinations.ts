@@ -212,12 +212,25 @@ export class AdminDestinations implements OnInit {
   onSearch(event: Event) {
     const q = (event.target as HTMLInputElement).value.toLowerCase();
     this.searchQuery = q;
-    this.filteredDestinations.set(
-      this.destinations().filter(d =>
-        d.destinationName?.toLowerCase().includes(q) ||
-        d.description?.toLowerCase().includes(q)
-      )
-    );
+    if (!q) {
+      this.currentPage.set(1);
+      this.loadDestinations();
+      return;
+    }
+    this.loading.set(true);
+    this.destService.getAllDestinations(1, 10000).subscribe({
+      next: r => {
+        const all = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        const filtered = all.filter((d: any) =>
+          d.destinationName?.toLowerCase().includes(q) ||
+          d.description?.toLowerCase().includes(q)
+        );
+        this.filteredDestinations.set(filtered);
+        this.updatePagination(filtered.length);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
   }
 
   editDestination(d: any) {

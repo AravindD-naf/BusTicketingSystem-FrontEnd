@@ -228,12 +228,25 @@ export class AdminRoutes implements OnInit {
 
   onSearch(event: Event) {
     const q = (event.target as HTMLInputElement).value.toLowerCase();
-    this.filteredRoutes.set(
-      this.routes().filter(r =>
-        r.source?.toLowerCase().includes(q) ||
-        r.destination?.toLowerCase().includes(q)
-      )
-    );
+    if (!q) {
+      this.currentPage.set(1);
+      this.loadRoutes();
+      return;
+    }
+    this.loading.set(true);
+    this.routeService.getAllRoutes(1, 10000).subscribe({
+      next: r => {
+        const all = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        const filtered = all.filter((r: any) =>
+          r.source?.toLowerCase().includes(q) ||
+          r.destination?.toLowerCase().includes(q)
+        );
+        this.filteredRoutes.set(filtered);
+        this.updatePagination(filtered.length);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
   }
 
   openModal() {

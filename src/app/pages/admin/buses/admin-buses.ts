@@ -245,13 +245,26 @@ export class AdminBuses implements OnInit {
   onSearch(event: Event) {
     const q = (event.target as HTMLInputElement).value.toLowerCase();
     this.searchQuery = q;
-    this.filteredBuses.set(
-      this.buses().filter(b =>
-        b.busNumber?.toLowerCase().includes(q) ||
-        b.operatorName?.toLowerCase().includes(q) ||
-        b.busType?.toLowerCase().includes(q)
-      )
-    );
+    if (!q) {
+      this.currentPage.set(1);
+      this.loadBuses();
+      return;
+    }
+    this.loading.set(true);
+    this.busService.getAllBuses(1, 10000).subscribe({
+      next: r => {
+        const all = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        const filtered = all.filter((b: any) =>
+          b.busNumber?.toLowerCase().includes(q) ||
+          b.operatorName?.toLowerCase().includes(q) ||
+          b.busType?.toLowerCase().includes(q)
+        );
+        this.filteredBuses.set(filtered);
+        this.updatePagination(filtered.length);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
   }
 
   updatePagination(total: number) {

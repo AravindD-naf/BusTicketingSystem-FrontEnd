@@ -205,12 +205,25 @@ export class AdminSources implements OnInit {
   onSearch(event: Event) {
     const q = (event.target as HTMLInputElement).value.toLowerCase();
     this.searchQuery = q;
-    this.filteredSources.set(
-      this.sources().filter(s =>
-        s.sourceName?.toLowerCase().includes(q) ||
-        s.description?.toLowerCase().includes(q)
-      )
-    );
+    if (!q) {
+      this.currentPage.set(1);
+      this.loadSources();
+      return;
+    }
+    this.loading.set(true);
+    this.sourceService.getAllSources(1, 10000).subscribe({
+      next: r => {
+        const all = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
+        const filtered = all.filter((s: any) =>
+          s.sourceName?.toLowerCase().includes(q) ||
+          s.description?.toLowerCase().includes(q)
+        );
+        this.filteredSources.set(filtered);
+        this.updatePagination(filtered.length);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
   }
 
   editSource(s: any) {

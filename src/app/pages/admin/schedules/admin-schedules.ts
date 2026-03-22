@@ -263,9 +263,7 @@ export class AdminSchedules implements OnInit {
       next: r => {
         const data = r.data?.items ?? (Array.isArray(r.data) ? r.data : []);
         this.schedules.set(data);
-        // this.updatePagination(r.data?.totalCount ?? data.length);
-        const total = typeof r.data?.totalCount === 'number' ? r.data.totalCount : data.length;
-        this.updatePagination(total);
+        this.updatePagination(r.data?.totalCount ?? data.length);
         this.loading.set(false);
       },
       error: e => { this.error.set(e?.error?.message || 'Failed to load schedules'); this.loading.set(false); }
@@ -431,19 +429,8 @@ export class AdminSchedules implements OnInit {
   // }
   deleteSchedule(id: number) {
     if (!confirm('Delete this schedule? This cannot be undone.')) return;
-
     this.busService.deleteSchedule(id).subscribe({
-      next: () => {
-        // ✅ Decrease total count locally
-        this.totalCount.update(c => Math.max(0, c - 1));
-
-        // ✅ Fix page when last item of page is deleted
-        if (this.schedules().length === 1 && this.currentPage() > 1) {
-          this.currentPage.update(p => p - 1);
-        }
-
-        this.loadSchedules();
-      },
+      next: () => { this.currentPage.set(1); this.loadSchedules(); },
       error: e => alert(e?.error?.message || 'Delete failed')
     });
   }
