@@ -99,21 +99,24 @@ export class MyBookings implements OnInit {
   closeModal() { this.selectedBooking.set(null); }
   goToSearch() { this.router.navigate(['/']); }
 
-  getStatusClass(status: string, cancellationReason?: string): string {
+  getStatusClass(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'confirmed':  return 'badge-confirmed';
-      case 'pending':    return 'badge-pending';
-      case 'cancelled':
-        return cancellationReason ? 'badge-expired' : 'badge-cancelled';
-      default:           return 'badge-default';
+      case 'confirmed':          return 'badge-confirmed';
+      case 'pending':            return 'badge-pending';
+      case 'paymentprocessing':  return 'badge-pending';
+      case 'expired':            return 'badge-expired';
+      case 'cancelled':          return 'badge-cancelled';
+      case 'paymentfailed':      return 'badge-cancelled';
+      default:                   return 'badge-default';
     }
   }
 
-  getStatusLabel(status: string, cancellationReason?: string): string {
-    if (status?.toLowerCase() === 'cancelled' && cancellationReason) {
-      return 'Expired';
+  getStatusLabel(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'paymentprocessing': return 'Payment Processing';
+      case 'paymentfailed':     return 'Payment Failed';
+      default:                  return status;
     }
-    return status;
   }
 
   formatDate(d: string): string {

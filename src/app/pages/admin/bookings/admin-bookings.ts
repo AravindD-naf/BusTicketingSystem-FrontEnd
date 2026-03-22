@@ -58,7 +58,7 @@ import { PaymentService } from '../../../core/services/payment.service';
               <td>₹{{ getTax(b.totalAmount) }} <span class="tax-note">+₹{{ CONVENIENCE_FEE }}</span></td>
               <td><strong>₹{{ getGrandTotal(b.totalAmount) }}</strong></td>
               <td>{{ b.bookingDate | date:'mediumDate' }}</td>
-              <td><span [class]="getStatusClass(b.bookingStatus, b.cancellationReason)">{{ getStatusLabel(b.bookingStatus, b.cancellationReason) }}</span></td>
+              <td><span [class]="getStatusClass(b.bookingStatus)">{{ getStatusLabel(b.bookingStatus) }}</span></td>
               <td>
                 <button class="btn-view" (click)="viewBooking(b)">👁️ View</button>
                 <button class="btn-cancel" *ngIf="b.bookingStatus === 'Confirmed'" (click)="cancelBooking(b.bookingId)">❌ Cancel</button>
@@ -117,8 +117,8 @@ import { PaymentService } from '../../../core/services/payment.service';
             </div>
             <div class="detail-row">
               <span class="detail-key">Status</span>
-              <span [class]="getStatusClass(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason)">
-                {{ getStatusLabel(selectedBooking()?.bookingStatus, selectedBooking()?.cancellationReason) }}
+              <span [class]="getStatusClass(selectedBooking()?.bookingStatus)">
+                {{ getStatusLabel(selectedBooking()?.bookingStatus) }}
               </span>
             </div>
             <div class="detail-row">
@@ -397,18 +397,23 @@ export class AdminBookings implements OnInit {
   getTax(amount: number): number { return Math.round(amount * 0.06); }
   getGrandTotal(amount: number): number { return amount + this.getTax(amount) + this.CONVENIENCE_FEE; }
 
-  getStatusClass(status: string, cancellationReason?: string): string {
+  getStatusClass(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'confirmed':   return 'status-chip status-confirmed';
-      case 'pending':     return 'status-chip status-pending';
-      case 'cancelled':   return cancellationReason ? 'status-chip status-expired' : 'status-chip status-cancelled';
-      case 'paymentfailed': return 'status-chip status-failed';
-      default:            return 'status-chip status-default';
+      case 'confirmed':          return 'status-chip status-confirmed';
+      case 'pending':            return 'status-chip status-pending';
+      case 'paymentprocessing':  return 'status-chip status-pending';
+      case 'expired':            return 'status-chip status-expired';
+      case 'cancelled':          return 'status-chip status-cancelled';
+      case 'paymentfailed':      return 'status-chip status-failed';
+      default:                   return 'status-chip status-default';
     }
   }
 
-  getStatusLabel(status: string, cancellationReason?: string): string {
-    if (status?.toLowerCase() === 'cancelled' && cancellationReason) return 'Expired';
-    return status;
+  getStatusLabel(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'paymentprocessing': return 'Payment Processing';
+      case 'paymentfailed':     return 'Payment Failed';
+      default:                  return status;
+    }
   }
 }
