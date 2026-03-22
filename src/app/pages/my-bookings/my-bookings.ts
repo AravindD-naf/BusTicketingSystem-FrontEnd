@@ -6,7 +6,7 @@ import { HttpErrorHandlerService } from '../../core/services/http-error-handler.
 import { Navbar } from '../../components/navbar/navbar';
 import { Footer } from '../../components/footer/footer';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment.prod';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-my-bookings',
@@ -19,16 +19,18 @@ export class MyBookings implements OnInit {
   private bookingService = inject(BookingService);
   private router         = inject(Router);
   private errHandler     = inject(HttpErrorHandlerService);
-  private http = inject(HttpClient);
+  private http           = inject(HttpClient);
 
-  bookings        = signal<any[]>([]);
-  loading         = signal(false);
-  error           = signal<string | null>(null);
-  selectedBooking = signal<any>(null);
-  ratingBookingId = signal<number | null>(null);
-  selectedRating  = signal<number>(0);
+  bookings         = signal<any[]>([]);
+  loading          = signal(false);
+  error            = signal<string | null>(null);
+  selectedBooking  = signal<any>(null);
+  cancelling       = signal<number | null>(null); // bookingId being cancelled
+
+  ratingBookingId  = signal<number | null>(null);
+  selectedRating   = signal<number>(0);
   ratingSubmitting = signal(false);
-  ratingSuccess   = signal(false);
+  ratingSuccess    = signal(false);
 
   ngOnInit() { this.loadBookings(); }
 
@@ -37,15 +39,10 @@ export class MyBookings implements OnInit {
     this.error.set(null);
     this.bookingService.getUserBookings().subscribe({
       next: (r: any) => {
-        // Handle various API response shapes
         let items: any[] = [];
-        if (Array.isArray(r?.data)) {
-          items = r.data;
-        } else if (Array.isArray(r?.data?.data)) {
-          items = r.data.data;
-        } else if (Array.isArray(r)) {
-          items = r;
-        }
+        if (Array.isArray(r?.data))        items = r.data;
+        else if (Array.isArray(r?.data?.data)) items = r.data.data;
+        else if (Array.isArray(r))         items = r;
         this.bookings.set(items);
         this.loading.set(false);
       },
@@ -56,6 +53,30 @@ export class MyBookings implements OnInit {
     });
   }
 
+  // ── Continue Payment ──
+  // Navigates to the payment page for a Pending booking.
+  // The payment page already handles Pending bookings correctly.
+  continuePayment(bookingId: number) {
+    this.router.navigate(['/payment', bookingId]);
+  }
+
+  // ── Cancel Booking ──
+  cancelBooking(bookingId: number) {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    this.cancelling.set(bookingId);
+    this.bookingService.cancelBooking(bookingId).subscribe({
+      next: () => {
+        this.cancelling.set(null);
+        this.loadBookings();
+      },
+      error: (err) => {
+        this.cancelling.set(null);
+        alert(this.errHandler.getErrorMessage(err));
+      }
+    });
+  }
+
+  // ── Rating ──
   openRating(bookingId: number) {
     this.ratingBookingId.set(bookingId);
     this.selectedRating.set(0);
@@ -83,31 +104,21 @@ export class MyBookings implements OnInit {
     });
   }
 
-  cancelBooking(bookingId: number) {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
-    this.bookingService.cancelBooking(bookingId).subscribe({
-      next: () => {
-        this.loadBookings();
-      },
-      error: (err) => {
-        alert(this.errHandler.getErrorMessage(err));
-      }
-    });
-  }
-
+  // ── Modal ──
   viewDetails(booking: any) { this.selectedBooking.set(booking); }
-  closeModal() { this.selectedBooking.set(null); }
-  goToSearch() { this.router.navigate(['/']); }
+  closeModal()              { this.selectedBooking.set(null); }
+  goToSearch()              { this.router.navigate(['/']); }
 
+  // ── Status helpers ──
   getStatusClass(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'confirmed':          return 'badge-confirmed';
-      case 'pending':            return 'badge-pending';
-      case 'paymentprocessing':  return 'badge-pending';
-      case 'expired':            return 'badge-expired';
-      case 'cancelled':          return 'badge-cancelled';
-      case 'paymentfailed':      return 'badge-cancelled';
-      default:                   return 'badge-default';
+      case 'confirmed':         return 'badge-confirmed';
+      case 'pending':           return 'badge-pending';
+      case 'paymentprocessing': return 'badge-pending';
+      case 'expired':           return 'badge-expired';
+      case 'cancelled':         return 'badge-cancelled';
+      case 'paymentfailed':     return 'badge-cancelled';
+      default:                  return 'badge-default';
     }
   }
 
@@ -119,12 +130,34 @@ export class MyBookings implements OnInit {
     }
   }
 
+  isPending(status: string): boolean {
+    return status?.toLowerCase() === 'pending';
+  }
+
+  isConfirmed(status: string): boolean {
+    return status?.toLowerCase() === 'confirmed';
+  }
+
+  isCancelling(bookingId: number): boolean {
+    return this.cancelling() === bookingId;
+  }
+
   formatDate(d: string): string {
     if (!d) return '—';
     try {
-      return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    } catch {
-      return d;
-    }
+      return new Date(d).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      });
+    } catch { return d; }
+  }
+
+  readonly convenienceFee = 20;
+
+  getTax(amount: number): number {
+    return Math.round(amount * 0.06);
+  }
+
+  getGrandTotal(amount: number): number {
+    return amount + this.getTax(amount) + this.convenienceFee;
   }
 }

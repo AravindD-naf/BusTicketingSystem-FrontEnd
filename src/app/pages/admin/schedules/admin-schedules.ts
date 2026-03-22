@@ -33,6 +33,7 @@ import { RouteService } from '../../../core/services/route.service';
               <th>Departure</th>
               <th>Arrival</th>
               <th>Avail. Seats</th>
+              <th>Fare (₹)</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -46,6 +47,7 @@ import { RouteService } from '../../../core/services/route.service';
               <td>{{ s.departureTime }}</td>
               <td>{{ s.arrivalTime }}<span *ngIf="s.isOvernightArrival" class="overnight-badge">+1</span></td>
               <td><span class="avail-badge">{{ s.availableSeats }}</span></td>
+              <td>₹{{ s.baseFare }}</td>
               <td><span class="status-chip" [class.active]="s.isActive">{{ s.isActive ? 'Active' : 'Inactive' }}</span></td>
               <td>
                 <button class="btn-edit" (click)="editSchedule(s)">✏️ Edit</button>
@@ -121,6 +123,11 @@ import { RouteService } from '../../../core/services/route.service';
                 <span class="auto-hint">Auto-calculated from route duration</span>
               </label>
             </div>
+            <label class="form-label">Fare per Seat (₹) *
+              <input class="form-input" type="number" formControlName="fare" placeholder="e.g. 500" min="0" />
+              <span class="auto-hint">Set 0 to use the route's default base fare</span>
+              <span class="field-error" *ngIf="scheduleForm.get('fare')?.invalid && scheduleForm.get('fare')?.touched">Must be 0 or more</span>
+            </label>
             <div class="modal-actions">
               <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
               <button type="submit" class="btn-primary" [disabled]="saving()">
@@ -219,7 +226,8 @@ export class AdminSchedules implements OnInit {
     busId:         [null, Validators.required],
     travelDate:    ['', Validators.required],
     departureTime: ['', Validators.required],
-    arrivalTime:   ['', Validators.required]
+    arrivalTime:   ['', Validators.required],
+    fare:          [0, [Validators.required, Validators.min(0)]]
   });
 
   ngOnInit() {
@@ -250,7 +258,7 @@ export class AdminSchedules implements OnInit {
   }
 
   openModal() {
-    this.scheduleForm.reset();
+    this.scheduleForm.reset({ routeId: null, busId: null, travelDate: '', departureTime: '', arrivalTime: '', fare: 0 });
     this.editingId.set(null);
     this.formError.set(null);
     this.selectedRouteDuration.set(null);
@@ -297,7 +305,8 @@ export class AdminSchedules implements OnInit {
       routeId: s.routeId, busId: s.busId,
       travelDate: s.travelDate?.split('T')[0],
       departureTime: s.departureTime?.substring(0, 5), // HH:MM only
-      arrivalTime: s.arrivalTime?.substring(0, 5) 
+      arrivalTime: s.arrivalTime?.substring(0, 5),
+      fare: s.baseFare || 0 
     });
     const route = this.routes().find((r: any) => r.routeId === s.routeId);
     if (route) {
@@ -354,8 +363,9 @@ export class AdminSchedules implements OnInit {
     }
 
     const payload = {
-      routeId: Number(v.routeId), busId: Number(v.busId),
-      travelDate: travelDateIso, departureTime: departure, arrivalTime: arrival
+        routeId: Number(v.routeId), busId: Number(v.busId),
+        travelDate: travelDateIso, departureTime: departure, arrivalTime: arrival,
+        fare: Number(v.fare) || 0
     };
 
     const id = this.editingId();

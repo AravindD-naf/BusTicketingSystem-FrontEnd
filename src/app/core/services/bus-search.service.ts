@@ -63,12 +63,30 @@ export class BusSearchService {
     });
 
     const sort = this.sortBy();
-    return result.sort((a: any, b: any) => {
-      if (sort === 'price_asc') return (a.baseFare || 0) - (b.baseFare || 0);
-      if (sort === 'price_desc') return (b.baseFare || 0) - (a.baseFare || 0);
-      if (sort === 'departure') return (a.departureTime || '').localeCompare(b.departureTime || '');
-      if (sort === 'arrival') return (a.arrivalTime || '').localeCompare(b.arrivalTime || '');
-      return 0;
+
+    // Helper: parse "HH:MM:SS" or "H:MM:SS" to total minutes
+    const toMins = (t: string): number => {
+        if (!t) return 0;
+        const p = t.split(':');
+        return parseInt(p[0], 10) * 60 + parseInt(p[1] || '0', 10);
+    };
+
+    // Helper: duration in minutes (handles overnight)
+    const duration = (s: any): number => {
+        const dep = toMins(s.departureTime);
+        const arr = toMins(s.arrivalTime);
+        const diff = arr - dep;
+        return diff < 0 ? diff + 24 * 60 : diff;
+    };
+
+    // Spread into new array so Angular signal detects the change
+    return [...result].sort((a: any, b: any) => {
+        if (sort === 'price_asc')  return (a.baseFare || 0) - (b.baseFare || 0);
+        if (sort === 'price_desc') return (b.baseFare || 0) - (a.baseFare || 0);
+        if (sort === 'departure')  return toMins(a.departureTime) - toMins(b.departureTime);
+        if (sort === 'arrival')    return toMins(a.arrivalTime)   - toMins(b.arrivalTime);
+        if (sort === 'duration')   return duration(a) - duration(b);
+        return 0;
     });
   });
 

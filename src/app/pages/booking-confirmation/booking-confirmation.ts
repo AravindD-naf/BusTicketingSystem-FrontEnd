@@ -39,8 +39,13 @@ export class BookingConfirmation implements OnInit {
       return;
     }
     this.bookingId.set(+id);
+    // Clean up all seat-selection session state after a successful booking
+    // so a fresh search/booking flow starts completely clean
+    sessionStorage.removeItem('returning_from_review');
+    sessionStorage.removeItem('was_returning');
+    sessionStorage.removeItem('seat_context');
     this.loadConfirmation();
-  }
+    }
 
   loadConfirmation() {
     this.loading.set(true);

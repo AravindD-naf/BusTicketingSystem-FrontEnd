@@ -1,6 +1,5 @@
 <app-navbar></app-navbar>
 
-<!-- Page hero bar -->
 <div class="page-hero">
   <div class="page-hero-left">
     <h2>My Bookings</h2>
@@ -27,10 +26,22 @@
 
     <div class="bookings-list" *ngIf="!loading() && bookings().length > 0">
       <div class="booking-card" *ngFor="let b of bookings()">
+
         <div class="booking-top">
           <div class="booking-id">#{{ b.bookingId }}</div>
-          <span class="status-badge" [class]="getStatusClass(b.bookingStatus)">{{ b.bookingStatus }}</span>
+          <span class="status-badge" [class]="getStatusClass(b.bookingStatus)">
+            {{ getStatusLabel(b.bookingStatus) }}
+          </span>
         </div>
+
+        <!-- Pending payment banner -->
+        <div class="pending-banner" *ngIf="isPending(b.bookingStatus)">
+          <span class="pending-icon">⏳</span>
+          <span class="pending-text">
+            Payment pending — your seats are reserved for a limited time.
+          </span>
+        </div>
+
         <div class="booking-info">
           <div class="info-item" *ngIf="b.source">
             <span class="info-label">Route</span>
@@ -49,30 +60,48 @@
             <span class="info-val">{{ b.numberOfSeats }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Amount</span>
-            <span class="info-val price">₹{{ b.totalAmount }}</span>
+            <span class="info-label">Total Amount</span>
+            <span class="info-val price">₹{{ getGrandTotal(b.totalAmount) }}</span>
+            <span class="info-fare-note">₹{{ b.totalAmount }} + ₹{{ getTax(b.totalAmount) }} tax + ₹{{ convenienceFee }} fee</span>
           </div>
           <div class="info-item">
             <span class="info-label">Booked On</span>
             <span class="info-val">{{ formatDate(b.bookingDate) }}</span>
           </div>
         </div>
+
         <div class="booking-actions">
+          <!-- View Details — always shown -->
           <button class="btn-outline" (click)="viewDetails(b)">
             <svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             View Details
           </button>
-          <button class="btn-cancel"
-            *ngIf="b.bookingStatus?.toLowerCase() === 'confirmed'"
-            (click)="cancelBooking(b.bookingId)">
-            Cancel Booking
-          </button>
-          <button class="btn-rate"
-            *ngIf="b.bookingStatus?.toLowerCase() === 'confirmed'"
-            (click)="openRating(b.bookingId)">
-            ⭐ Rate
-          </button>
+
+          <!-- PENDING: Continue Payment + Cancel -->
+          <ng-container *ngIf="isPending(b.bookingStatus)">
+            <button class="btn-continue" (click)="continuePayment(b.bookingId)">
+              💳 Continue Payment
+            </button>
+            <button class="btn-cancel"
+              [disabled]="isCancelling(b.bookingId)"
+              (click)="cancelBooking(b.bookingId)">
+              {{ isCancelling(b.bookingId) ? 'Cancelling...' : 'Cancel Booking' }}
+            </button>
+          </ng-container>
+
+          <!-- CONFIRMED: Cancel + Rate -->
+          <ng-container *ngIf="isConfirmed(b.bookingStatus)">
+            <button class="btn-cancel"
+              [disabled]="isCancelling(b.bookingId)"
+              (click)="cancelBooking(b.bookingId)">
+              {{ isCancelling(b.bookingId) ? 'Cancelling...' : 'Cancel Booking' }}
+            </button>
+            <button class="btn-rate" (click)="openRating(b.bookingId)">
+              ⭐ Rate
+            </button>
+          </ng-container>
         </div>
+
       </div>
     </div>
   </div>
@@ -86,37 +115,84 @@
       </div>
       <div class="detail-list">
         <div class="dl-row"><span>Schedule ID</span><span>{{ selectedBooking()?.scheduleId }}</span></div>
-        <div class="dl-row"><span>Number of Seats</span><span>{{ selectedBooking()?.numberOfSeats }}</span></div>
-        <div class="dl-row"><span>Total Amount</span><span style="font-weight:700;color:#16a34a">₹{{ selectedBooking()?.totalAmount }}</span></div>
-        <div class="dl-row"><span>Status</span><span class="status-badge" [class]="getStatusClass(selectedBooking()?.bookingStatus)">{{ getStatusLabel(selectedBooking()?.bookingStatus) }}</span></div>
-        <div class="dl-row" *ngIf="selectedBooking()?.travelDate"><span>Travel Date</span><span>{{ formatDate(selectedBooking()?.travelDate) }}</span></div>
-        <div class="dl-row" *ngIf="selectedBooking()?.departureTime"><span>Departure</span><span>{{ selectedBooking()?.departureTime }}</span></div>
-        <div class="dl-row" *ngIf="selectedBooking()?.busNumber"><span>Bus Number</span><span>{{ selectedBooking()?.busNumber }}</span></div>
-        <div class="dl-row" *ngIf="selectedBooking()?.operatorName"><span>Operator</span><span>{{ selectedBooking()?.operatorName }}</span></div>
-        <div class="dl-row" *ngIf="selectedBooking()?.source"><span>Route</span><span>{{ selectedBooking()?.source }} → {{ selectedBooking()?.destination }}</span></div>
+        <div class="dl-row"><span>Seats</span><span>{{ selectedBooking()?.numberOfSeats }}</span></div>
+        <div class="dl-row">
+          <span>Seat Fare</span>
+          <span>₹{{ selectedBooking()?.totalAmount }}</span>
+        </div>
+        <div class="dl-row">
+          <span>GST & Taxes (6%)</span>
+          <span>₹{{ getTax(selectedBooking()?.totalAmount ?? 0) }}</span>
+        </div>
+        <div class="dl-row">
+          <span>Convenience Fee</span>
+          <span>₹{{ convenienceFee }}</span>
+        </div>
+        <div class="dl-row dl-row-total">
+          <span>Total Paid</span>
+          <span style="font-weight:700;color:#16a34a">₹{{ getGrandTotal(selectedBooking()?.totalAmount ?? 0) }}</span>
+        </div>
+        <div class="dl-row">
+          <span>Status</span>
+          <span class="status-badge" [class]="getStatusClass(selectedBooking()?.bookingStatus)">
+            {{ getStatusLabel(selectedBooking()?.bookingStatus) }}
+          </span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.bookingStatus === 'Cancelled'">
+          <span>Cancelled By</span>
+          <span>{{ selectedBooking()?.cancelledBy || '—' }}</span>
+        </div>
+        <div class="dl-row refund-notice"
+          *ngIf="selectedBooking()?.bookingStatus === 'Cancelled' && selectedBooking()?.cancelledBy === 'Admin'">
+          <span>💰 Refund</span>
+          <span style="color:#16a34a;font-weight:600">Eligible — Contact support</span>
+        </div>
+        <div class="dl-row refund-notice"
+          *ngIf="selectedBooking()?.bookingStatus === 'Cancelled' && selectedBooking()?.cancelledBy === 'Customer'">
+          <span>💰 Refund</span>
+          <span style="color:#dc2626">Not applicable</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.travelDate">
+          <span>Travel Date</span><span>{{ formatDate(selectedBooking()?.travelDate) }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.departureTime">
+          <span>Departure</span><span>{{ selectedBooking()?.departureTime }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.busNumber">
+          <span>Bus Number</span><span>{{ selectedBooking()?.busNumber }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.operatorName">
+          <span>Operator</span><span>{{ selectedBooking()?.operatorName }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.source">
+          <span>Route</span><span>{{ selectedBooking()?.source }} → {{ selectedBooking()?.destination }}</span>
+        </div>
+      </div>
+      <!-- Continue payment from modal too -->
+      <div class="modal-footer" *ngIf="isPending(selectedBooking()?.bookingStatus)">
+        <button class="btn-continue" style="width:100%" (click)="closeModal(); continuePayment(selectedBooking()?.bookingId)">
+          💳 Continue Payment
+        </button>
       </div>
     </div>
   </div>
+
   <!-- Rating Modal -->
   <div class="modal-overlay" *ngIf="ratingBookingId()" (click)="closeRating()">
     <div class="rating-modal" (click)="$event.stopPropagation()">
       <h3>Rate Your Journey</h3>
       <p>How was your experience? Tap a star to rate.</p>
-
       <div class="star-row">
         <span *ngFor="let star of [1,2,3,4,5]"
           class="star-btn"
           [class.filled]="star <= selectedRating()"
           (click)="selectedRating.set(star)">★</span>
       </div>
-
-      <div *ngIf="ratingSuccess()" class="rating-success">
-        ✅ Thank you for your rating!
-      </div>
-
+      <div *ngIf="ratingSuccess()" class="rating-success">✅ Thank you for your rating!</div>
       <div class="rating-actions" *ngIf="!ratingSuccess()">
         <button class="btn-secondary" (click)="closeRating()">Cancel</button>
-        <button class="btn-primary" (click)="submitRating()" [disabled]="ratingSubmitting() || selectedRating() === 0">
+        <button class="btn-primary" (click)="submitRating()"
+          [disabled]="ratingSubmitting() || selectedRating() === 0">
           {{ ratingSubmitting() ? 'Submitting...' : 'Submit Rating' }}
         </button>
       </div>

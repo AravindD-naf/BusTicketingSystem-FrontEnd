@@ -62,7 +62,7 @@ import { PaymentService } from '../../../core/services/payment.service';
               <td>
                 <button class="btn-view" (click)="viewBooking(b)">👁️ View</button>
                 <button class="btn-cancel" *ngIf="b.bookingStatus === 'Confirmed'" (click)="cancelBooking(b.bookingId)">❌ Cancel</button>
-                <button class="btn-refund" *ngIf="b.bookingStatus === 'Cancelled' && !b.cancellationReason" (click)="openRefundModal(b)">💰 Refund</button>
+                <button class="btn-refund" *ngIf="b.bookingStatus === 'Cancelled' && b.cancelledBy === 'Admin'" (click)="openRefundModal(b)">💰 Refund</button>
               </td>
             </tr>
             <tr *ngIf="filteredBookings().length === 0">
