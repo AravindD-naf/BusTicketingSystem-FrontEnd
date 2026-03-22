@@ -19,6 +19,20 @@ import { AdminSources } from './pages/admin/sources/admin-sources';
 import { AdminDestinations } from './pages/admin/destinations/admin-destinations';
 import { AdminAuditLogs } from './pages/admin/audit-logs/admin-audit-logs';
 
+// Static pages
+import { About } from './pages/about/about';
+import { Accessibility } from './pages/accessibility/accessibility';
+import { HowItWorks } from './pages/how-it-works/how-it-works';
+import { Blog } from './pages/blog/blog';
+import { Help } from './pages/help/help';
+import { Contact } from './pages/contact/contact';
+import { Cancellations } from './pages/cancellations/cancellations';
+import { RefundPolicy } from './pages/refund-policy/refund-policy';
+import { PrivacyPolicy } from './pages/privacy-policy/privacy-policy';
+import { Terms } from './pages/terms/terms';
+import { CookiePolicy } from './pages/cookie-policy/cookie-policy';
+import { Partner } from './pages/partner/partner';
+
 export const routes: Routes = [
   { path: '', component: Landing },
   { path: 'auth', component: Auth },
@@ -44,5 +58,22 @@ export const routes: Routes = [
       { path: 'audit-logs', component: AdminAuditLogs }
     ]
   },
+
+  // Static / info pages
+  { path: 'about',          component: About },
+  { path: 'how-it-works',   component: HowItWorks },
+  { path: 'blog',           component: Blog },
+  { path: 'help',           component: Help },
+  { path: 'contact',        component: Contact },
+  { path: 'cancellations',  component: Cancellations },
+  { path: 'refund-policy',  component: RefundPolicy },
+  { path: 'privacy-policy', component: PrivacyPolicy },
+  { path: 'terms',          component: Terms },
+  { path: 'cookie-policy',  component: CookiePolicy },
+  { path: 'accessibility',  component: Accessibility },
+  { path: 'partner',        component: Partner },
+
+
+
   { path: '**', redirectTo: '' }
 ];
