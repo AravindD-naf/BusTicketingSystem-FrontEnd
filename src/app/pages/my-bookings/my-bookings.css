@@ -264,6 +264,65 @@
   margin-top: 4px;
 }
 
+/* Refund banner shown on cancelled booking cards */
+.refund-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f0fdf4;
+  border-left: 3px solid #22c55e;
+  padding: 10px 20px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.refund-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.refund-banner-icon { font-size: 16px; flex-shrink: 0; }
+.refund-banner-info { display: flex; flex-direction: column; gap: 2px; }
+.refund-banner-title { font-weight: 600; color: #15803d; font-size: 13px; }
+.refund-banner-detail { font-size: 11px; color: #64748b; }
+ 
+/* No-refund notice for non-paid cancelled bookings */
+.no-refund-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border-left: 3px solid #cbd5e1;
+  padding: 10px 20px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+ 
+/* Refund status chip used in both card and modal */
+.refund-status-chip {
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.refund-pending    { background: #fef9c3; color: #ca8a04; }
+.refund-completed  { background: #dcfce7; color: #16a34a; }
+.refund-rejected   { background: #fee2e2; color: #dc2626; }
+.refund-processing { background: #eff6ff; color: #1d4ed8; }
+ 
+/* Section title divider inside detail modal */
+.dl-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 12px 0 4px;
+  border-bottom: 1px solid var(--border);
+}
+
 @media (max-width: 640px) {
   .bookings-container { padding: 16px 16px 32px; }
   .page-hero { padding: 20px 16px; }

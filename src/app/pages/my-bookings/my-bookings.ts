@@ -7,6 +7,7 @@ import { Navbar } from '../../components/navbar/navbar';
 import { Footer } from '../../components/footer/footer';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { PaymentService } from '../../core/services/payment.service';
 
 @Component({
   selector: 'app-my-bookings',
@@ -20,13 +21,14 @@ export class MyBookings implements OnInit {
   private router         = inject(Router);
   private errHandler     = inject(HttpErrorHandlerService);
   private http           = inject(HttpClient);
+  private paymentService = inject(PaymentService);
 
   bookings         = signal<any[]>([]);
   loading          = signal(false);
   error            = signal<string | null>(null);
   selectedBooking  = signal<any>(null);
   cancelling       = signal<number | null>(null); // bookingId being cancelled
-
+  refundData = signal<Map<number, any>>(new Map());
   ratingBookingId  = signal<number | null>(null);
   selectedRating   = signal<number>(0);
   ratingSubmitting = signal(false);
@@ -45,12 +47,35 @@ export class MyBookings implements OnInit {
         else if (Array.isArray(r))         items = r;
         this.bookings.set(items);
         this.loading.set(false);
+        // Load refund data for any cancelled bookings
+        items.filter(b => b.bookingStatus === 'Cancelled').forEach(b => {
+          this.loadRefundForBooking(b.bookingId);
+        });
       },
       error: (err) => {
         this.error.set(this.errHandler.getErrorMessage(err));
         this.loading.set(false);
       }
     });
+  }
+
+  loadRefundForBooking(bookingId: number) {
+    this.paymentService.getRefundByBooking(bookingId).subscribe({
+      next: (r: any) => {
+        if (r?.data) {
+          this.refundData.update(map => {
+            const newMap = new Map(map);
+            newMap.set(bookingId, r.data);
+            return newMap;
+          });
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  getRefund(bookingId: number): any {
+    return this.refundData().get(bookingId) ?? null;
   }
 
   // ── Continue Payment ──

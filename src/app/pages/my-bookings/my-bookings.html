@@ -70,6 +70,34 @@
           </div>
         </div>
 
+        <!-- Refund banner for cancelled bookings that have a refund record -->
+        <div class="refund-banner" *ngIf="b.bookingStatus === 'Cancelled' && getRefund(b.bookingId)">
+          <div class="refund-banner-left">
+            <span class="refund-banner-icon">💰</span>
+            <div class="refund-banner-info">
+              <span class="refund-banner-title">Refund Initiated</span>
+              <span class="refund-banner-detail">
+                ₹{{ getRefund(b.bookingId)?.refundAmount }} refund
+                ({{ getRefund(b.bookingId)?.refundPercentage }}% of fare •
+                ₹{{ getRefund(b.bookingId)?.cancellationFee }} cancellation fee)
+              </span>
+            </div>
+          </div>
+          <span class="refund-status-chip"
+            [class.refund-pending]="getRefund(b.bookingId)?.status === 'Pending'"
+            [class.refund-completed]="getRefund(b.bookingId)?.status === 'Completed'"
+            [class.refund-rejected]="getRefund(b.bookingId)?.status === 'Rejected'"
+            [class.refund-processing]="getRefund(b.bookingId)?.status === 'Processing'">
+            {{ getRefund(b.bookingId)?.status }}
+          </span>
+        </div>
+
+        <!-- No-refund notice for cancelled bookings without a refund record (Pending/Expired cancellations) -->
+        <div class="no-refund-banner" *ngIf="b.bookingStatus === 'Cancelled' && !getRefund(b.bookingId)">
+          <span>ℹ️</span>
+          <span>No refund applicable — booking was not paid.</span>
+        </div>
+
         <div class="booking-actions">
           <!-- View Details — always shown -->
           <button class="btn-outline" (click)="viewDetails(b)">
@@ -77,7 +105,7 @@
             View Details
           </button>
 
-          <!-- PENDING: Continue Payment + Cancel -->
+          <!-- PENDING: Continue Payment + Cancel (no refund for pending) -->
           <ng-container *ngIf="isPending(b.bookingStatus)">
             <button class="btn-continue" (click)="continuePayment(b.bookingId)">
               💳 Continue Payment
@@ -114,8 +142,34 @@
         <button class="close-btn" (click)="closeModal()">✕</button>
       </div>
       <div class="detail-list">
+
+        <!-- Journey info -->
+        <div class="dl-row" *ngIf="selectedBooking()?.source">
+          <span>Route</span>
+          <span>{{ selectedBooking()?.source }} → {{ selectedBooking()?.destination }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.travelDate">
+          <span>Travel Date</span>
+          <span>{{ formatDate(selectedBooking()?.travelDate) }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.departureTime">
+          <span>Departure</span>
+          <span>{{ selectedBooking()?.departureTime }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.busNumber">
+          <span>Bus Number</span>
+          <span>{{ selectedBooking()?.busNumber }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.operatorName">
+          <span>Operator</span>
+          <span>{{ selectedBooking()?.operatorName }}</span>
+        </div>
+
+        <!-- Booking info -->
         <div class="dl-row"><span>Schedule ID</span><span>{{ selectedBooking()?.scheduleId }}</span></div>
         <div class="dl-row"><span>Seats</span><span>{{ selectedBooking()?.numberOfSeats }}</span></div>
+
+        <!-- Fare breakdown -->
         <div class="dl-row">
           <span>Seat Fare</span>
           <span>₹{{ selectedBooking()?.totalAmount }}</span>
@@ -132,42 +186,69 @@
           <span>Total Paid</span>
           <span style="font-weight:700;color:#16a34a">₹{{ getGrandTotal(selectedBooking()?.totalAmount ?? 0) }}</span>
         </div>
+
+        <!-- Status -->
         <div class="dl-row">
           <span>Status</span>
           <span class="status-badge" [class]="getStatusClass(selectedBooking()?.bookingStatus)">
             {{ getStatusLabel(selectedBooking()?.bookingStatus) }}
           </span>
         </div>
-        <div class="dl-row" *ngIf="selectedBooking()?.bookingStatus === 'Cancelled'">
-          <span>Cancelled By</span>
-          <span>{{ selectedBooking()?.cancelledBy || '—' }}</span>
-        </div>
-        <div class="dl-row refund-notice"
-          *ngIf="selectedBooking()?.bookingStatus === 'Cancelled' && selectedBooking()?.cancelledBy === 'Admin'">
-          <span>💰 Refund</span>
-          <span style="color:#16a34a;font-weight:600">Eligible — Contact support</span>
-        </div>
-        <div class="dl-row refund-notice"
-          *ngIf="selectedBooking()?.bookingStatus === 'Cancelled' && selectedBooking()?.cancelledBy === 'Customer'">
-          <span>💰 Refund</span>
-          <span style="color:#dc2626">Not applicable</span>
-        </div>
-        <div class="dl-row" *ngIf="selectedBooking()?.travelDate">
-          <span>Travel Date</span><span>{{ formatDate(selectedBooking()?.travelDate) }}</span>
-        </div>
-        <div class="dl-row" *ngIf="selectedBooking()?.departureTime">
-          <span>Departure</span><span>{{ selectedBooking()?.departureTime }}</span>
-        </div>
-        <div class="dl-row" *ngIf="selectedBooking()?.busNumber">
-          <span>Bus Number</span><span>{{ selectedBooking()?.busNumber }}</span>
-        </div>
-        <div class="dl-row" *ngIf="selectedBooking()?.operatorName">
-          <span>Operator</span><span>{{ selectedBooking()?.operatorName }}</span>
-        </div>
-        <div class="dl-row" *ngIf="selectedBooking()?.source">
-          <span>Route</span><span>{{ selectedBooking()?.source }} → {{ selectedBooking()?.destination }}</span>
-        </div>
+
+        <!-- Cancellation & Refund section — only shown for cancelled bookings -->
+        <ng-container *ngIf="selectedBooking()?.bookingStatus === 'Cancelled'">
+
+          <div class="dl-row">
+            <span>Cancelled By</span>
+            <span>{{ selectedBooking()?.cancelledBy || '—' }}</span>
+          </div>
+
+          <!-- Has a refund record (was a confirmed/paid booking) -->
+          <ng-container *ngIf="getRefund(selectedBooking()?.bookingId)">
+            <div class="dl-section-title">💰 Refund Details</div>
+
+            <div class="dl-row">
+              <span>Refund Amount</span>
+              <span style="color:#16a34a;font-weight:700">
+                ₹{{ getRefund(selectedBooking()?.bookingId)?.refundAmount }}
+              </span>
+            </div>
+            <div class="dl-row">
+              <span>Cancellation Fee</span>
+              <span style="color:#dc2626">
+                ₹{{ getRefund(selectedBooking()?.bookingId)?.cancellationFee }}
+              </span>
+            </div>
+            <div class="dl-row">
+              <span>Policy Applied</span>
+              <span>{{ getRefund(selectedBooking()?.bookingId)?.refundPercentage }}% of fare refunded</span>
+            </div>
+            <div class="dl-row">
+              <span>Refund Status</span>
+              <span class="refund-status-chip"
+                [class.refund-pending]="getRefund(selectedBooking()?.bookingId)?.status === 'Pending'"
+                [class.refund-completed]="getRefund(selectedBooking()?.bookingId)?.status === 'Completed'"
+                [class.refund-rejected]="getRefund(selectedBooking()?.bookingId)?.status === 'Rejected'"
+                [class.refund-processing]="getRefund(selectedBooking()?.bookingId)?.status === 'Processing'">
+                {{ getRefund(selectedBooking()?.bookingId)?.status }}
+              </span>
+            </div>
+            <div class="dl-row" *ngIf="getRefund(selectedBooking()?.bookingId)?.processedAt">
+              <span>Processed On</span>
+              <span>{{ formatDate(getRefund(selectedBooking()?.bookingId)?.processedAt) }}</span>
+            </div>
+          </ng-container>
+
+          <!-- No refund record (booking was not paid — Pending/Expired status before cancellation) -->
+          <div class="dl-row refund-notice" *ngIf="!getRefund(selectedBooking()?.bookingId)">
+            <span>💰 Refund</span>
+            <span style="color:#94a3b8">Not applicable — no payment was made for this booking.</span>
+          </div>
+
+        </ng-container>
+
       </div>
+
       <!-- Continue payment from modal too -->
       <div class="modal-footer" *ngIf="isPending(selectedBooking()?.bookingStatus)">
         <button class="btn-continue" style="width:100%" (click)="closeModal(); continuePayment(selectedBooking()?.bookingId)">
