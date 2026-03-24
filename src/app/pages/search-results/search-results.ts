@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Navbar } from '../../components/navbar/navbar';
 import { Footer } from '../../components/footer/footer';
@@ -29,7 +29,10 @@ export class SearchResults implements OnInit {
   loading    = signal(true);
   error      = signal<string | null>(null);
 
-  schedules = this.busSearchService.filteredSchedules;
+  schedules = this.busSearchService.allSchedules;
+  totalCount = this.busSearchService.totalCount;
+  pageSize   = this.busSearchService.pageSize;
+  pageNumber = this.busSearchService.pageNumber;
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -69,7 +72,16 @@ export class SearchResults implements OnInit {
 
   sortBy(option: SortOption) {
     this.busSearchService.updateSort(option);
+    this.loadSchedules();  // re-fetch from backend with new sort
   }
+
+  goToPage(page: number) {
+    this.busSearchService.pageNumber.set(page);
+    this.loadSchedules();
+  }
+
+  totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
+
 
   onSelectBus(scheduleId: number) {
     this.router.navigate(['/seat-selection', scheduleId], {

@@ -25,94 +25,49 @@ export class BusSearchService {
     minRating: 0
   });
   sortBy = signal<SortOption>('departure');
+  pageNumber = signal(1);
+  pageSize   = signal(20);
+  totalCount = signal(0);
 
-  filteredSchedules = computed(() => {
-    const f = this.filter();
-    let result = this.allSchedules().filter((schedule: any) => {
-
-      // Bus type filter
-      if (f.busTypes.length && !f.busTypes.includes(schedule.busType)) return false;
-
-      // Operator filter
-      if (f.operators.length && !f.operators.includes(schedule.operatorName)) return false;
-
-      // Price filter
-      if (f.maxPrice && (schedule.baseFare || 0) > f.maxPrice) return false;
-
-      // Rating filter — treat missing/zero rating as 4.5 (unrated buses still show)
-      if (f.minRating > 0) {
-        const busRating = (schedule.rating && schedule.rating > 0) ? schedule.rating : 4.5;
-        if (busRating < f.minRating) return false;
-      }
-
-      // Departure time filter
-      if (f.departureTimes.length) {
-        const dep = schedule.departureTime || '';
-        const h = parseInt(dep.split(':')[0], 10);
-        const matches = f.departureTimes.some((t: string) => {
-          if (t === 'morning')   return h >= 6  && h < 12;
-          if (t === 'afternoon') return h >= 12 && h < 18;
-          if (t === 'evening')   return h >= 18 && h < 22;
-          if (t === 'night')     return h >= 22 || h < 6;
-          return false;
-        });
-        if (!matches) return false;
-      }
-
-      return true;
-    });
-
-    const sort = this.sortBy();
-
-    // Helper: parse "HH:MM:SS" or "H:MM:SS" to total minutes
-    const toMins = (t: string): number => {
-        if (!t) return 0;
-        const p = t.split(':');
-        return parseInt(p[0], 10) * 60 + parseInt(p[1] || '0', 10);
-    };
-
-    // Use durationMinutes from backend (already computed correctly for overnight journeys)
-    // Fall back to computing from dep/arr if field not present
-    const getDuration = (s: any): number =>
-      s.durationMinutes > 0
-        ? s.durationMinutes
-        : (() => {
-            const dep = toMins(s.departureTime);
-            const arr = toMins(s.arrivalTime);
-            const diff = arr - dep;
-            return diff < 0 ? diff + 24 * 60 : diff;
-          })();
-
-    return [...result].sort((a: any, b: any) => {
-      if (sort === 'price_asc')  return (a.baseFare || 0) - (b.baseFare || 0);
-      if (sort === 'price_desc') return (b.baseFare || 0) - (a.baseFare || 0);
-      if (sort === 'departure')  return toMins(a.departureTime) - toMins(b.departureTime);
-      if (sort === 'arrival')    return toMins(a.arrivalTime)   - toMins(b.arrivalTime);
-      if (sort === 'duration')   return getDuration(a) - getDuration(b);
-      return 0;
-    });
-  });
+  
 
   updateFilter(partial: Partial<BusFilter>) {
     this.filter.update(f => ({ ...f, ...partial }));
+    this.pageNumber.set(1);
   }
 
   updateSort(sort: SortOption) {
     this.sortBy.set(sort);
+    this.pageNumber.set(1);
   }
 
   // POST /api/v1/booking/schedules/search
   search(fromCity: string, toCity: string, travelDate: string, passengers: number = 1) {
-    return this.http.post<ApiResponse<any[]>>(`${this.API}/booking/schedules/search`, {
+    const f = this.filter();
+    const body = {
       fromCity,
       toCity,
-      travelDate
-    }).pipe(
+      travelDate,
+      busTypes:       f.busTypes.length       ? f.busTypes       : undefined,
+      maxPrice:       f.maxPrice < 3000       ? f.maxPrice       : undefined,
+      departureTimes: f.departureTimes.length ? f.departureTimes : undefined,
+      operators:      f.operators.length      ? f.operators      : undefined,
+      minRating:      f.minRating > 0         ? f.minRating      : undefined,
+      sortBy:         this.sortBy(),
+      pageNumber:     this.pageNumber(),
+      pageSize:       this.pageSize()
+    };
+    return this.http.post<ApiResponse<any>>(`${this.API}/booking/schedules/search`, body).pipe(
       tap(response => {
-        if (response.success && Array.isArray(response.data)) {
-          this.allSchedules.set(response.data);
+        if (response.success) {
+          const data = response.data;
+          // Handle both paged { items, totalCount } and plain array responses
+          const items = Array.isArray(data) ? data : (data?.items ?? []);
+          this.allSchedules.set(items);
+          this.totalCount.set(Array.isArray(data) ? items.length : (data?.totalCount ?? items.length));
         } else {
           this.allSchedules.set([]);
+          this.totalCount.set(0);
         }
       })
     );

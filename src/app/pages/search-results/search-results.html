@@ -12,7 +12,7 @@
     </div>
   </div>
   <div class="summary-right">
-    <div class="results-count"><strong>{{ schedules().length }} buses</strong> available</div>
+    <div class="results-count"><strong>{{ totalCount() }} buses</strong> available</div>
     <button class="edit-btn" (click)="editSearch()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       Edit Search
@@ -70,7 +70,9 @@
 <div class="page-body">
 
   <!-- ── FILTER SIDEBAR ── -->
-  <app-filter-sidebar></app-filter-sidebar>
+  <app-filter-sidebar (filterChanged)="loadSchedules()"></app-filter-sidebar>
+
+
 
   <!-- ── RESULTS COLUMN ── -->
   <div class="results-col">
@@ -166,6 +168,11 @@
           <div class="card-tag" *ngIf="s.availableSeats > 5">✦ Free Cancellation</div>
         </div>
 
+      </div>
+      <div class="pagination-bar" *ngIf="totalPages() > 1">
+        <button class="page-btn" (click)="goToPage(pageNumber() - 1)" [disabled]="pageNumber() === 1">← Prev</button>
+        <span class="page-info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
+        <button class="page-btn" (click)="goToPage(pageNumber() + 1)" [disabled]="pageNumber() === totalPages()">Next →</button>
       </div>
     </ng-container>
   </div>
