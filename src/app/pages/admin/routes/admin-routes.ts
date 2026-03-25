@@ -17,6 +17,10 @@ import { RouteService } from '../../../core/services/route.service';
       <div class="search-bar">
         <input class="search-input" placeholder="Search by source or destination..." (input)="onSearch($event)" />
       </div>
+      <div *ngIf="deleteError()" class="warn-box">
+        ⚠️ {{ deleteError() }}
+        <button (click)="deleteError.set(null)" style="margin-left:8px;background:none;border:none;cursor:pointer;font-weight:700">✕</button>
+      </div>
 
       <div *ngIf="loading()" class="info-box">Loading routes...</div>
       <div *ngIf="error()" class="error-box">{{ error() }}</div>
@@ -194,6 +198,8 @@ export class AdminRoutes implements OnInit {
   saving         = signal(false);
   formError      = signal<string | null>(null);
   editingId      = signal<number | null>(null);
+  deleteError = signal<string | null>(null);
+
 
   // Pagination
   pageSize    = signal(10);
@@ -291,9 +297,10 @@ export class AdminRoutes implements OnInit {
 
   deleteRoute(id: number) {
     if (!confirm('Delete this route?')) return;
+    this.deleteError.set(null);
     this.routeService.deleteRoute(id).subscribe({
       next: () => { this.currentPage.set(1); this.loadRoutes(); },
-      error: e => alert(e?.error?.message || 'Delete failed')
+      error: e => this.deleteError.set(e?.error?.message || 'Delete failed')
     });
   }
 

@@ -17,6 +17,10 @@ import { BusSearchService } from '../../../core/services/bus-search.service';
       <div class="search-bar">
         <input class="search-input" placeholder="Search by bus number, operator or type..." (input)="onSearch($event)" />
       </div>
+      <div *ngIf="deleteError()" class="warn-box">
+        ⚠️ {{ deleteError() }}
+        <button (click)="deleteError.set(null)" style="margin-left:8px;background:none;border:none;cursor:pointer;font-weight:700">✕</button>
+      </div>
 
       <div *ngIf="loading()" class="info-box">Loading buses...</div>
       <div *ngIf="error()" class="error-box">{{ error() }}</div>
@@ -208,6 +212,8 @@ export class AdminBuses implements OnInit {
   saving    = signal(false);
   formError = signal<string | null>(null);
   editingId = signal<number | null>(null);
+  deleteError = signal<string | null>(null);
+
 
   // Pagination
   pageSize    = signal(10);
@@ -330,9 +336,10 @@ export class AdminBuses implements OnInit {
 
   deleteBus(id: number) {
     if (!confirm('Delete this bus?')) return;
+    this.deleteError.set(null);
     this.busService.deleteBus(id).subscribe({
       next: () => { this.currentPage.set(1); this.loadBuses(); },
-      error: e => alert(e?.error?.message || 'Delete failed')
+      error: e => this.deleteError.set(e?.error?.message || 'Delete failed')
     });
   }
 }
