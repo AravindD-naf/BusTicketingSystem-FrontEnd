@@ -61,4 +61,10 @@ export class RouteService {
   searchRoutes(source: string, destination: string, pageNumber = 1, pageSize = 10) {
     return this.http.post<ApiResponse<any[]>>(`${this.API}/routes/search`, { source, destination, pageNumber, pageSize });
   }
+
+  // Add this method to RouteService
+  getAllCities() {
+    return this.http.post<ApiResponse<any>>(`${this.API}/routes/get-all`, { pageNumber: 1, pageSize: 1000 });
+  }
+
 }

@@ -69,6 +69,48 @@
   display: block;
 }
 
+.autocomplete-wrap {
+  position: relative;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  z-index: 999;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.suggestions-dropdown li {
+  padding: 10px 14px;
+  font-size: .875rem;
+  color: #1e293b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background .15s;
+}
+
+.suggestions-dropdown li:hover {
+  background: #f0f9ff;
+  color: #1d4ed8;
+}
+
+.city-icon {
+  font-size: .8rem;
+}
+
+
 /* Responsive */
 @media (max-width: 860px) {
   .form-row { grid-template-columns: 1fr; }

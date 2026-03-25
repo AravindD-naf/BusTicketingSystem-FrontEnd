@@ -6,30 +6,49 @@
 
   <div class="from-to-row">
     <div class="form-row">
-      <div class="form-group">
+
+      <!-- FROM -->
+      <div class="form-group autocomplete-wrap">
         <label>FROM</label>
         <input
           type="text"
           placeholder="Chennai"
           formControlName="from"
+          autocomplete="off"
           [class.input-error]="searchForm.get('from')?.invalid && searchForm.get('from')?.touched"
+          (input)="onFromInput($event)"
+          (blur)="hideFromDropdown()"
+          (focus)="onFromInput($event)"
         />
         <span class="field-error" *ngIf="searchForm.get('from')?.invalid && searchForm.get('from')?.touched">
           Please enter origin city
         </span>
+        <ul class="suggestions-dropdown" *ngIf="showFromDropdown()">
+          <li *ngFor="let city of fromSuggestions()" (mousedown)="selectFrom(city)">{{ city }}</li>
+        </ul>
       </div>
-      <div class="form-group">
+
+      <!-- TO -->
+      <div class="form-group autocomplete-wrap">
         <label>TO</label>
         <input
           type="text"
           placeholder="Bangalore"
           formControlName="to"
+          autocomplete="off"
           [class.input-error]="searchForm.get('to')?.invalid && searchForm.get('to')?.touched"
+          (input)="onToInput($event)"
+          (blur)="hideToDropdown()"
+          (focus)="onToInput($event)"
         />
         <span class="field-error" *ngIf="searchForm.get('to')?.invalid && searchForm.get('to')?.touched">
           Please enter destination city
         </span>
+        <ul class="suggestions-dropdown" *ngIf="showToDropdown()">
+          <li *ngFor="let city of toSuggestions()" (mousedown)="selectTo(city)">{{ city }}</li>
+        </ul>
       </div>
+
     </div>
     <button type="button" class="swap-btn" (click)="swapCities()">⇄</button>
   </div>
