@@ -8,6 +8,7 @@ import { Footer } from '../../components/footer/footer';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { PaymentService } from '../../core/services/payment.service';
+import { WalletService } from '../../core/services/wallet.service';
 
 @Component({
   selector: 'app-my-bookings',
@@ -22,6 +23,7 @@ export class MyBookings implements OnInit {
   private errHandler     = inject(HttpErrorHandlerService);
   private http           = inject(HttpClient);
   private paymentService = inject(PaymentService);
+  private walletService = inject(WalletService);
 
   bookings         = signal<any[]>([]);
   loading          = signal(false);
@@ -65,9 +67,16 @@ export class MyBookings implements OnInit {
   cancelBooking(bookingId: number) {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
     this.cancelling.set(bookingId);
+    const booking = this.bookings().find(b => b.bookingId === bookingId);
     this.bookingService.cancelBooking(bookingId).subscribe({
       next: () => {
         this.cancelling.set(null);
+        // Credit refund to wallet if booking was Confirmed (had a payment)
+        if (booking?.bookingStatus?.toLowerCase() === 'confirmed' && booking?.totalAmount > 0) {
+          this.walletService.loadWallet();
+          this.walletService.creditRefund(booking.totalAmount, bookingId);
+          alert(`Your booking has been cancelled. ₹${booking.totalAmount} refund has been credited to your BusMate Wallet.`);
+        }
         this.loadBookings();
       },
       error: (err) => {

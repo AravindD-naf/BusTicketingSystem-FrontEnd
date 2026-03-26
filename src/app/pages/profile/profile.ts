@@ -1,25 +1,49 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { BookingService } from '../../core/services/booking.service';
+import { WalletService } from '../../core/services/wallet.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { Footer } from '../../components/footer/footer';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, Navbar, Footer],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, Navbar, Footer],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
 export class Profile implements OnInit {
   auth               = inject(AuthService);
+  walletService      = inject(WalletService);
   private bookingSvc = inject(BookingService);
   private router     = inject(Router);
+  private fb         = inject(FormBuilder);
 
   bookings = signal<any[]>([]);
   loading  = signal(true);
+
+  // Wallet UI state
+  showAddMoney     = signal(false);
+  addMoneyLoading  = signal(false);
+  addMoneySuccess  = signal(false);
+  addMoneyError    = signal<string | null>(null);
+  showTransactions = signal(false);
+
+  addMoneyForm = this.fb.group({
+    amount:        [null as number | null, [Validators.required, Validators.min(1), Validators.max(50000)]],
+    paymentMethod: ['UPI', Validators.required]
+  });
+
+  topupMethods = [
+    { value: 'UPI',       label: 'UPI',         icon: 'upi' },
+    { value: 'RuPay',     label: 'RuPay',       icon: 'rupay' },
+    { value: 'VISA',      label: 'VISA',        icon: 'visa' },
+    { value: 'Mastercard',label: 'Mastercard',  icon: 'mastercard' },
+    { value: 'Diners',    label: 'Diners Club', icon: 'diners' },
+  ];
 
   totalBookings  = computed(() => this.bookings().length);
 
@@ -52,6 +76,7 @@ export class Profile implements OnInit {
   });
 
   ngOnInit() {
+    this.walletService.loadWallet();
     this.bookingSvc.getUserBookings(1, 100).subscribe({
       next: (r: any) => {
         let items: any[] = [];
@@ -63,6 +88,39 @@ export class Profile implements OnInit {
       },
       error: () => this.loading.set(false)
     });
+  }
+
+  openAddMoney() {
+    this.showAddMoney.set(true);
+    this.addMoneySuccess.set(false);
+    this.addMoneyError.set(null);
+    this.addMoneyForm.reset({ amount: null, paymentMethod: 'UPI' });
+  }
+
+  closeAddMoney() {
+    this.showAddMoney.set(false);
+  }
+
+  submitAddMoney() {
+    if (this.addMoneyForm.invalid) {
+      this.addMoneyForm.markAllAsTouched();
+      return;
+    }
+    const amount = Number(this.addMoneyForm.value.amount);
+    this.addMoneyLoading.set(true);
+    this.addMoneyError.set(null);
+
+    // Simulate payment gateway delay
+    setTimeout(() => {
+      this.walletService.credit(amount, `Added via ${this.addMoneyForm.value.paymentMethod}`);
+      this.addMoneyLoading.set(false);
+      this.addMoneySuccess.set(true);
+      setTimeout(() => this.closeAddMoney(), 1800);
+    }, 1200);
+  }
+
+  toggleTransactions() {
+    this.showTransactions.update(v => !v);
   }
 
   getInitials(): string {
@@ -78,6 +136,13 @@ export class Profile implements OnInit {
     if (!d) return '—';
     try {
       return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch { return d; }
+  }
+
+  formatTxDate(d: string): string {
+    if (!d) return '—';
+    try {
+      return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch { return d; }
   }
 

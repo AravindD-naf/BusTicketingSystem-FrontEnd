@@ -7,6 +7,7 @@ import { Footer } from '../../components/footer/footer';
 import { BookingService } from '../../core/services/booking.service';
 import { PaymentService } from '../../core/services/payment.service';
 import { SeatService } from '../../core/services/seat.service';
+import { WalletService } from '../../core/services/wallet.service';
 import { HttpErrorHandlerService } from '../../core/services/http-error-handler.service';
 
 @Component({
@@ -23,6 +24,7 @@ export class Payment implements OnInit {
   private bookingService = inject(BookingService);
   private paymentService = inject(PaymentService);
   private errHandler     = inject(HttpErrorHandlerService);
+  walletService          = inject(WalletService);
   seatService            = inject(SeatService);
 
   bookingId    = signal<number>(0);
@@ -37,18 +39,31 @@ export class Payment implements OnInit {
   grandTotal   = this.seatService.totalAmount;
   selectedSeatCount = computed(() => this.seatService.selectedSeats().length);
 
+  // Wallet balance check
+  walletSufficient = computed(() =>
+    this.walletService.hasSufficientBalance(
+      this.booking()?.totalAmount ?? this.grandTotal()
+    )
+  );
+
   paymentForm: FormGroup = this.fb.group({
     paymentMethod: ['UPI', Validators.required]
   });
 
-  paymentMethods = [
-    { value: 'UPI',        label: 'UPI',                  icon: '📱' },
-    { value: 'CreditCard', label: 'Credit / Debit Card',  icon: '💳' },
-    { value: 'NetBanking', label: 'Net Banking',           icon: '🏦' },
-    { value: 'Wallet',     label: 'Digital Wallet',        icon: '👛' }
-  ];
+  paymentMethods = computed(() => [
+    { value: 'UPI',        label: 'UPI',                  icon: '📱', disabled: false },
+    { value: 'CreditCard', label: 'Credit / Debit Card',  icon: '💳', disabled: false },
+    { value: 'NetBanking', label: 'Net Banking',           icon: '🏦', disabled: false },
+    {
+      value: 'BusMateWallet',
+      label: `BusMate Wallet  (₹${this.walletService.balance().toFixed(2)} available)`,
+      icon: '👛',
+      disabled: !this.walletSufficient()
+    },
+  ]);
 
   ngOnInit() {
+    this.walletService.loadWallet();
     const id = this.route.snapshot.params['bookingId'];
     if (!id || isNaN(+id)) {
       this.error.set('Invalid booking ID.');
@@ -78,16 +93,33 @@ export class Payment implements OnInit {
     this.processing.set(true);
     this.error.set(null);
 
-    // Use booking totalAmount or fall back to seatService computed total
     const amount = this.booking()?.totalAmount ?? this.grandTotal();
+    const method = this.paymentForm.value.paymentMethod;
+
+    // Wallet payment — deduct locally first, then confirm with backend
+    if (method === 'BusMateWallet') {
+      const deducted = this.walletService.debit(
+        amount,
+        `Payment for Booking #${this.bookingId()}`
+      );
+      if (!deducted) {
+        this.processing.set(false);
+        this.error.set('Insufficient wallet balance. Please add money or choose another payment method.');
+        return;
+      }
+    }
 
     this.paymentService.initiatePayment({
       bookingId: this.bookingId(),
       amount,
-      paymentMethod: this.paymentForm.value.paymentMethod
+      paymentMethod: method === 'BusMateWallet' ? 'Wallet' : method
     }).subscribe({
       next: (initiateResp: any) => {
         if (!initiateResp?.success) {
+          // Refund wallet deduction if initiation failed
+          if (method === 'BusMateWallet') {
+            this.walletService.credit(amount, `Refund - Payment initiation failed`);
+          }
           this.processing.set(false);
           this.error.set(initiateResp?.message || 'Payment initiation failed.');
           return;
@@ -104,16 +136,27 @@ export class Payment implements OnInit {
             if (confirmResp?.success) {
               this.router.navigate(['/booking-confirmation', this.bookingId()]);
             } else {
+              // Refund wallet deduction if confirmation failed
+              if (method === 'BusMateWallet') {
+                this.walletService.credit(amount, `Refund - Payment confirmation failed`);
+              }
               this.error.set(confirmResp?.message || 'Payment confirmation failed.');
             }
           },
           error: (err) => {
+            // Refund wallet deduction on error
+            if (method === 'BusMateWallet') {
+              this.walletService.credit(amount, `Refund - Payment error`);
+            }
             this.processing.set(false);
             this.error.set(this.errHandler.getErrorMessage(err));
           }
         });
       },
       error: (err) => {
+        if (method === 'BusMateWallet') {
+          this.walletService.credit(amount, `Refund - Payment error`);
+        }
         this.processing.set(false);
         this.error.set(this.errHandler.getErrorMessage(err));
       }

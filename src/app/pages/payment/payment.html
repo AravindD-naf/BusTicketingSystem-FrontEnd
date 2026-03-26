@@ -31,13 +31,21 @@
         <form [formGroup]="paymentForm" (ngSubmit)="processPayment()">
           <div class="method-list">
             <label
-              *ngFor="let m of paymentMethods"
+              *ngFor="let m of paymentMethods()"
               class="method-option"
               [class.selected]="paymentForm.value.paymentMethod === m.value"
+              [class.disabled]="m.disabled"
             >
-              <input type="radio" formControlName="paymentMethod" [value]="m.value" hidden />
+              <input type="radio" formControlName="paymentMethod" [value]="m.value" [disabled]="m.disabled" hidden />
               <span class="method-icon">{{ m.icon }}</span>
-              <span class="method-label">{{ m.label }}</span>
+              <span class="method-label">
+                {{ m.value === 'BusMateWallet' ? 'BusMate Wallet' : m.label }}
+                <ng-container *ngIf="m.value === 'BusMateWallet'">
+                  <span class="wallet-balance-chip" [class.insufficient]="m.disabled">
+                    ₹{{ walletService.balance() | number:'1.2-2' }} {{ m.disabled ? '— Insufficient' : '— Available' }}
+                  </span>
+                </ng-container>
+              </span>
               <span class="check-dot" *ngIf="paymentForm.value.paymentMethod === m.value">✓</span>
             </label>
           </div>
