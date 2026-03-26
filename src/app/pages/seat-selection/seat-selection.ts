@@ -99,7 +99,7 @@ export class SeatSelection implements OnInit {
     this.from.set(qp['from'] || '');
     this.to.set(qp['to'] || '');
     this.date.set(qp['date'] || '');
-    this.requiredSeats.set(Math.max(1, +qp['passengers'] || 1));
+    this.requiredSeats.set(this.MAX_SEATS);
 
     // ── STORE search context so booking-review can navigate back correctly ──
     sessionStorage.setItem('seat_context', JSON.stringify({
@@ -284,7 +284,7 @@ export class SeatSelection implements OnInit {
 
     // If trying to add but already at required count — show warning
     if (!wasSelected && this.selectedSeats().length >= this.requiredSeats()) {
-      alert(`You selected ${this.requiredSeats()} passenger(s). Please deselect a seat before choosing another.`);
+      alert(`You can select a maximum of ${this.MAX_SEATS} seats per booking.`);
       return;
     }
 

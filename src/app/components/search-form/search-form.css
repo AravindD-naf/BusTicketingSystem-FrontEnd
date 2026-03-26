@@ -45,18 +45,6 @@
 }
 .swap-btn:hover { transform: translateX(-50%) rotate(180deg); }
 
-.search-btn {
-  width: 100%; background: var(--navy); color: white; border: none;
-  padding: 14px; border-radius: var(--radius-sm);
-  font-size: 15px; font-weight: 600; letter-spacing: 0.3px;
-  transition: all 0.2s; margin-top: 4px;
-}
-.search-btn:hover {
-  background: var(--navy-light);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(10,31,68,0.25);
-}
-
 .input-error {
   border-color: #ef4444 !important;
   background: #fff5f5;
@@ -111,9 +99,62 @@
 }
 
 
+/* Date row with toggle + picker */
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.day-toggle {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.toggle-btn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.toggle-btn.active {
+  background: #0A1F44;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(10,31,68,0.25);
+}
+.date-group {
+  flex: 1;
+}
+.date-group input[type="date"] {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.search-btn {
+  width: 100%; background: var(--navy); color: white; border: none;
+  padding: 11px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; letter-spacing: 0.3px;
+  transition: all 0.2s; margin-top: 2px;
+}
+.search-btn:hover {
+  background: var(--navy-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(10,31,68,0.25);
+}
+
 /* Responsive */
 @media (max-width: 860px) {
   .form-row { grid-template-columns: 1fr; }
+  .date-row { flex-direction: column; align-items: stretch; }
 }
 @media (max-width: 540px) {
   .search-card { padding: 24px; }

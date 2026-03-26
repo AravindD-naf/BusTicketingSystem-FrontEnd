@@ -19,7 +19,7 @@ import { AdminSources } from './pages/admin/sources/admin-sources';
 import { AdminDestinations } from './pages/admin/destinations/admin-destinations';
 import { AdminAuditLogs } from './pages/admin/audit-logs/admin-audit-logs';
 
-// Static pages
+import { Profile } from './pages/profile/profile';
 import { About } from './pages/about/about';
 import { Accessibility } from './pages/accessibility/accessibility';
 import { HowItWorks } from './pages/how-it-works/how-it-works';
@@ -42,6 +42,7 @@ export const routes: Routes = [
   { path: 'payment/:bookingId', component: Payment, canActivate: [authGuard] },
   { path: 'booking-confirmation/:bookingId', component: BookingConfirmation, canActivate: [authGuard] },
   { path: 'my-bookings', component: MyBookings, canActivate: [authGuard] },
+  { path: 'profile', component: Profile, canActivate: [authGuard] },
   {
     path: 'admin',
     component: AdminLayout,

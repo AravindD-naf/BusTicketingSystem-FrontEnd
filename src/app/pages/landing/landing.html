@@ -28,6 +28,72 @@
   </div>
 </section>
 
+<!-- OFFERS + TOP ROUTES STACKED -->
+<section class="below-hero-section">
+  <div class="below-hero-inner">
+
+    <!-- TOP: Offers & Deals -->
+    <div class="below-col below-col-offers">
+      <div class="below-col-header">
+        <div class="section-tag">Exclusive Promos</div>
+        <h2 class="below-title">Find exciting <span class="deals-highlight">offers</span> &amp; deals.</h2>
+      </div>
+      <div class="deals-track-wrapper">
+        <button class="deals-arrow deals-arrow-left" (click)="scrollDeals(-1)" aria-label="Scroll left">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="deals-track" id="dealsTrack">
+          <div
+            class="deal-card"
+            *ngFor="let deal of deals"
+            [style.background-image]="'url(' + deal.bgImage + ')'"
+            (click)="openDeal(deal)"
+          >
+            <div class="deal-overlay"></div>
+            <div class="deal-content">
+              <span class="deal-tag">{{ deal.tag }}</span>
+              <h3 class="deal-title">{{ deal.title }}</h3>
+              <p class="deal-sub">{{ deal.subtitle }}</p>
+              <div class="deal-code-row">
+                <span class="deal-code">{{ deal.promoCode }}</span>
+              </div>
+              <span class="deal-cta">View Offer →</span>
+            </div>
+            <div class="deal-badge">
+              <div class="deal-badge-val">{{ deal.discount }}</div>
+              <div class="deal-badge-sub">{{ deal.discountSub }}</div>
+            </div>
+            <div class="deal-tc">T&amp;C apply</div>
+          </div>
+        </div>
+        <button class="deals-arrow deals-arrow-right" (click)="scrollDeals(1)" aria-label="Scroll right">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- BOTTOM: Top Travelled Routes -->
+    <div class="below-col below-col-routes">
+      <div class="below-col-header">
+        <div class="section-tag">Popular Picks</div>
+        <h2 class="below-title">Top travelled <span class="routes-highlight">bus routes.</span></h2>
+      </div>
+      <div class="routes-grid">
+        <div
+          class="route-card"
+          *ngFor="let route of topRoutes"
+          [style.background-image]="sanitizeUrl(route.image)"
+          (click)="goToRoute(route)"
+        >
+          <div class="route-overlay"></div>
+          <div class="route-label">Buses from {{ route.from }} to {{ route.to }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <!-- FEATURES -->
 <section class="features" id="features">
   <div class="section-header">
@@ -101,7 +167,6 @@
       <div class="cta-btns">
         <a class="btn-white" routerLink="/results">Search Buses Now</a>
         <a class="btn-ghost" routerLink="/my-bookings">View My Bookings</a>
-        <!-- <a class="btn-ghost" routerLink="/my-bookings">View My Bookings</a> -->
       </div>
     </ng-container>
     <ng-template #guestCta>
@@ -114,5 +179,55 @@
     </ng-template>
   </div>
 </section>
+
+<!-- DEAL DETAIL MODAL -->
+<div class="deal-modal-backdrop" *ngIf="selectedDeal()" (click)="closeDeal()">
+  <div class="deal-modal" (click)="$event.stopPropagation()">
+    <div
+      class="deal-modal-banner"
+      [style.background-image]="'url(' + selectedDeal()!.bgImage + ')'"
+    >
+      <div class="deal-modal-overlay"></div>
+      <button class="deal-modal-close" (click)="closeDeal()">✕</button>
+      <div class="deal-modal-banner-content">
+        <span class="deal-modal-tag">{{ selectedDeal()!.tag }}</span>
+        <h2 class="deal-modal-title">{{ selectedDeal()!.title }}</h2>
+        <p class="deal-modal-sub">{{ selectedDeal()!.subtitle }}</p>
+      </div>
+      <div class="deal-modal-discount-badge">
+        <span class="dmdb-val">{{ selectedDeal()!.discount }}</span>
+        <span class="dmdb-sub">{{ selectedDeal()!.discountSub }}</span>
+      </div>
+    </div>
+    <div class="deal-modal-body">
+      <div class="deal-modal-code-section">
+        <p class="deal-modal-code-label">Use promo code at checkout</p>
+        <div class="deal-modal-code-box">
+          <span class="deal-modal-code-text">{{ selectedDeal()!.promoCode }}</span>
+          <button class="deal-modal-copy-btn" (click)="copyCode(selectedDeal()!.promoCode)">
+            <ng-container *ngIf="!codeCopied()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copy
+            </ng-container>
+            <ng-container *ngIf="codeCopied()">✓ Copied!</ng-container>
+          </button>
+        </div>
+      </div>
+      <div class="deal-modal-validity">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Valid until {{ selectedDeal()!.validUntil }}
+      </div>
+      <div class="deal-modal-terms">
+        <p class="deal-modal-terms-title">Terms &amp; Conditions</p>
+        <ul class="deal-modal-terms-list">
+          <li *ngFor="let t of selectedDeal()!.termsLines">{{ t }}</li>
+        </ul>
+      </div>
+      <a routerLink="/results" class="deal-modal-book-btn" (click)="closeDeal()">
+        Book Now &amp; Apply Code →
+      </a>
+    </div>
+  </div>
+</div>
 
 <app-footer></app-footer>

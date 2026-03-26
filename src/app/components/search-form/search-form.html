@@ -53,29 +53,24 @@
     <button type="button" class="swap-btn" (click)="swapCities()">⇄</button>
   </div>
 
-  <div class="form-row">
-    <div class="form-group">
-      <label>DATE</label>
+  <!-- DATE TOGGLE + DATE PICKER -->
+  <div class="date-row">
+    <div class="day-toggle">
+      <button type="button" class="toggle-btn" [class.active]="selectedDay() === 'today'" (click)="setDay('today')">Today</button>
+      <button type="button" class="toggle-btn" [class.active]="selectedDay() === 'tomorrow'" (click)="setDay('tomorrow')">Tomorrow</button>
+    </div>
+    <div class="form-group date-group">
       <input
         type="date"
         id="travel-date"
         formControlName="date"
+        [min]="today"
         [class.input-error]="searchForm.get('date')?.invalid && searchForm.get('date')?.touched"
+        (change)="onDateChange()"
       />
       <span class="field-error" *ngIf="searchForm.get('date')?.invalid && searchForm.get('date')?.touched">
         Please select a travel date
       </span>
-    </div>
-    <div class="form-group">
-      <label>PASSENGERS</label>
-      <select formControlName="passengers">
-        <option [value]="1">1 Adult</option>
-        <option [value]="2">2 Adults</option>
-        <option [value]="3">3 Adults</option>
-        <option [value]="4">4 Adults</option>
-        <option [value]="5">5 Adults</option>
-        <option [value]="6">6 Adults</option>
-      </select>
     </div>
   </div>
 

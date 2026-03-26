@@ -16,14 +16,28 @@ export class SearchForm implements OnInit {
   private fb       = inject(FormBuilder);
   private routeSvc = inject(RouteService);
 
+  today    = new Date().toISOString().split('T')[0];
   tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  selectedDay = signal<'today' | 'tomorrow'>('tomorrow');
 
   searchForm: FormGroup = this.fb.group({
     from: ['', Validators.required],
     to:   ['', Validators.required],
     date: [this.tomorrow, Validators.required],
-    passengers: [1]
   });
+
+  setDay(day: 'today' | 'tomorrow') {
+    this.selectedDay.set(day);
+    this.searchForm.patchValue({ date: day === 'today' ? this.today : this.tomorrow });
+  }
+
+  onDateChange() {
+    const val = this.searchForm.get('date')?.value;
+    if (val === this.today) this.selectedDay.set('today');
+    else if (val === this.tomorrow) this.selectedDay.set('tomorrow');
+    else this.selectedDay.set('tomorrow'); // custom date, deselect toggle
+  }
 
   // All unique cities loaded from DB
   allCities = signal<string[]>([]);

@@ -1,0 +1,193 @@
+<app-navbar></app-navbar>
+
+<div class="profile-page">
+
+  <!-- HERO BANNER -->
+  <div class="profile-banner">
+    <div class="banner-content">
+
+      <!-- Avatar -->
+      <div class="avatar-ring">
+        <div class="avatar">{{ getInitials() }}</div>
+      </div>
+
+      <!-- Name + meta -->
+      <div class="banner-info">
+        <h1 class="profile-name">{{ auth.user()?.name || 'Traveller' }}</h1>
+        <p class="profile-email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          {{ auth.user()?.email }}
+        </p>
+        <div class="banner-badges">
+          <span class="profile-badge verified">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            {{ auth.user()?.role === 'Admin' ? 'Administrator' : 'Verified Traveller' }}
+          </span>
+          <span class="profile-badge member">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            Member since {{ joinYear() }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Banner stats -->
+      <div class="banner-stats">
+        <div class="banner-stat">
+          <div class="bstat-val">{{ loading() ? '—' : totalBookings() }}</div>
+          <div class="bstat-label">Bookings</div>
+        </div>
+        <div class="bstat-divider"></div>
+        <div class="banner-stat">
+          <div class="bstat-val">{{ loading() ? '—' : upcomingCount() }}</div>
+          <div class="bstat-label">Upcoming</div>
+        </div>
+        <div class="bstat-divider"></div>
+        <div class="banner-stat">
+          <div class="bstat-val">{{ loading() ? '—' : completedCount() }}</div>
+          <div class="bstat-label">Completed</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Decorative bus icon -->
+    <div class="banner-deco">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M3 8H21V18C21 19.1 20.1 20 19 20H5C3.9 20 3 19.1 3 18V8ZM3 8L5 4H19L21 8M9 17V20M15 17V20M7 12H9M15 12H17"/></svg>
+    </div>
+  </div>
+
+  <div class="profile-body">
+
+    <div class="profile-grid">
+
+      <!-- Account Info -->
+      <div class="profile-card info-card">
+        <div class="card-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Account Details
+        </div>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Full Name</span>
+            <span class="info-value">{{ auth.user()?.name || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Email Address</span>
+            <span class="info-value">{{ auth.user()?.email || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Account Role</span>
+            <span class="info-value role-chip" [class.admin]="auth.user()?.role === 'Admin'">
+              {{ auth.user()?.role || 'Customer' }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Total Trips</span>
+            <span class="info-value">{{ loading() ? '—' : totalBookings() }} bookings</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Member Since</span>
+            <span class="info-value">{{ joinYear() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="profile-card actions-card">
+        <div class="card-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Quick Actions
+        </div>
+        <div class="action-list">
+          <a routerLink="/my-bookings" class="action-item">
+            <div class="action-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="action-text">
+              <span class="action-title">My Bookings</span>
+              <span class="action-sub">View all your trips</span>
+            </div>
+            <svg class="action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <a routerLink="/results" class="action-item">
+            <div class="action-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <div class="action-text">
+              <span class="action-title">Search Buses</span>
+              <span class="action-sub">Book your next journey</span>
+            </div>
+            <svg class="action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <a routerLink="/help" class="action-item">
+            <div class="action-icon orange">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="action-text">
+              <span class="action-title">Help & Support</span>
+              <span class="action-sub">Get assistance</span>
+            </div>
+            <svg class="action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <button class="action-item logout-action" (click)="logout()">
+            <div class="action-icon red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            </div>
+            <div class="action-text">
+              <span class="action-title">Sign Out</span>
+              <span class="action-sub">Log out of your account</span>
+            </div>
+            <svg class="action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recent Trips -->
+    <div class="profile-card recent-card">
+      <div class="card-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8H21V18C21 19.1 20.1 20 19 20H5C3.9 20 3 19.1 3 18V8ZM3 8L5 4H19L21 8M9 17V20M15 17V20"/></svg>
+        Recent Trips
+      </div>
+
+      <div *ngIf="loading()" class="empty-state">
+        <div class="spinner"></div>
+        <p>Loading your trips...</p>
+      </div>
+
+      <div *ngIf="!loading() && bookings().length === 0" class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M3 8H21V18C21 19.1 20.1 20 19 20H5C3.9 20 3 19.1 3 18V8ZM3 8L5 4H19L21 8"/></svg>
+        <p>No trips yet. <a routerLink="/results">Book your first bus!</a></p>
+      </div>
+
+      <div *ngIf="!loading() && bookings().length > 0" class="bookings-list">
+        <div class="booking-row" *ngFor="let b of recentBookings()">
+          <div class="booking-left">
+            <div class="booking-id">#{{ b.bookingId }}</div>
+            <div class="booking-route">
+              <span class="route-city">{{ b.source || '—' }}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <span class="route-city">{{ b.destination || '—' }}</span>
+            </div>
+          </div>
+          <div class="booking-right">
+            <span class="booking-date">{{ formatDate(b.travelDate) }}</span>
+            <span class="booking-seats">{{ b.numberOfSeats }} seat{{ b.numberOfSeats > 1 ? 's' : '' }}</span>
+            <span class="booking-amount">₹{{ b.totalAmount }}</span>
+            <span class="booking-status" [class]="getStatusClass(b.bookingStatus)">
+              {{ b.bookingStatus || 'Confirmed' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <a *ngIf="!loading() && bookings().length > 0" routerLink="/my-bookings" class="view-all-btn">
+        View All Bookings →
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<app-footer></app-footer>
