@@ -22,8 +22,9 @@ export class Profile implements OnInit {
   private router     = inject(Router);
   private fb         = inject(FormBuilder);
 
-  bookings = signal<any[]>([]);
-  loading  = signal(true);
+  bookings    = signal<any[]>([]);
+  totalCount  = signal<number>(0);
+  loading     = signal(true);
 
   // Wallet UI state
   showAddMoney     = signal(false);
@@ -45,7 +46,7 @@ export class Profile implements OnInit {
     { value: 'Diners',    label: 'Diners Club', icon: 'diners' },
   ];
 
-  totalBookings  = computed(() => this.bookings().length);
+  totalBookings  = computed(() => this.totalCount() || this.bookings().length);
 
   upcomingCount = computed(() =>
     this.bookings().filter(b => {
@@ -77,13 +78,16 @@ export class Profile implements OnInit {
 
   ngOnInit() {
     this.walletService.loadWallet();
-    this.bookingSvc.getUserBookings(1, 100).subscribe({
+    this.bookingSvc.getUserBookings(1, 200).subscribe({
       next: (r: any) => {
         let items: any[] = [];
         if (Array.isArray(r?.data))            items = r.data;
         else if (Array.isArray(r?.data?.data)) items = r.data.data;
         else if (Array.isArray(r))             items = r;
         this.bookings.set(items);
+        // Use totalCount from response if available (includes all bookings regardless of IsDeleted)
+        if (r?.totalCount != null) this.totalCount.set(r.totalCount);
+        else this.totalCount.set(items.length);
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
