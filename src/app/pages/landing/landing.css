@@ -3,7 +3,14 @@
 /* HERO */
 .hero {
   min-height: 100vh;
-  background: var(--navy);
+  background:
+    linear-gradient(
+      to right,
+      rgba(5, 15, 40, 0.82) 0%,
+      rgba(5, 15, 40, 0.65) 50%,
+      rgba(5, 15, 40, 0.45) 100%
+    ),
+    url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat;
   display: flex; align-items: center;
   padding: 100px 5% 60px !important;
   position: relative; overflow: hidden;
@@ -28,13 +35,15 @@
 }
 .hero-badge {
   display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
   border-radius: 100px; padding: 6px 14px;
   font-size: 12px; font-weight: 500;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255,255,255,0.9);
   letter-spacing: 0.5px; text-transform: uppercase;
   margin-bottom: 20px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .badge-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
 .hero-title {
@@ -42,18 +51,21 @@
   font-size: clamp(38px, 5vw, 62px); font-weight: 900;
   color: white; line-height: 1.1; letter-spacing: -1.5px;
   margin-bottom: 16px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.4);
 }
-.hero-title span { color: rgba(255,255,255,0.4); }
+.hero-title span { color: rgba(255,255,255,0.45); }
 .hero-desc {
-  font-size: 16px; font-weight: 300; color: rgba(255,255,255,0.65);
+  font-size: 16px; font-weight: 300; color: rgba(255,255,255,0.85);
   line-height: 1.7; margin-bottom: 32px; max-width: 420px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.35);
 }
 .hero-stats { display: flex; gap: 32px; }
 .hero-stat-num {
   font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700;
   color: white; line-height: 1;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.3);
 }
-.hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; letter-spacing: 0.3px; }
+.hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 4px; letter-spacing: 0.3px; }
 
 /* ── BELOW HERO: Offers + Routes Side by Side ── */
 .below-hero-section {

@@ -4,7 +4,7 @@
   background: var(--white);
   border-radius: var(--radius-lg);
   padding: 36px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12);
   position: relative;
 }
 .search-card-header { margin-bottom: 28px; }
