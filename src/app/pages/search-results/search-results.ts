@@ -104,6 +104,10 @@ export class SearchResults implements OnInit {
     return (words[0]?.substring(0, 2) || 'BU').toUpperCase();
   }
 
+  onFilterChanged() {
+    this.loadSchedules();
+  }
+
   formatTime(t: string): string {
     if (!t) return '';
     const parts = t.split(':');

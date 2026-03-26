@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, output, EventEmitter, Output } from '@angular/core';
+import { Component, computed, inject, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BusSearchService } from '../../core/services/bus-search.service';
+import { SortOption } from '../../core/models/filter.model';
 
 @Component({
   selector: 'app-filter-sidebar',
@@ -10,18 +11,30 @@ import { BusSearchService } from '../../core/services/bus-search.service';
   templateUrl: './filter-sidebar.html',
   styleUrl: './filter-sidebar.css',
 })
-
-
 export class FilterSidebar {
   busSearch = inject(BusSearchService);
+
+  @Output() filterChanged = new EventEmitter<void>();
+  @Output() sortChanged   = new EventEmitter<SortOption>();
+
+  activeTab: 'filters' | 'sort' = 'filters';
+
+  sortOptions: { value: SortOption; label: string; icon: string }[] = [
+    { value: 'departure',  label: 'Early Departure',   icon: '🌅' },
+    { value: 'arrival',    label: 'Early Arrival',      icon: '🏁' },
+    { value: 'price_asc',  label: 'Lowest Fare First',  icon: '💰' },
+    { value: 'price_desc', label: 'Highest Fare First',  icon: '💎' },
+    { value: 'duration',   label: 'Shortest Duration',  icon: '⚡' },
+    { value: 'rating',     label: 'Top Rated',          icon: '⭐' },
+  ];
 
   busTypes = ['AC Sleeper', 'Non-AC Sleeper', 'AC Seater', 'Non-AC Seater', 'Volvo AC Sleeper', 'AC Semi-Sleeper'];
 
   departureTimes = [
-    { key: 'morning', label: 'Morning', icon: '🌅', range: '6 – 12 AM' },
+    { key: 'morning',   label: 'Morning',   icon: '🌅', range: '6 – 12 AM' },
     { key: 'afternoon', label: 'Afternoon', icon: '☀️', range: '12 – 6 PM' },
-    { key: 'evening', label: 'Evening', icon: '🌆', range: '6 – 10 PM' },
-    { key: 'night', label: 'Night', icon: '🌙', range: '10 PM – 6' }
+    { key: 'evening',   label: 'Evening',   icon: '🌆', range: '6 – 10 PM' },
+    { key: 'night',     label: 'Night',     icon: '🌙', range: '10 PM – 6' }
   ] as const;
 
   maxPrice = 3000;
@@ -33,14 +46,18 @@ export class FilterSidebar {
   selectedOperators: string[] = [];
   minRating = 0;
 
-  
-  // Dynamically derived from actual search results
   readonly operators = computed(() => {
     const names = this.busSearch.allSchedules()
       .map((s: any) => s.operatorName)
       .filter((name: string) => !!name);
     return [...new Set(names)] as string[];
   });
+
+  selectSort(option: SortOption) {
+    this.busSearch.updateSort(option);
+    this.sortChanged.emit(option);
+    this.filterChanged.emit();
+  }
 
   onPriceChange(val: number) {
     this.maxPrice = val;
@@ -63,8 +80,6 @@ export class FilterSidebar {
 
   setRating(r: number) { this.minRating = r; this.applyFilter(); }
 
-  @Output() filterChanged = new EventEmitter<void>();
-
   applyFilter() {
     this.busSearch.updateFilter({
       busTypes: this.selectedTypes,
@@ -73,16 +88,16 @@ export class FilterSidebar {
       operators: this.selectedOperators,
       minRating: this.minRating
     });
-    this.filterChanged.emit();  // ADD this line
+    this.filterChanged.emit();
   }
 
   clearAll() {
-  this.selectedTypes = [];
-  this.selectedTimes = [];
-  this.selectedOperators = [];
-  this.maxPrice = 3000;
-  this.minRating = 0;
-  this.busSearch.updateFilter({ busTypes: [], maxPrice: 3000, departureTimes: [], operators: [], minRating: 0 });
-  this.filterChanged.emit();  // ADD this line
-}
+    this.selectedTypes = [];
+    this.selectedTimes = [];
+    this.selectedOperators = [];
+    this.maxPrice = 3000;
+    this.minRating = 0;
+    this.busSearch.updateFilter({ busTypes: [], maxPrice: 3000, departureTimes: [], operators: [], minRating: 0 });
+    this.filterChanged.emit();
+  }
 }

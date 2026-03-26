@@ -20,15 +20,6 @@
   </div>
 </div>
 
-<!-- ── SORT BAR ── -->
-<div class="sort-bar">
-  <span class="sort-label">Sort by</span>
-  <button class="sort-btn" [class.active]="busSearchService.sortBy() === 'departure'" (click)="sortBy('departure')">Departure ↑</button>
-  <button class="sort-btn" [class.active]="busSearchService.sortBy() === 'price_asc'" (click)="sortBy('price_asc')">Price ↑</button>
-  <button class="sort-btn" [class.active]="busSearchService.sortBy() === 'price_desc'" (click)="sortBy('price_desc')">Price ↓</button>
-  <button class="sort-btn" [class.active]="busSearchService.sortBy() === 'duration'" (click)="sortBy('duration')">Duration</button>
-</div>
-
 <!-- ── PROMO STRIP ── -->
 <div class="promo-strip">
   <div class="promo-card">
@@ -70,9 +61,7 @@
 <div class="page-body">
 
   <!-- ── FILTER SIDEBAR ── -->
-  <app-filter-sidebar (filterChanged)="loadSchedules()"></app-filter-sidebar>
-
-
+  <app-filter-sidebar (filterChanged)="onFilterChanged()"></app-filter-sidebar>
 
   <!-- ── RESULTS COLUMN ── -->
   <div class="results-col">
