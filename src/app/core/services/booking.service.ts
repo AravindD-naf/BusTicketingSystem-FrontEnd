@@ -21,7 +21,7 @@ export class BookingService {
   }
 
   // POST /api/v1/booking/my-bookings
-  getUserBookings(pageNumber = 1, pageSize = 50) {
+  getUserBookings(pageNumber = 1, pageSize = 200) {
     return this.http.post<ApiResponse<any>>(`${this.API}/booking/my-bookings`, { pageNumber, pageSize });
   }
 

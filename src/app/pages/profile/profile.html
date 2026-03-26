@@ -237,9 +237,9 @@
             </div>
           </div>
           <div class="booking-right">
-            <span class="booking-date">{{ formatDate(b.travelDate) }}</span>
+            <span class="booking-date">{{ formatDate(b.travelDate || b.bookingDate) }}</span>
             <span class="booking-seats">{{ b.numberOfSeats }} seat{{ b.numberOfSeats > 1 ? 's' : '' }}</span>
-            <span class="booking-amount">₹{{ b.totalAmount }}</span>
+            <span class="booking-amount">₹{{ getGrandTotal(b.totalAmount) }}</span>
             <span class="booking-status" [class]="getStatusClass(b.bookingStatus)">{{ b.bookingStatus || 'Confirmed' }}</span>
           </div>
         </div>

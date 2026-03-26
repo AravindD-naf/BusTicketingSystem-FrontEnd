@@ -50,7 +50,7 @@ export class Profile implements OnInit {
   upcomingCount = computed(() =>
     this.bookings().filter(b => {
       const status = (b.bookingStatus || '').toLowerCase();
-      if (status === 'cancelled' || status === 'expired') return false;
+      if (status === 'cancelled' || status === 'expired' || status === 'paymentfailed') return false;
       if (!b.travelDate) return false;
       return new Date(b.travelDate) >= new Date(new Date().toDateString());
     }).length
@@ -59,7 +59,7 @@ export class Profile implements OnInit {
   completedCount = computed(() =>
     this.bookings().filter(b => {
       const status = (b.bookingStatus || '').toLowerCase();
-      if (status === 'cancelled' || status === 'expired') return false;
+      if (status === 'cancelled' || status === 'expired' || status === 'paymentfailed') return false;
       if (!b.travelDate) return false;
       return new Date(b.travelDate) < new Date(new Date().toDateString());
     }).length
@@ -144,6 +144,16 @@ export class Profile implements OnInit {
     try {
       return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch { return d; }
+  }
+
+  readonly convenienceFee = 20;
+
+  getTax(amount: number): number {
+    return Math.round(amount * 0.06);
+  }
+
+  getGrandTotal(amount: number): number {
+    return amount + this.getTax(amount) + this.convenienceFee;
   }
 
   getStatusClass(status: string): string {
