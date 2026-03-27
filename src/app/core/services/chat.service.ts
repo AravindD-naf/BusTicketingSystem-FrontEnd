@@ -1,6 +1,10 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import * as signalR from '@microsoft/signalr';
+import {
+  HubConnection,
+  HubConnectionBuilder,
+  HubConnectionState
+} from '@microsoft/signalr';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 
@@ -24,7 +28,7 @@ export interface Conversation {
 export class ChatService {
   private http   = inject(HttpClient);
   private auth   = inject(AuthService);
-  private hub!: signalR.HubConnection;
+  private hub!: HubConnection;
 
   messages   = signal<ChatMsg[]>([]);
   connected  = signal(false);
@@ -46,9 +50,9 @@ export class ChatService {
   private readonly API = environment.apiBase;
 
   connect() {
-    if (this.hub && this.hub.state !== signalR.HubConnectionState.Disconnected) return;
+    if (this.hub && this.hub.state !== HubConnectionState.Disconnected) return;
 
-    this.hub = new signalR.HubConnectionBuilder()
+    this.hub = new HubConnectionBuilder()
       .withUrl(this.HUB_URL, {
         accessTokenFactory: () => this.auth.token ?? ''
       })
@@ -129,6 +133,6 @@ export class ChatService {
   }
 
   private isConnected(): boolean {
-    return this.hub?.state === signalR.HubConnectionState.Connected;
+    return this.hub?.state === HubConnectionState.Connected;
   }
 }
