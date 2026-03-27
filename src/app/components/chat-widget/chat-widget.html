@@ -19,8 +19,8 @@
         <div>
           <div class="chat-name">BusMate Support</div>
           <div class="chat-status">
-            <span class="status-dot" [class.online]="chatService.connected()"></span>
-            {{ chatService.connected() ? 'Online' : 'Connecting...' }}
+            <span class="status-dot" [class.online]="chatService.isConnected()"></span>
+            {{ chatService.isConnected() ? 'Online' : 'Connecting...' }}
           </div>
         </div>
       </div>
@@ -32,15 +32,21 @@
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c0cfe0" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <p>Hi! How can we help you today?</p>
       </div>
-      <div *ngFor="let m of chatService.messages()"
-           class="msg-row"
-           [class.mine]="m.senderId === myId"
-           [class.theirs]="m.senderId !== myId">
-        <div class="msg-bubble">
-          <span class="msg-text">{{ m.content }}</span>
-          <span class="msg-time">{{ m.sentAt | date:'h:mm a' }}</span>
+      <ng-container *ngFor="let m of chatService.messages()">
+        <div class="msg-row"
+             [class.mine]="m.senderId === myId"
+             [class.theirs]="m.senderId !== myId">
+          <div class="msg-bubble">
+            <span class="msg-text">{{ m.content }}</span>
+            <span class="msg-time">{{ m.sentAt | date:'h:mm a' }}</span>
+          </div>
         </div>
-      </div>
+      </ng-container>
+    </div>
+
+    <div class="not-connected-banner" *ngIf="!chatService.isConnected()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Connecting to support...
     </div>
 
     <div class="chat-input-row">

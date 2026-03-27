@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,36 +11,28 @@ import { ChatService } from '../../core/services/chat.service';
   templateUrl: './chat-widget.html',
   styleUrl: './chat-widget.css'
 })
-export class ChatWidget implements OnInit, AfterViewChecked {
+export class ChatWidget implements OnInit, OnDestroy, AfterViewChecked {
   auth        = inject(AuthService);
   chatService = inject(ChatService);
 
   open            = signal(false);
   inputText       = signal('');
   unreadFromAdmin = signal(0);
-  private prevMsgCount = 0;
   private shouldScroll = false;
+  private msgSub: (() => void) | null = null;
 
   @ViewChild('msgList') msgList!: ElementRef<HTMLDivElement>;
 
   get myId(): number { return +(this.auth.user()?.id ?? 0); }
 
   ngOnInit() {
+    // Only for authenticated non-admin users
     if (!this.auth.isAuthenticated() || this.auth.user()?.role === 'Admin') return;
     this.chatService.loadAdminId();
     this.chatService.connect();
-
-    // Poll for new messages when window is closed to show unread badge
-    setInterval(() => {
-      const msgs = this.chatService.messages();
-      if (!this.open() && msgs.length > this.prevMsgCount) {
-        const newMsgs = msgs.slice(this.prevMsgCount);
-        const fromAdmin = newMsgs.filter(m => m.senderId !== this.myId).length;
-        if (fromAdmin > 0) this.unreadFromAdmin.update(n => n + fromAdmin);
-      }
-      this.prevMsgCount = msgs.length;
-    }, 500);
   }
+
+  ngOnDestroy() { /* service stays alive */ }
 
   ngAfterViewChecked() {
     if (this.shouldScroll) {
@@ -53,29 +45,44 @@ export class ChatWidget implements OnInit, AfterViewChecked {
     this.open.update(v => !v);
     if (this.open()) {
       this.unreadFromAdmin.set(0);
-      this.prevMsgCount = 0;
       const adminId = this.chatService.adminId();
       if (adminId) {
         this.chatService.loadHistory(adminId);
         this.chatService.markRead(adminId);
       } else {
-        this.chatService.loadAdminId();
+        // Retry once after a short delay
         setTimeout(() => {
           const id = this.chatService.adminId();
           if (id) { this.chatService.loadHistory(id); this.chatService.markRead(id); }
-        }, 800);
+        }, 1000);
       }
       this.shouldScroll = true;
     } else {
       this.chatService.messages.set([]);
-      this.prevMsgCount = 0;
     }
+  }
+
+  // Called from template when new messages arrive while window is open
+  onMessagesChange() {
+    this.shouldScroll = true;
   }
 
   send() {
     const text = this.inputText().trim();
     const adminId = this.chatService.adminId();
     if (!text || !adminId) return;
+    if (!this.chatService.isConnected()) {
+      // Try to reconnect once then send
+      this.chatService.connect();
+      setTimeout(() => {
+        if (this.chatService.isConnected()) {
+          this.chatService.sendMessage(adminId, text);
+          this.inputText.set('');
+          this.shouldScroll = true;
+        }
+      }, 1500);
+      return;
+    }
     this.chatService.sendMessage(adminId, text);
     this.inputText.set('');
     this.shouldScroll = true;
