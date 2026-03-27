@@ -24,6 +24,7 @@
     <div *ngIf="loading()" class="loading-box">Loading booking details...</div>
 
     <div *ngIf="!loading()" class="payment-layout">
+
       <!-- Left: Payment Form -->
       <div class="payment-form-card">
         <h2 class="section-title">Choose Payment Method</h2>
@@ -50,10 +51,51 @@
             </label>
           </div>
 
+          <!-- ── Promo Code Section ── -->
+          <div class="promo-section">
+            <div class="promo-label">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              Have a promo code?
+            </div>
+
+            <!-- Applied state -->
+            <div class="promo-applied" *ngIf="promoApplied()">
+              <div class="promo-applied-left">
+                <span class="promo-applied-icon">🎉</span>
+                <div>
+                  <div class="promo-applied-code">{{ promoApplied()!.code }}</div>
+                  <div class="promo-applied-msg">{{ promoApplied()!.message }}</div>
+                </div>
+              </div>
+              <button type="button" class="promo-remove-btn" (click)="removePromo()">✕ Remove</button>
+            </div>
+
+            <!-- Input state -->
+            <div class="promo-input-row" *ngIf="!promoApplied()">
+              <input
+                class="promo-input"
+                type="text"
+                placeholder="Enter promo code"
+                [value]="promoInput()"
+                (input)="promoInput.set($any($event.target).value.toUpperCase())"
+                (keydown.enter)="$event.preventDefault(); applyPromo()"
+              />
+              <button
+                type="button"
+                class="promo-apply-btn"
+                (click)="applyPromo()"
+                [disabled]="promoValidating()"
+              >
+                {{ promoValidating() ? '...' : 'Apply' }}
+              </button>
+            </div>
+            <div class="promo-error" *ngIf="promoError()">{{ promoError() }}</div>
+          </div>
+
           <div *ngIf="error()" class="error-box">{{ error() }}</div>
 
           <button type="submit" class="pay-btn" [disabled]="processing()">
-            <span *ngIf="!processing()">Pay ₹{{grandTotal()}} →</span>
+            <span *ngIf="!processing()">Pay ₹{{ grandTotal() }} →</span>
             <span *ngIf="processing()">Processing Payment...</span>
           </button>
 
@@ -66,20 +108,51 @@
       <!-- Right: Booking Summary -->
       <div class="booking-summary">
         <div class="summary-header">
-        <h3 class="summary-title">Booking Summary</h3>
+          <h3 class="summary-title">Booking Summary</h3>
         </div>
         <div class="summary-body">
           <div class="summary-rows">
             <div class="summary-row"><span>Booking ID</span><strong>#{{ bookingId() }}</strong></div>
-            <div class="summary-row"><span>Schedule ID</span><span>{{ booking()?.scheduleId }}</span></div>
-            <div class="summary-row"><span>Seats</span><span>{{ booking()?.numberOfSeats ?? selectedSeatCount() }}</span></div>
+            <div class="summary-row" *ngIf="booking()?.source">
+              <span>Route</span><span>{{ booking()?.source }} → {{ booking()?.destination }}</span>
+            </div>
+            <div class="summary-row" *ngIf="booking()?.travelDate">
+              <span>Travel Date</span><span>{{ booking()?.travelDate | date:'mediumDate' }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Seats</span><span>{{ booking()?.numberOfSeats ?? selectedSeatCount() }}</span>
+            </div>
+          </div>
+
+          <div class="fare-rows">
+            <div class="fare-row"><span>Seat Fare</span><span>₹{{ seatFare() }}</span></div>
+
+            <!-- Discount row — only shown when promo applied -->
+            <div class="fare-row fare-discount" *ngIf="promoApplied()">
+              <span>
+                Promo ({{ promoApplied()!.code }})
+                <span class="discount-type-badge">
+                  {{ promoApplied()!.discountType === 'Percentage' ? promoApplied()!.discountValue + '%' : '₹' + promoApplied()!.discountValue + ' flat' }}
+                </span>
+              </span>
+              <span class="discount-value">− ₹{{ discountAmount() }}</span>
             </div>
 
-            <div class="fare-rows">
-            <div class="fare-row"><span>Seat Fare</span><span>₹{{ totalFare() }}</span></div>
-          <div class="fare-row"><span>GST & Taxes (6%)</span><span>₹{{ taxAmount() }}</span></div>
-          <div class="fare-row"><span>Convenience Fee</span><span>₹{{ convFee }}</span></div>
-          <div class="fare-row fare-total"><span>Total Payable</span><strong>₹{{grandTotal()}}</strong></div>
+            <div class="fare-row" *ngIf="promoApplied()">
+              <span>Discounted Fare</span><span>₹{{ discountedFare() }}</span>
+            </div>
+
+            <div class="fare-row"><span>GST & Taxes (6%)</span><span>₹{{ taxAmount() }}</span></div>
+            <div class="fare-row"><span>Convenience Fee</span><span>₹{{ convenienceFee }}</span></div>
+
+            <div class="fare-row fare-total">
+              <span>Total Payable</span>
+              <strong>₹{{ grandTotal() }}</strong>
+            </div>
+          </div>
+
+          <div class="promo-savings-banner" *ngIf="promoApplied()">
+            🎉 You're saving <strong>₹{{ discountAmount() }}</strong> with code <strong>{{ promoApplied()!.code }}</strong>!
           </div>
         </div>
         <div class="secure-badge">🔒 Secure 256-bit encrypted payment</div>

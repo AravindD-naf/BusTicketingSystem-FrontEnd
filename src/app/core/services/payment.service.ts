@@ -6,6 +6,7 @@ export interface InitiatePaymentRequest {
   bookingId: number;
   amount: number;
   paymentMethod: string;
+  promoCode?: string;
 }
 
 export interface ConfirmPaymentRequest {
@@ -36,6 +37,11 @@ export class PaymentService {
   // POST /api/v1/booking/payment/initiate
   initiatePayment(request: InitiatePaymentRequest) {
     return this.http.post<ApiResponse<any>>(`${this.API}/booking/payment/initiate`, request);
+  }
+
+  // POST /api/v1/promo/validate
+  validatePromoCode(code: string, bookingAmount: number) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/promo/validate`, { code, bookingAmount });
   }
 
   // POST /api/v1/booking/payment/confirm

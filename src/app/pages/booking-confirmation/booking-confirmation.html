@@ -53,6 +53,18 @@
           <span class="detail-key">Seat Fare</span>
           <span class="detail-val">₹{{ baseFare() }}</span>
         </div>
+        <div class="detail-row" *ngIf="booking()?.promoCodeUsed">
+          <span class="detail-key">Promo Code</span>
+          <span class="detail-val promo-code-badge">{{ booking()?.promoCodeUsed }}</span>
+        </div>
+        <div class="detail-row" *ngIf="discountAmount() > 0">
+          <span class="detail-key">Discount</span>
+          <span class="detail-val discount-val">− ₹{{ discountAmount() }}</span>
+        </div>
+        <div class="detail-row" *ngIf="discountAmount() > 0">
+          <span class="detail-key">Discounted Fare</span>
+          <span class="detail-val">₹{{ discountedFare() }}</span>
+        </div>
         <div class="detail-row">
           <span class="detail-key">GST & Taxes (6%)</span>
           <span class="detail-val">₹{{ taxAmount() }}</span>

@@ -327,3 +327,22 @@
   .bookings-container { padding: 16px 16px 32px; }
   .page-hero { padding: 20px 16px; }
 }
+
+/* Promo code display in booking cards */
+.promo-tag {
+  display: inline-block;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.promo-saved {
+  font-size: 12px;
+  color: #16a34a;
+  font-weight: 500;
+}

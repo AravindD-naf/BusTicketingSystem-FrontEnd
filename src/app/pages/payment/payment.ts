@@ -33,17 +33,27 @@ export class Payment implements OnInit {
   booking      = signal<any>(null);
   error        = signal<string | null>(null);
 
-  totalFare    = this.seatService.totalFare;
-  taxAmount    = this.seatService.taxAmount;
-  convFee      = this.seatService.convenienceFee;
-  grandTotal   = this.seatService.totalAmount;
+  // Promo code state
+  promoInput       = signal('');
+  promoValidating  = signal(false);
+  promoError       = signal<string | null>(null);
+  promoApplied     = signal<{ code: string; discountAmount: number; discountType: string; discountValue: number; message: string } | null>(null);
+
+  readonly convenienceFee = 20;
+
+  // Base fare from SeatService (seat price only, no tax/fee)
+  seatFare   = this.seatService.totalFare;
+
+  // After promo discount is applied, recalculate everything
+  discountAmount = computed(() => this.promoApplied()?.discountAmount ?? 0);
+  discountedFare = computed(() => Math.max(0, this.seatFare() - this.discountAmount()));
+  taxAmount      = computed(() => Math.round(this.discountedFare() * 0.06));
+  grandTotal     = computed(() => this.discountedFare() + this.taxAmount() + this.convenienceFee);
+
   selectedSeatCount = computed(() => this.seatService.selectedSeats().length);
 
-  // Wallet balance check
   walletSufficient = computed(() =>
-    this.walletService.hasSufficientBalance(
-      this.booking()?.totalAmount ?? this.grandTotal()
-    )
+    this.walletService.hasSufficientBalance(this.grandTotal())
   );
 
   paymentForm: FormGroup = this.fb.group({
@@ -51,9 +61,9 @@ export class Payment implements OnInit {
   });
 
   paymentMethods = computed(() => [
-    { value: 'UPI',        label: 'UPI',                  icon: '📱', disabled: false },
-    { value: 'CreditCard', label: 'Credit / Debit Card',  icon: '💳', disabled: false },
-    { value: 'NetBanking', label: 'Net Banking',           icon: '🏦', disabled: false },
+    { value: 'UPI',          label: 'UPI',                 icon: '📱', disabled: false },
+    { value: 'CreditCard',   label: 'Credit / Debit Card', icon: '💳', disabled: false },
+    { value: 'NetBanking',   label: 'Net Banking',          icon: '🏦', disabled: false },
     {
       value: 'BusMateWallet',
       label: `BusMate Wallet  (₹${this.walletService.balance().toFixed(2)} available)`,
@@ -88,38 +98,70 @@ export class Payment implements OnInit {
     });
   }
 
+  applyPromo() {
+    const code = this.promoInput().trim();
+    if (!code) { this.promoError.set('Please enter a promo code.'); return; }
+    this.promoValidating.set(true);
+    this.promoError.set(null);
+    this.promoApplied.set(null);
+
+    // Use seat fare (before tax/fee) as the booking amount for validation
+    this.paymentService.validatePromoCode(code, this.seatFare()).subscribe({
+      next: (r: any) => {
+        this.promoValidating.set(false);
+        const result = r?.data;
+        if (result?.isValid) {
+          this.promoApplied.set({
+            code: result.code,
+            discountAmount: result.discountAmount,
+            discountType: result.discountType,
+            discountValue: result.discountValue,
+            message: result.message
+          });
+        } else {
+          this.promoError.set(result?.message || 'Invalid promo code.');
+        }
+      },
+      error: (err) => {
+        this.promoValidating.set(false);
+        this.promoError.set(this.errHandler.getErrorMessage(err));
+      }
+    });
+  }
+
+  removePromo() {
+    this.promoApplied.set(null);
+    this.promoInput.set('');
+    this.promoError.set(null);
+  }
+
   processPayment() {
     if (this.paymentForm.invalid) return;
     this.processing.set(true);
     this.error.set(null);
 
-    const amount = this.booking()?.totalAmount ?? this.grandTotal();
+    const finalAmount = this.grandTotal();
     const method = this.paymentForm.value.paymentMethod;
+    const promoCode = this.promoApplied()?.code;
 
-    // Wallet payment — deduct locally first, then confirm with backend
     if (method === 'BusMateWallet') {
-      const deducted = this.walletService.debit(
-        amount,
-        `Payment for Booking #${this.bookingId()}`
-      );
+      const deducted = this.walletService.debit(finalAmount, `Payment for Booking #${this.bookingId()}`);
       if (!deducted) {
         this.processing.set(false);
-        this.error.set('Insufficient wallet balance. Please add money or choose another payment method.');
+        this.error.set('Insufficient wallet balance.');
         return;
       }
     }
 
     this.paymentService.initiatePayment({
       bookingId: this.bookingId(),
-      amount,
-      paymentMethod: method === 'BusMateWallet' ? 'Wallet' : method
+      amount: finalAmount,
+      paymentMethod: method === 'BusMateWallet' ? 'Wallet' : method,
+      promoCode
     }).subscribe({
       next: (initiateResp: any) => {
         if (!initiateResp?.success) {
-          // Refund wallet deduction if initiation failed
-          if (method === 'BusMateWallet') {
-            this.walletService.credit(amount, `Refund - Payment initiation failed`);
-          }
+          if (method === 'BusMateWallet') this.walletService.credit(finalAmount, 'Refund - Payment initiation failed');
           this.processing.set(false);
           this.error.set(initiateResp?.message || 'Payment initiation failed.');
           return;
@@ -136,27 +178,19 @@ export class Payment implements OnInit {
             if (confirmResp?.success) {
               this.router.navigate(['/booking-confirmation', this.bookingId()]);
             } else {
-              // Refund wallet deduction if confirmation failed
-              if (method === 'BusMateWallet') {
-                this.walletService.credit(amount, `Refund - Payment confirmation failed`);
-              }
+              if (method === 'BusMateWallet') this.walletService.credit(finalAmount, 'Refund - Payment confirmation failed');
               this.error.set(confirmResp?.message || 'Payment confirmation failed.');
             }
           },
           error: (err) => {
-            // Refund wallet deduction on error
-            if (method === 'BusMateWallet') {
-              this.walletService.credit(amount, `Refund - Payment error`);
-            }
+            if (method === 'BusMateWallet') this.walletService.credit(finalAmount, 'Refund - Payment error');
             this.processing.set(false);
             this.error.set(this.errHandler.getErrorMessage(err));
           }
         });
       },
       error: (err) => {
-        if (method === 'BusMateWallet') {
-          this.walletService.credit(amount, `Refund - Payment error`);
-        }
+        if (method === 'BusMateWallet') this.walletService.credit(finalAmount, 'Refund - Payment error');
         this.processing.set(false);
         this.error.set(this.errHandler.getErrorMessage(err));
       }

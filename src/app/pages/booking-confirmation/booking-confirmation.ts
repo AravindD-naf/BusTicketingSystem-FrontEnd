@@ -27,9 +27,11 @@ export class BookingConfirmation implements OnInit {
 
   // Fare breakdown computed from backend totalAmount (base fare)
   readonly convenienceFee = 20;
-  baseFare    = computed(() => this.booking()?.totalAmount ?? 0);
-  taxAmount   = computed(() => Math.round(this.baseFare() * 0.06));
-  grandTotal  = computed(() => this.baseFare() + this.taxAmount() + this.convenienceFee);
+  baseFare       = computed(() => this.booking()?.totalAmount ?? 0);
+  discountAmount = computed(() => this.booking()?.discountAmount ?? 0);
+  discountedFare = computed(() => Math.max(0, this.baseFare() - this.discountAmount()));
+  taxAmount      = computed(() => Math.round(this.discountedFare() * 0.06));
+  grandTotal     = computed(() => this.discountedFare() + this.taxAmount() + this.convenienceFee);
 
   ngOnInit() {
     const id = this.route.snapshot.params['bookingId'];

@@ -104,3 +104,21 @@
   .action-row { flex-direction: column; }
   .btn-primary, .btn-secondary, .btn-outline { width: 100%; text-align: center; }
 }
+
+/* Promo code display in confirmation */
+.promo-code-badge {
+  display: inline-block;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+
+.discount-val {
+  color: #16a34a;
+  font-weight: 700;
+}

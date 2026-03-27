@@ -163,11 +163,12 @@ export class MyBookings implements OnInit {
 
   readonly convenienceFee = 20;
 
-  getTax(amount: number): number {
-    return Math.round(amount * 0.06);
+  getTax(amount: number, discount = 0): number {
+    return Math.round(Math.max(0, amount - discount) * 0.06);
   }
 
-  getGrandTotal(amount: number): number {
-    return amount + this.getTax(amount) + this.convenienceFee;
+  getGrandTotal(amount: number, discount = 0): number {
+    const discounted = Math.max(0, amount - discount);
+    return discounted + this.getTax(amount, discount) + this.convenienceFee;
   }
 }

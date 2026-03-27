@@ -58,8 +58,19 @@
           </div>
           <div class="info-item">
             <span class="info-label">Total Amount</span>
-            <span class="info-val price">₹{{ getGrandTotal(b.totalAmount) }}</span>
-            <span class="info-fare-note">₹{{ b.totalAmount }} + ₹{{ getTax(b.totalAmount) }} tax + ₹{{ convenienceFee }} fee</span>
+            <span class="info-val price">₹{{ getGrandTotal(b.totalAmount, b.discountAmount) }}</span>
+            <span class="info-fare-note">
+              ₹{{ b.totalAmount }}
+              <ng-container *ngIf="b.discountAmount > 0"> − ₹{{ b.discountAmount }} promo</ng-container>
+              + ₹{{ getTax(b.totalAmount, b.discountAmount) }} tax + ₹{{ convenienceFee }} fee
+            </span>
+          </div>
+          <div class="info-item" *ngIf="b.promoCodeUsed">
+            <span class="info-label">Promo Applied</span>
+            <span class="info-val">
+              <span class="promo-tag">🏷️ {{ b.promoCodeUsed }}</span>
+              <span class="promo-saved"> — saved ₹{{ b.discountAmount }}</span>
+            </span>
           </div>
           <div class="info-item">
             <span class="info-label">Booked On</span>
@@ -161,9 +172,21 @@
           <span>Seat Fare</span>
           <span>₹{{ selectedBooking()?.totalAmount }}</span>
         </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.promoCodeUsed">
+          <span>Promo Code</span>
+          <span class="promo-tag">🏷️ {{ selectedBooking()?.promoCodeUsed }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.discountAmount > 0">
+          <span>Discount</span>
+          <span style="color:#16a34a;font-weight:600">− ₹{{ selectedBooking()?.discountAmount }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.discountAmount > 0">
+          <span>Discounted Fare</span>
+          <span>₹{{ (selectedBooking()?.totalAmount ?? 0) - (selectedBooking()?.discountAmount ?? 0) }}</span>
+        </div>
         <div class="dl-row">
           <span>GST & Taxes (6%)</span>
-          <span>₹{{ getTax(selectedBooking()?.totalAmount ?? 0) }}</span>
+          <span>₹{{ getTax(selectedBooking()?.totalAmount ?? 0, selectedBooking()?.discountAmount ?? 0) }}</span>
         </div>
         <div class="dl-row">
           <span>Convenience Fee</span>
@@ -171,7 +194,7 @@
         </div>
         <div class="dl-row dl-row-total">
           <span>Total Paid</span>
-          <span style="font-weight:700;color:#16a34a">₹{{ getGrandTotal(selectedBooking()?.totalAmount ?? 0) }}</span>
+          <span style="font-weight:700;color:#16a34a">₹{{ getGrandTotal(selectedBooking()?.totalAmount ?? 0, selectedBooking()?.discountAmount ?? 0) }}</span>
         </div>
         <div class="dl-row">
           <span>Status</span>
