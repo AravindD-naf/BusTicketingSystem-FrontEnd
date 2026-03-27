@@ -26,27 +26,20 @@ export interface Conversation {
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
-  private http   = inject(HttpClient);
-  private auth   = inject(AuthService);
+  private http = inject(HttpClient);
+  private auth = inject(AuthService);
   private hub!: HubConnection;
 
-  messages   = signal<ChatMsg[]>([]);
-  connected  = signal(false);
-  adminId    = signal<number | null>(null);
-
-  // Admin-side: list of conversations with unread counts
-  conversations  = signal<Conversation[]>([]);
-  totalUnread    = computed(() => this.conversations().reduce((s, c) => s + c.unreadCount, 0));
-
-  // Track which user's history is currently loaded (admin side)
+  messages      = signal<ChatMsg[]>([]);
+  connected     = signal(false);
+  adminId       = signal<number | null>(null);
+  conversations = signal<Conversation[]>([]);
+  totalUnread   = computed(() => this.conversations().reduce((s, c) => s + c.unreadCount, 0));
   activeConvUserId = signal<number | null>(null);
 
-  // Hub URL: strip /api/v1 suffix to get base, then append /hubs/chat
-  // Works with both relative (/api/v1) and absolute (https://host/api/v1) apiBase
-  private readonly HUB_URL = (() => {
-    const base = environment.apiBase.replace(/\/api\/v1\/?$/, '');
-    return base ? `${base}/hubs/chat` : '/hubs/chat';
-  })();
+  // SignalR needs an absolute URL — use the backend directly
+  // The proxy handles /api but SignalR WebSocket needs to go to the backend port
+  private readonly HUB_URL = 'https://localhost:5001/hubs/chat';
   private readonly API = environment.apiBase;
 
   connect() {
@@ -64,17 +57,13 @@ export class ChatService {
 
     this.hub.on('ReceiveMessage', (msg: ChatMsg) => {
       const isAdmin = this.auth.user()?.role === 'Admin';
-
       if (isAdmin) {
-        // Only append to message list if this message belongs to the active conversation
         const active = this.activeConvUserId();
         if (active !== null && (msg.senderId === active || msg.receiverId === active)) {
           this.messages.update(msgs => this.dedup([...msgs, msg]));
         }
-        // Always refresh conversation list for badge updates
         this.loadConversations();
       } else {
-        // Customer: always append (only one conversation — with admin)
         this.messages.update(msgs => this.dedup([...msgs, msg]));
       }
     });
@@ -84,7 +73,6 @@ export class ChatService {
       .catch((err: unknown) => console.error('SignalR connect error:', err));
   }
 
-  /** Deduplicate by messageId */
   private dedup(msgs: ChatMsg[]): ChatMsg[] {
     const seen = new Set<number>();
     return msgs.filter(m => {
@@ -103,14 +91,13 @@ export class ChatService {
   markRead(senderId: number) {
     if (!this.isConnected()) return;
     this.hub.invoke('MarkRead', senderId).catch(() => {});
-    // Clear badge locally immediately
     this.conversations.update(cs =>
       cs.map(c => c.userId === senderId ? { ...c, unreadCount: 0 } : c)
     );
   }
 
   loadHistory(otherUserId: number) {
-    this.messages.set([]); // clear before loading
+    this.messages.set([]);
     this.activeConvUserId.set(otherUserId);
     this.http.get<any>(`${this.API}/chat/history/${otherUserId}`).subscribe({
       next: r => this.messages.set(r?.data ?? []),
@@ -132,7 +119,7 @@ export class ChatService {
     });
   }
 
-  private isConnected(): boolean {
+  isConnected(): boolean {
     return this.hub?.state === HubConnectionState.Connected;
   }
 }
