@@ -7,8 +7,6 @@ import { Navbar } from '../../components/navbar/navbar';
 import { Footer } from '../../components/footer/footer';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { PaymentService } from '../../core/services/payment.service';
-import { WalletService } from '../../core/services/wallet.service';
 
 @Component({
   selector: 'app-my-bookings',
@@ -22,8 +20,6 @@ export class MyBookings implements OnInit {
   private router         = inject(Router);
   private errHandler     = inject(HttpErrorHandlerService);
   private http           = inject(HttpClient);
-  private paymentService = inject(PaymentService);
-  private walletService = inject(WalletService);
 
   bookings         = signal<any[]>([]);
   loading          = signal(false);
@@ -71,10 +67,10 @@ export class MyBookings implements OnInit {
     this.bookingService.cancelBooking(bookingId).subscribe({
       next: () => {
         this.cancelling.set(null);
-        // Credit refund to wallet via API if booking was Confirmed (had a payment)
-        if (booking?.bookingStatus?.toLowerCase() === 'confirmed' && booking?.totalAmount > 0) {
-          this.walletService.creditRefund(booking.totalAmount, bookingId);
-          alert(`Your booking has been cancelled. ₹${booking.totalAmount} refund will be credited to your BusMate Wallet once approved.`);
+        // Backend handles refund automatically via cancellation policy
+        // For confirmed bookings, a refund record is created and wallet credited by the backend
+        if (booking?.bookingStatus?.toLowerCase() === 'confirmed') {
+          alert('Your booking has been cancelled. Refund will be processed as per cancellation policy and credited to your BusMate Wallet.');
         }
         this.loadBookings();
       },
