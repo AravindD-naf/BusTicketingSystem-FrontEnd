@@ -77,7 +77,7 @@ export class ChatService {
 
     this.hub.start()
       .then(() => this.connected.set(true))
-      .catch(err => console.error('SignalR connect error:', err));
+      .catch((err: unknown) => console.error('SignalR connect error:', err));
   }
 
   /** Deduplicate by messageId */
@@ -93,7 +93,7 @@ export class ChatService {
   sendMessage(receiverId: number, content: string) {
     if (!content.trim() || !this.isConnected()) return;
     this.hub.invoke('SendMessage', receiverId, content)
-      .catch(err => console.error('Send error:', err));
+      .catch((err: unknown) => console.error('Send error:', err));
   }
 
   markRead(senderId: number) {
