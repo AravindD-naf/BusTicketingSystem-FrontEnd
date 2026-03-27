@@ -33,6 +33,18 @@
         <h2>Available Buses</h2>
         <p *ngIf="!loading()">Showing {{ schedules().length }} results · {{ from() }} → {{ to() }}<span *ngIf="date()"> · {{ date() }}</span></p>
       </div>
+      <div class="sort-dropdown-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+        <label class="sort-dropdown-label" for="sort-select">Sort by</label>
+        <select id="sort-select" class="sort-dropdown" (change)="sortBy($any($event.target).value)">
+          <option value="departure"  [selected]="busSearchService.sortBy() === 'departure'">Early Departure</option>
+          <option value="arrival"    [selected]="busSearchService.sortBy() === 'arrival'">Early Arrival</option>
+          <option value="price_asc"  [selected]="busSearchService.sortBy() === 'price_asc'">Lowest Fare</option>
+          <option value="price_desc" [selected]="busSearchService.sortBy() === 'price_desc'">Highest Fare</option>
+          <option value="duration"   [selected]="busSearchService.sortBy() === 'duration'">Shortest Duration</option>
+          <option value="rating"     [selected]="busSearchService.sortBy() === 'rating'">Top Rated</option>
+        </select>
+      </div>
     </div>
 
     <!-- Loading -->

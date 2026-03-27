@@ -179,12 +179,34 @@
 
 /* ── BUS RESULTS COLUMN ── */
 .results-col { display: flex; flex-direction: column; gap: 12px; }
-.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 4px; flex-wrap: wrap; gap: 10px;
+}
 .results-header h2 {
   font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700;
   color: var(--navy); letter-spacing: -0.3px;
 }
 .results-header p { font-size: 13px; color: var(--muted); }
+
+/* Sort dropdown */
+.sort-dropdown-wrap {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 7px 12px;
+  transition: border-color 0.18s;
+}
+.sort-dropdown-wrap:focus-within { border-color: var(--navy); }
+.sort-dropdown-wrap svg { stroke: var(--muted); flex-shrink: 0; }
+.sort-dropdown-label {
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  white-space: nowrap; cursor: default;
+}
+.sort-dropdown {
+  border: none; outline: none; background: transparent;
+  font-size: 13px; font-weight: 600; color: var(--navy);
+  cursor: pointer; padding-right: 4px;
+}
 
 /* States */
 .loading-box {

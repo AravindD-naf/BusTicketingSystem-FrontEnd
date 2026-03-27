@@ -17,17 +17,6 @@ export class FilterSidebar {
   @Output() filterChanged = new EventEmitter<void>();
   @Output() sortChanged   = new EventEmitter<SortOption>();
 
-  activeTab: 'filters' | 'sort' = 'filters';
-
-  sortOptions: { value: SortOption; label: string; icon: string }[] = [
-    { value: 'departure',  label: 'Early Departure',   icon: '🌅' },
-    { value: 'arrival',    label: 'Early Arrival',      icon: '🏁' },
-    { value: 'price_asc',  label: 'Lowest Fare First',  icon: '💰' },
-    { value: 'price_desc', label: 'Highest Fare First',  icon: '💎' },
-    { value: 'duration',   label: 'Shortest Duration',  icon: '⚡' },
-    { value: 'rating',     label: 'Top Rated',          icon: '⭐' },
-  ];
-
   busTypes = ['AC Sleeper', 'Non-AC Sleeper', 'AC Seater', 'Non-AC Seater', 'Volvo AC Sleeper', 'AC Semi-Sleeper'];
 
   departureTimes = [
@@ -52,12 +41,6 @@ export class FilterSidebar {
       .filter((name: string) => !!name);
     return [...new Set(names)] as string[];
   });
-
-  selectSort(option: SortOption) {
-    this.busSearch.updateSort(option);
-    this.sortChanged.emit(option);
-    this.filterChanged.emit();
-  }
 
   onPriceChange(val: number) {
     this.maxPrice = val;
