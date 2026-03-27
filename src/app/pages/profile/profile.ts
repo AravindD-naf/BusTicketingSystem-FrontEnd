@@ -111,15 +111,23 @@ export class Profile implements OnInit {
       return;
     }
     const amount = Number(this.addMoneyForm.value.amount);
+    const method = this.addMoneyForm.value.paymentMethod ?? 'UPI';
     this.addMoneyLoading.set(true);
     this.addMoneyError.set(null);
 
-    // Simulate payment gateway delay
+    // Simulate payment gateway delay then call backend
     setTimeout(() => {
-      this.walletService.credit(amount, `Added via ${this.addMoneyForm.value.paymentMethod}`);
-      this.addMoneyLoading.set(false);
-      this.addMoneySuccess.set(true);
-      setTimeout(() => this.closeAddMoney(), 1800);
+      this.walletService.topUp(amount, method).subscribe({
+        next: () => {
+          this.addMoneyLoading.set(false);
+          this.addMoneySuccess.set(true);
+          setTimeout(() => this.closeAddMoney(), 1800);
+        },
+        error: (err) => {
+          this.addMoneyLoading.set(false);
+          this.addMoneyError.set('Failed to add money. Please try again.');
+        }
+      });
     }, 1200);
   }
 

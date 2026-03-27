@@ -145,14 +145,29 @@ export class Payment implements OnInit {
     const promoCode = this.promoApplied()?.code;
 
     if (method === 'BusMateWallet') {
-      const deducted = this.walletService.debit(finalAmount, `Payment for Booking #${this.bookingId()}`);
-      if (!deducted) {
-        this.processing.set(false);
-        this.error.set('Insufficient wallet balance.');
-        return;
-      }
+      // Debit via API first — if it fails, don't proceed
+      this.walletService.debitFromApi(
+        finalAmount,
+        `Payment for Booking #${this.bookingId()}`,
+        String(this.bookingId())
+      ).subscribe({
+        next: () => this.proceedWithPayment(finalAmount, method, promoCode),
+        error: (err) => {
+          this.processing.set(false);
+          this.error.set(this.errHandler.getErrorMessage(err));
+        }
+      });
+      return;
     }
 
+    this.proceedWithPayment(finalAmount, method, promoCode);
+  }
+
+  goBack() {
+    this.router.navigate(['/booking-review', this.bookingId()]);
+  }
+
+  private proceedWithPayment(finalAmount: number, method: string, promoCode?: string) {
     this.paymentService.initiatePayment({
       bookingId: this.bookingId(),
       amount: finalAmount,
@@ -161,7 +176,7 @@ export class Payment implements OnInit {
     }).subscribe({
       next: (initiateResp: any) => {
         if (!initiateResp?.success) {
-          if (method === 'BusMateWallet') this.walletService.credit(finalAmount, 'Refund - Payment initiation failed');
+          if (method === 'BusMateWallet') this.walletService.creditToApi(finalAmount, 'Refund - Payment initiation failed', String(this.bookingId())).subscribe();
           this.processing.set(false);
           this.error.set(initiateResp?.message || 'Payment initiation failed.');
           return;
@@ -176,28 +191,25 @@ export class Payment implements OnInit {
           next: (confirmResp: any) => {
             this.processing.set(false);
             if (confirmResp?.success) {
+              this.walletService.loadWallet(); // refresh balance in navbar
               this.router.navigate(['/booking-confirmation', this.bookingId()]);
             } else {
-              if (method === 'BusMateWallet') this.walletService.credit(finalAmount, 'Refund - Payment confirmation failed');
+              if (method === 'BusMateWallet') this.walletService.creditToApi(finalAmount, 'Refund - Payment failed', String(this.bookingId())).subscribe();
               this.error.set(confirmResp?.message || 'Payment confirmation failed.');
             }
           },
           error: (err) => {
-            if (method === 'BusMateWallet') this.walletService.credit(finalAmount, 'Refund - Payment error');
+            if (method === 'BusMateWallet') this.walletService.creditToApi(finalAmount, 'Refund - Payment error', String(this.bookingId())).subscribe();
             this.processing.set(false);
             this.error.set(this.errHandler.getErrorMessage(err));
           }
         });
       },
       error: (err) => {
-        if (method === 'BusMateWallet') this.walletService.credit(finalAmount, 'Refund - Payment error');
+        if (method === 'BusMateWallet') this.walletService.creditToApi(finalAmount, 'Refund - Payment error', String(this.bookingId())).subscribe();
         this.processing.set(false);
         this.error.set(this.errHandler.getErrorMessage(err));
       }
     });
-  }
-
-  goBack() {
-    this.router.navigate(['/booking-review', this.bookingId()]);
   }
 }

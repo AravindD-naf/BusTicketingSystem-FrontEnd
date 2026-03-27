@@ -71,11 +71,10 @@ export class MyBookings implements OnInit {
     this.bookingService.cancelBooking(bookingId).subscribe({
       next: () => {
         this.cancelling.set(null);
-        // Credit refund to wallet if booking was Confirmed (had a payment)
+        // Credit refund to wallet via API if booking was Confirmed (had a payment)
         if (booking?.bookingStatus?.toLowerCase() === 'confirmed' && booking?.totalAmount > 0) {
-          this.walletService.loadWallet();
           this.walletService.creditRefund(booking.totalAmount, bookingId);
-          alert(`Your booking has been cancelled. ₹${booking.totalAmount} refund has been credited to your BusMate Wallet.`);
+          alert(`Your booking has been cancelled. ₹${booking.totalAmount} refund will be credited to your BusMate Wallet once approved.`);
         }
         this.loadBookings();
       },

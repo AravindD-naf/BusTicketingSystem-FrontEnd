@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal, HostListener, inject } from '@angular/core';
+import { Component, signal, HostListener, inject, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { WalletService } from '../../core/services/wallet.service';
 
 @Component({
   selector: 'app-navbar',
@@ -10,11 +11,18 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
-export class Navbar {
-  auth = inject(AuthService);
+export class Navbar implements OnInit {
+  auth          = inject(AuthService);
+  walletService = inject(WalletService);
   private router = inject(Router);
   mobileOpen = signal(false);
-  scrolled = signal(false);
+  scrolled   = signal(false);
+
+  ngOnInit() {
+    if (this.auth.isAuthenticated()) {
+      this.walletService.loadWallet();
+    }
+  }
 
   @HostListener('window:scroll')
   onScroll() { this.scrolled.set(window.scrollY > 20); }
