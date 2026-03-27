@@ -99,7 +99,7 @@ export class SeatSelection implements OnInit {
     this.from.set(qp['from'] || '');
     this.to.set(qp['to'] || '');
     this.date.set(qp['date'] || '');
-    this.requiredSeats.set(this.MAX_SEATS);
+    this.requiredSeats.set(Math.min(+(qp['passengers'] || 1), this.MAX_SEATS));
 
     // ── STORE search context so booking-review can navigate back correctly ──
     sessionStorage.setItem('seat_context', JSON.stringify({
@@ -282,8 +282,8 @@ export class SeatSelection implements OnInit {
     const wasSelected = this.seatService.isSelectedByNumber(seat.seatNumber);
     const price = this.busInfo()?.baseFare || 0;
 
-    // If trying to add but already at required count — show warning
-    if (!wasSelected && this.selectedSeats().length >= this.requiredSeats()) {
+    // If trying to add but already at max — show warning
+    if (!wasSelected && this.selectedSeats().length >= this.MAX_SEATS) {
       alert(`You can select a maximum of ${this.MAX_SEATS} seats per booking.`);
       return;
     }
@@ -362,16 +362,15 @@ export class SeatSelection implements OnInit {
   }
 
   onProceed() {
-    const required = this.requiredSeats();
     const selected = this.selectedSeats().length;
 
     if (selected === 0) {
-      alert(`Please select ${required} seat(s) for your ${required} passenger(s).`);
+      alert('Please select at least 1 seat to proceed.');
       return;
     }
 
-    if (selected < required) {
-      alert(`You have selected ${required} passenger(s) but only ${selected} seat(s). Please select ${required - selected} more seat(s).`);
+    if (selected > this.MAX_SEATS) {
+      alert(`You can select a maximum of ${this.MAX_SEATS} seats per booking.`);
       return;
     }
     

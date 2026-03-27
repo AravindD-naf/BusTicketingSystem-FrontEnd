@@ -20,6 +20,10 @@
           <span class="detail-key">Booking ID</span>
           <span class="detail-val highlight">#{{ booking()?.bookingId }}</span>
         </div>
+        <div class="detail-row" *ngIf="booking()?.pnr">
+          <span class="detail-key">PNR</span>
+          <span class="detail-val highlight pnr-val">{{ booking()?.pnr }}</span>
+        </div>
         <div class="detail-row" *ngIf="booking()?.source">
           <span class="detail-key">Route</span>
           <span class="detail-val">{{ booking()?.source }} → {{ booking()?.destination }}</span>
