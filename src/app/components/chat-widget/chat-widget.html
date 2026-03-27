@@ -1,0 +1,59 @@
+<ng-container *ngIf="auth.isAuthenticated() && auth.user()?.role !== 'Admin'">
+
+  <!-- Floating bubble -->
+  <button class="chat-bubble" (click)="toggleOpen()" [class.open]="open()" aria-label="Chat with support">
+    <svg *ngIf="!open()" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <svg *ngIf="open()" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+    <span class="bubble-badge" *ngIf="!open() && unreadFromAdmin() > 0">{{ unreadFromAdmin() }}</span>
+  </button>
+
+  <!-- Chat window -->
+  <div class="chat-window" *ngIf="open()">
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">S</div>
+        <div>
+          <div class="chat-name">BusMate Support</div>
+          <div class="chat-status">
+            <span class="status-dot" [class.online]="chatService.connected()"></span>
+            {{ chatService.connected() ? 'Online' : 'Connecting...' }}
+          </div>
+        </div>
+      </div>
+      <button class="chat-close" (click)="toggleOpen()">✕</button>
+    </div>
+
+    <div class="chat-messages" #msgList>
+      <div *ngIf="chatService.messages().length === 0" class="chat-empty">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c0cfe0" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <p>Hi! How can we help you today?</p>
+      </div>
+      <div *ngFor="let m of chatService.messages()"
+           class="msg-row"
+           [class.mine]="m.senderId === myId"
+           [class.theirs]="m.senderId !== myId">
+        <div class="msg-bubble">
+          <span class="msg-text">{{ m.content }}</span>
+          <span class="msg-time">{{ m.sentAt | date:'h:mm a' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-row">
+      <textarea class="chat-input" rows="1"
+        placeholder="Type a message..."
+        [value]="inputText()"
+        (input)="inputText.set($any($event.target).value)"
+        (keydown)="onKey($event)">
+      </textarea>
+      <button class="chat-send" (click)="send()" [disabled]="!inputText().trim()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+</ng-container>
