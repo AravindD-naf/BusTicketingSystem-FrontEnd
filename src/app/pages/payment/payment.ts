@@ -41,8 +41,13 @@ export class Payment implements OnInit {
 
   readonly convenienceFee = 20;
 
-  // Base fare from SeatService (seat price only, no tax/fee)
-  seatFare   = this.seatService.totalFare;
+  // Base fare — prefer booking data from backend; fall back to SeatService signal
+  // (SeatService is only populated when coming directly from seat selection)
+  seatFare = computed(() => {
+    const fromBooking = this.booking()?.totalAmount;
+    if (fromBooking && fromBooking > 0) return fromBooking;
+    return this.seatService.totalFare();
+  });
 
   // After promo discount is applied, recalculate everything
   discountAmount = computed(() => this.promoApplied()?.discountAmount ?? 0);
