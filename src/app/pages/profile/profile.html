@@ -100,17 +100,17 @@
         <div class="tx-list" *ngIf="walletService.transactions().length > 0">
           <div class="tx-item" *ngFor="let tx of walletService.transactions()">
             <div class="tx-left">
-              <div class="tx-icon" [class.tx-credit]="tx.type === 'credit'" [class.tx-debit]="tx.type === 'debit'">
-                <svg *ngIf="tx.type === 'credit'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-                <svg *ngIf="tx.type === 'debit'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+              <div class="tx-icon" [class.tx-credit]="tx.type === 'Credit'" [class.tx-debit]="tx.type === 'Debit'">
+                <svg *ngIf="tx.type === 'Credit'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                <svg *ngIf="tx.type === 'Debit'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
               </div>
               <div class="tx-info">
                 <span class="tx-desc">{{ tx.description }}</span>
-                <span class="tx-date">{{ formatTxDate(tx.date) }}</span>
+                <span class="tx-date">{{ formatTxDate(tx.createdAt) }}</span>
               </div>
             </div>
-            <div class="tx-amount" [class.tx-credit]="tx.type === 'credit'" [class.tx-debit]="tx.type === 'debit'">
-              {{ tx.type === 'credit' ? '+' : '-' }}₹{{ tx.amount | number:'1.2-2' }}
+            <div class="tx-amount" [class.tx-credit]="tx.type === 'Credit'" [class.tx-debit]="tx.type === 'Debit'">
+              {{ tx.type === 'Credit' ? '+' : '-' }}₹{{ tx.amount | number:'1.2-2' }}
             </div>
           </div>
         </div>
