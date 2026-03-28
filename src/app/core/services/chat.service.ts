@@ -4,7 +4,6 @@ import {
   HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
-  HttpTransportType,
   LogLevel
 } from '@microsoft/signalr';
 import { environment } from '../../../environments/environment';
@@ -31,40 +30,34 @@ export class ChatService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
   private hub!: HubConnection;
-  private connectAttempts = 0;
-  private readonly MAX_ATTEMPTS = 3;
 
-  messages      = signal<ChatMsg[]>([]);
-  connected     = signal(false);
-  adminId       = signal<number | null>(null);
-  conversations = signal<Conversation[]>([]);
-  totalUnread   = computed(() => this.conversations().reduce((s, c) => s + c.unreadCount, 0));
+  messages         = signal<ChatMsg[]>([]);
+  connected        = signal(false);
+  adminId          = signal<number | null>(null);
+  conversations    = signal<Conversation[]>([]);
+  totalUnread      = computed(() => this.conversations().reduce((s, c) => s + c.unreadCount, 0));
   activeConvUserId = signal<number | null>(null);
 
-  // Use HTTP port 5000 directly — avoids HTTPS redirect/cert issues in dev
-  // skipNegotiation + WebSockets only means no negotiate HTTP request at all
-  private readonly HUB_URL = 'http://localhost:5000/hubs/chat';
+  // Goes through Angular proxy → http://localhost:5000/hubs/chat
+  // Proxy handles both HTTP negotiate and WebSocket upgrade
+  private readonly HUB_URL = '/hubs/chat';
   private readonly API = environment.apiBase;
 
   connect() {
     if (!this.auth.isAuthenticated()) return;
     if (this.hub && this.hub.state !== HubConnectionState.Disconnected) return;
-    if (this.connectAttempts >= this.MAX_ATTEMPTS) return;
 
     this.hub = new HubConnectionBuilder()
       .withUrl(this.HUB_URL, {
-        accessTokenFactory: () => this.auth.token ?? '',
-        transport: HttpTransportType.WebSockets,
-        skipNegotiation: true   // skip HTTP negotiate — go straight to WebSocket
+        // Token passed via accessTokenFactory — used in negotiate + WS query string
+        accessTokenFactory: () => this.auth.token ?? ''
       })
-      .withAutomaticReconnect([2000, 5000, 10000]) // retry 3 times max, then stop
+      // Retry: 0s, 2s, 5s, 10s — then stop
+      .withAutomaticReconnect([0, 2000, 5000, 10000])
       .configureLogging(LogLevel.Warning)
       .build();
 
-    this.hub.onreconnected(() => {
-      this.connected.set(true);
-      this.connectAttempts = 0;
-    });
+    this.hub.onreconnected(() => this.connected.set(true));
     this.hub.onclose(() => this.connected.set(false));
     this.hub.onreconnecting(() => this.connected.set(false));
 
@@ -75,20 +68,18 @@ export class ChatService {
         if (active !== null && (msg.senderId === active || msg.receiverId === active)) {
           this.messages.update(msgs => this.dedup([...msgs, msg]));
         }
+        // Refresh conversation list for badge update
         this.loadConversations();
       } else {
+        // Customer: always append
         this.messages.update(msgs => this.dedup([...msgs, msg]));
       }
     });
 
-    this.connectAttempts++;
     this.hub.start()
-      .then(() => {
-        this.connected.set(true);
-        this.connectAttempts = 0;
-      })
+      .then(() => this.connected.set(true))
       .catch((err: unknown) => {
-        console.warn('SignalR connection failed:', err);
+        console.warn('SignalR connect failed:', err);
         this.connected.set(false);
       });
   }

@@ -18,6 +18,7 @@ export class AdminChat implements OnInit, AfterViewChecked {
   selectedUser = signal<Conversation | null>(null);
   inputText    = signal('');
   private shouldScroll = false;
+  private lastMsgCount = 0;
 
   @ViewChild('msgList') msgList!: ElementRef<HTMLDivElement>;
 
@@ -29,11 +30,17 @@ export class AdminChat implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked() {
+    const msgs = this.chatService.messages();
+    if (msgs.length !== this.lastMsgCount) {
+      this.lastMsgCount = msgs.length;
+      this.shouldScroll = true;
+    }
     if (this.shouldScroll) { this.scrollToBottom(); this.shouldScroll = false; }
   }
 
   selectUser(conv: Conversation) {
     this.selectedUser.set(conv);
+    this.lastMsgCount = 0;
     this.chatService.loadHistory(conv.userId);
     this.chatService.markRead(conv.userId);
     this.shouldScroll = true;
@@ -42,6 +49,7 @@ export class AdminChat implements OnInit, AfterViewChecked {
   back() {
     this.selectedUser.set(null);
     this.chatService.messages.set([]);
+    this.lastMsgCount = 0;
     this.chatService.loadConversations();
   }
 
