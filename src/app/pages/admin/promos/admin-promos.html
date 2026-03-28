@@ -1,0 +1,142 @@
+<div class="promos-page">
+
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Promo Codes</h2>
+      <p class="page-sub">Create and manage discount codes shown on the homepage</p>
+    </div>
+    <button class="btn-create" (click)="openCreate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Promo Code
+    </button>
+  </div>
+
+  <div class="alert success" *ngIf="success()">✓ {{ success() }}</div>
+
+  <!-- Loading -->
+  <div class="loading-box" *ngIf="loading()">Loading promo codes...</div>
+
+  <!-- Table -->
+  <div class="table-card" *ngIf="!loading()">
+    <div class="empty-state" *ngIf="promos().length === 0">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c0cfe0" stroke-width="1.2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      <p>No promo codes yet. Create your first one!</p>
+    </div>
+
+    <table class="promo-table" *ngIf="promos().length > 0">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Discount</th>
+          <th>Min Booking</th>
+          <th>Valid Until</th>
+          <th>Usage</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of promos()" [class.expired-row]="isExpired(p)">
+          <td><span class="code-chip">{{ p.code }}</span></td>
+          <td>
+            <span *ngIf="p.discountType === 'Percentage'">{{ p.discountValue }}%
+              <span class="cap-note" *ngIf="p.maxDiscountAmount > 0">up to ₹{{ p.maxDiscountAmount }}</span>
+            </span>
+            <span *ngIf="p.discountType === 'Flat'">₹{{ p.discountValue }} flat</span>
+          </td>
+          <td>{{ p.minBookingAmount > 0 ? '₹' + p.minBookingAmount : '—' }}</td>
+          <td [class.expired-date]="isExpired(p)">{{ formatDate(p.validUntil) }}</td>
+          <td>{{ p.usedCount }}{{ p.maxUsageCount > 0 ? ' / ' + p.maxUsageCount : '' }}</td>
+          <td>
+            <span class="status-badge" [class.active]="p.isActive && !isExpired(p)" [class.inactive]="!p.isActive" [class.expired]="isExpired(p)">
+              {{ isExpired(p) ? 'Expired' : p.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="btn-icon edit" (click)="openEdit(p)" title="Edit">✏️</button>
+            <button class="btn-icon toggle" (click)="toggle(p)" [title]="p.isActive ? 'Deactivate' : 'Activate'">
+              {{ p.isActive ? '🔴' : '🟢' }}
+            </button>
+            <button class="btn-icon del" (click)="delete(p)" title="Delete">🗑️</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create / Edit Modal -->
+  <div class="modal-backdrop" *ngIf="showForm()" (click)="closeForm()">
+    <div class="modal" (click)="$event.stopPropagation()" [formGroup]="form">
+      <div class="modal-header">
+        <h3>{{ editId() ? 'Edit Promo Code' : 'New Promo Code' }}</h3>
+        <button class="modal-close" (click)="closeForm()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="alert error" *ngIf="error()">{{ error() }}</div>
+
+        <div class="form-grid">
+          <div class="field full">
+            <label>Code *</label>
+            <input type="text" formControlName="code" placeholder="e.g. SUMMER20" style="text-transform:uppercase"/>
+            <span class="err" *ngIf="form.get('code')?.invalid && form.get('code')?.touched">Required (3–50 chars)</span>
+          </div>
+
+          <div class="field">
+            <label>Discount Type *</label>
+            <select formControlName="discountType">
+              <option value="Percentage">Percentage (%)</option>
+              <option value="Flat">Flat Amount (₹)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Discount Value *</label>
+            <input type="number" formControlName="discountValue" placeholder="e.g. 20"/>
+            <span class="err" *ngIf="form.get('discountValue')?.invalid && form.get('discountValue')?.touched">Required</span>
+          </div>
+
+          <div class="field">
+            <label>Max Discount Cap (₹) <span class="hint">0 = no cap</span></label>
+            <input type="number" formControlName="maxDiscountAmount" placeholder="0"/>
+          </div>
+
+          <div class="field">
+            <label>Min Booking Amount (₹) <span class="hint">0 = no minimum</span></label>
+            <input type="number" formControlName="minBookingAmount" placeholder="0"/>
+          </div>
+
+          <div class="field">
+            <label>Valid From *</label>
+            <input type="date" formControlName="validFrom"/>
+          </div>
+
+          <div class="field">
+            <label>Valid Until *</label>
+            <input type="date" formControlName="validUntil"/>
+          </div>
+
+          <div class="field">
+            <label>Max Usage Count <span class="hint">0 = unlimited</span></label>
+            <input type="number" formControlName="maxUsageCount" placeholder="0"/>
+          </div>
+
+          <div class="field toggle-field">
+            <label class="toggle-label">
+              <input type="checkbox" formControlName="isActive"/>
+              Active (visible to users)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeForm()">Cancel</button>
+        <button class="btn-save" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : (editId() ? 'Update' : 'Create') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

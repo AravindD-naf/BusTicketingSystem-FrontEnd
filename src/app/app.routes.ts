@@ -19,6 +19,7 @@ import { AdminSources } from './pages/admin/sources/admin-sources';
 import { AdminDestinations } from './pages/admin/destinations/admin-destinations';
 import { AdminAuditLogs } from './pages/admin/audit-logs/admin-audit-logs';
 import { AdminChat } from './pages/admin/chat/admin-chat';
+import { AdminPromos } from './pages/admin/promos/admin-promos';
 
 import { Profile } from './pages/profile/profile';
 import { About } from './pages/about/about';
@@ -58,7 +59,8 @@ export const routes: Routes = [
       { path: 'sources', component: AdminSources },
       { path: 'destinations', component: AdminDestinations },
       { path: 'audit-logs', component: AdminAuditLogs },
-      { path: 'chat', component: AdminChat }
+      { path: 'chat', component: AdminChat },
+      { path: 'promos', component: AdminPromos }
     ]
   },
 

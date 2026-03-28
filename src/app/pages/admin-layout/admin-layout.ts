@@ -42,6 +42,9 @@ import { ChatService } from '../../core/services/chat.service';
           <a routerLink="/admin/audit-logs" routerLinkActive="active" class="nav-link">
             <span>📋</span><span *ngIf="!collapsed()" class="label">Audit Logs</span>
           </a>
+          <a routerLink="/admin/promos" routerLinkActive="active" class="nav-link">
+            <span>🏷️</span><span *ngIf="!collapsed()" class="label">Promo Codes</span>
+          </a>
           <a routerLink="/admin/chat" routerLinkActive="active" class="nav-link">
             <span>💬</span>
             <span *ngIf="!collapsed()" class="label">Messages</span>
