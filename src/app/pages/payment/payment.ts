@@ -214,27 +214,26 @@ export class Payment implements OnInit {
           },
           theme: { color: '#0A1F44' },
           handler: (response: RazorpaySuccessResponse) => {
-            // Step 2: verify signature on backend
-            this.paymentService.verifyRazorpayPayment(
+            // Single call: verify signature + record + confirm booking
+            this.paymentService.verifyAndConfirmRazorpay(
+              this.bookingId(),
               response.razorpay_order_id,
               response.razorpay_payment_id,
-              response.razorpay_signature
+              response.razorpay_signature,
+              method
             ).subscribe({
-              next: (verifyResp: any) => {
-                if (verifyResp?.data?.isValid) {
-                  // Step 3: confirm payment in our system
-                  this.proceedWithPayment(
-                    finalAmount, method, promoCode,
-                    response.razorpay_payment_id
-                  );
+              next: (confirmResp: any) => {
+                this.processing.set(false);
+                if (confirmResp?.success) {
+                  this.walletService.loadWallet();
+                  this.router.navigate(['/booking-confirmation', this.bookingId()]);
                 } else {
-                  this.processing.set(false);
-                  this.error.set('Payment verification failed. Please contact support.');
+                  this.error.set(confirmResp?.message || 'Payment confirmation failed.');
                 }
               },
               error: () => {
                 this.processing.set(false);
-                this.error.set('Payment verification error. Please contact support.');
+                this.error.set('Payment confirmation error. Please contact support.');
               }
             });
           },
