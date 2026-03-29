@@ -188,7 +188,13 @@ export class Payment implements OnInit {
       next: (resp: any) => {
         if (!resp?.success) {
           this.processing.set(false);
-          this.error.set(resp?.message || 'Could not create payment order.');
+          const msg = resp?.message || 'Could not create payment order.';
+          // Detect unconfigured keys
+          if (msg.includes('not configured') || msg.includes('Authentication failed')) {
+            this.error.set('Payment gateway not configured. Please add Razorpay test keys to appsettings.json.');
+          } else {
+            this.error.set(msg);
+          }
           return;
         }
 
