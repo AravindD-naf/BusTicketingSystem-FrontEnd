@@ -3,10 +3,7 @@
 /* ── PAGE BACKGROUND ── */
 .results-page {
   min-height: calc(100vh - 64px);
-  background:
-    linear-gradient(rgba(10, 31, 68, 0.55), rgba(10, 31, 68, 0.45)),
-    url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=80&auto=format&fit=crop')
-    center center / cover fixed;
+  background: var(--off);
 }
 
 /* ── SEARCH SUMMARY BAR ── */
@@ -142,13 +139,12 @@
 
 /* ── FILTER SIDEBAR ── */
 .sidebar {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--white);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   overflow: hidden;
   position: sticky; top: 80px;
   box-shadow: var(--sh-sm);
-  backdrop-filter: blur(8px);
 }
 .sidebar-head {
   padding: 16px 20px;
@@ -189,10 +185,9 @@
 }
 .results-header h2 {
   font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700;
-  color: white; letter-spacing: -0.3px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  color: var(--navy); letter-spacing: -0.3px;
 }
-.results-header p { font-size: 13px; color: rgba(255,255,255,0.8); }
+.results-header p { font-size: 13px; color: var(--muted); }
 
 /* Sort dropdown */
 .sort-dropdown-wrap {
@@ -215,10 +210,9 @@
 
 /* States */
 .loading-box {
-  background: rgba(255,255,255,0.95); border-radius: var(--radius-md);
+  background: var(--white); border-radius: var(--radius-md);
   border: 1px solid var(--border); box-shadow: var(--sh-sm);
   padding: 60px 24px; text-align: center;
-  backdrop-filter: blur(4px);
 }
 .spinner {
   width: 36px; height: 36px;
@@ -235,24 +229,22 @@
 }
 .retry-link { background: none; border: none; color: #dc2626; cursor: pointer; font-weight: 600; text-decoration: underline; }
 .no-results {
-  background: rgba(255,255,255,0.95); border-radius: var(--radius-md);
+  background: var(--white); border-radius: var(--radius-md);
   border: 1px solid var(--border); box-shadow: var(--sh-sm);
   padding: 60px 24px; text-align: center;
-  backdrop-filter: blur(4px);
 }
 .no-results h3 { font-family: 'Fraunces', serif; font-size: 20px; color: var(--navy); margin: 0 0 8px; }
 .no-results p { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
 
 /* ── BUS CARD ── */
 .bus-card {
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(10, 31, 68, 0.15);
+  box-shadow: var(--sh-sm);
   transition: all 0.22s;
   animation: fadeUp 0.4s ease both;
-  backdrop-filter: blur(4px);
 }
 .bus-card:nth-child(2) { animation-delay: 0.06s; }
 .bus-card:nth-child(3) { animation-delay: 0.12s; }
