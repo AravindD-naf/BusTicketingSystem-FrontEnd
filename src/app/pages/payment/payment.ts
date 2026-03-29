@@ -169,9 +169,22 @@ export class Payment implements OnInit {
     this.openRazorpay(finalAmount, method, promoCode);
   }
 
+  // Lazy-load Razorpay script only when needed — avoids 200+ network requests on every page
+  private loadRazorpayScript(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (window.Razorpay) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Razorpay'));
+      document.body.appendChild(script);
+    });
+  }
+
   private openRazorpay(finalAmount: number, method: string, promoCode?: string) {
-    // Step 1: create Razorpay order on backend
-    this.paymentService.createRazorpayOrder(this.bookingId(), finalAmount).subscribe({
+    // Load Razorpay script on demand, then create order
+    this.loadRazorpayScript().then(() => {
+      this.paymentService.createRazorpayOrder(this.bookingId(), finalAmount).subscribe({
       next: (resp: any) => {
         if (!resp?.success) {
           this.processing.set(false);
@@ -230,10 +243,14 @@ export class Payment implements OnInit {
         const rzp = new window.Razorpay(options);
         rzp.open();
       },
-      error: (err) => {
+      error: (err: unknown) => {
         this.processing.set(false);
         this.error.set(this.errHandler.getErrorMessage(err));
       }
+    });
+    }).catch(() => {
+      this.processing.set(false);
+      this.error.set('Could not load payment gateway. Please try again.');
     });
   }
 
