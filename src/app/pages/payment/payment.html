@@ -46,9 +46,15 @@
                     ₹{{ walletService.balance() | number:'1.2-2' }} {{ m.disabled ? '— Insufficient' : '— Available' }}
                   </span>
                 </ng-container>
+                <span class="razorpay-badge" *ngIf="m.value !== 'BusMateWallet'">via Razorpay</span>
               </span>
               <span class="check-dot" *ngIf="paymentForm.value.paymentMethod === m.value">✓</span>
             </label>
+          </div>
+
+          <div class="razorpay-note" *ngIf="paymentForm.value.paymentMethod !== 'BusMateWallet'">
+            <img src="https://razorpay.com/favicon.ico" width="14" height="14" alt="Razorpay" style="border-radius:2px"/>
+            Powered by Razorpay — test mode
           </div>
 
           <!-- ── Promo Code Section ── -->
@@ -95,8 +101,13 @@
           <div *ngIf="error()" class="error-box">{{ error() }}</div>
 
           <button type="submit" class="pay-btn" [disabled]="processing()">
-            <span *ngIf="!processing()">Pay ₹{{ grandTotal() }} →</span>
-            <span *ngIf="processing()">Processing Payment...</span>
+            <span *ngIf="!processing() && paymentForm.value.paymentMethod !== 'BusMateWallet'">
+              Pay ₹{{ grandTotal() }} via Razorpay →
+            </span>
+            <span *ngIf="!processing() && paymentForm.value.paymentMethod === 'BusMateWallet'">
+              Pay ₹{{ grandTotal() }} from Wallet →
+            </span>
+            <span *ngIf="processing()">Processing...</span>
           </button>
 
           <button type="button" class="back-btn" (click)="goBack()" [disabled]="processing()">

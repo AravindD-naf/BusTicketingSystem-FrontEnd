@@ -34,8 +34,15 @@ export class PaymentService {
 
   constructor(private http: HttpClient) {}
 
-  // POST /api/v1/booking/payment/initiate
-  initiatePayment(request: InitiatePaymentRequest) {
+  // POST /api/v1/razorpay/create-order
+  createRazorpayOrder(bookingId: number, amount: number) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/razorpay/create-order`, { bookingId, amount });
+  }
+
+  // POST /api/v1/razorpay/verify
+  verifyRazorpayPayment(razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/razorpay/verify`, { razorpayOrderId, razorpayPaymentId, razorpaySignature });
+  }
     return this.http.post<ApiResponse<any>>(`${this.API}/booking/payment/initiate`, request);
   }
 

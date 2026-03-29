@@ -146,17 +146,17 @@ export class Payment implements OnInit {
     this.error.set(null);
 
     const finalAmount = this.grandTotal();
-    const method = this.paymentForm.value.paymentMethod;
-    const promoCode = this.promoApplied()?.code;
+    const method      = this.paymentForm.value.paymentMethod;
+    const promoCode   = this.promoApplied()?.code;
 
+    // BusMate Wallet — direct debit, no Razorpay
     if (method === 'BusMateWallet') {
-      // Debit via API first — if it fails, don't proceed
       this.walletService.debitFromApi(
         finalAmount,
         `Payment for Booking #${this.bookingId()}`,
         String(this.bookingId())
       ).subscribe({
-        next: () => this.proceedWithPayment(finalAmount, method, promoCode),
+        next: () => this.proceedWithPayment(finalAmount, 'Wallet', promoCode),
         error: (err) => {
           this.processing.set(false);
           this.error.set(this.errHandler.getErrorMessage(err));
@@ -165,14 +165,83 @@ export class Payment implements OnInit {
       return;
     }
 
-    this.proceedWithPayment(finalAmount, method, promoCode);
+    // All other methods — open Razorpay checkout
+    this.openRazorpay(finalAmount, method, promoCode);
+  }
+
+  private openRazorpay(finalAmount: number, method: string, promoCode?: string) {
+    // Step 1: create Razorpay order on backend
+    this.paymentService.createRazorpayOrder(this.bookingId(), finalAmount).subscribe({
+      next: (resp: any) => {
+        if (!resp?.success) {
+          this.processing.set(false);
+          this.error.set(resp?.message || 'Could not create payment order.');
+          return;
+        }
+
+        const { orderId, keyId, amount, currency } = resp.data;
+        const user = this.booking();
+
+        const options: RazorpayOptions = {
+          key:         keyId,
+          amount:      amount,
+          currency:    currency,
+          name:        'BusMate',
+          description: `Booking #${this.bookingId()}`,
+          order_id:    orderId,
+          prefill: {
+            name:  user?.passengerName ?? '',
+            email: user?.contactEmail  ?? ''
+          },
+          theme: { color: '#0A1F44' },
+          handler: (response: RazorpaySuccessResponse) => {
+            // Step 2: verify signature on backend
+            this.paymentService.verifyRazorpayPayment(
+              response.razorpay_order_id,
+              response.razorpay_payment_id,
+              response.razorpay_signature
+            ).subscribe({
+              next: (verifyResp: any) => {
+                if (verifyResp?.data?.isValid) {
+                  // Step 3: confirm payment in our system
+                  this.proceedWithPayment(
+                    finalAmount, method, promoCode,
+                    response.razorpay_payment_id
+                  );
+                } else {
+                  this.processing.set(false);
+                  this.error.set('Payment verification failed. Please contact support.');
+                }
+              },
+              error: () => {
+                this.processing.set(false);
+                this.error.set('Payment verification error. Please contact support.');
+              }
+            });
+          },
+          modal: {
+            ondismiss: () => {
+              this.processing.set(false);
+              this.error.set('Payment cancelled. You can try again.');
+            }
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      },
+      error: (err) => {
+        this.processing.set(false);
+        this.error.set(this.errHandler.getErrorMessage(err));
+      }
+    });
   }
 
   goBack() {
     this.router.navigate(['/booking-review', this.bookingId()]);
   }
 
-  private proceedWithPayment(finalAmount: number, method: string, promoCode?: string) {
+  private proceedWithPayment(finalAmount: number, method: string, promoCode?: string, transactionId?: string) {
     this.paymentService.initiatePayment({
       bookingId: this.bookingId(),
       amount: finalAmount,
@@ -189,14 +258,14 @@ export class Payment implements OnInit {
         const paymentId = initiateResp.data?.paymentId;
         this.paymentService.confirmPayment({
           paymentId,
-          transactionId: `TXN_${Date.now()}`,
+          transactionId: transactionId ?? `TXN_${Date.now()}`,
           isSuccess: true,
           failureReason: ''
         }).subscribe({
           next: (confirmResp: any) => {
             this.processing.set(false);
             if (confirmResp?.success) {
-              this.walletService.loadWallet(); // refresh balance in navbar
+              this.walletService.loadWallet();
               this.router.navigate(['/booking-confirmation', this.bookingId()]);
             } else {
               if (method === 'BusMateWallet') this.walletService.creditToApi(finalAmount, 'Refund - Payment failed', String(this.bookingId())).subscribe();

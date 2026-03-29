@@ -118,8 +118,15 @@
 }
 .method-option.selected { border-color: var(--navy); background: var(--navy-faint); }
 .method-icon { font-size: 1.3rem; }
-.method-label { flex: 1; font-size: 14px; font-weight: 500; color: var(--navy); }
+.method-label { flex: 1; font-size: 14px; font-weight: 500; color: var(--navy); display: flex; flex-direction: column; gap: 2px; }
 .check-dot { color: var(--navy); font-weight: 700; font-size: 18px; }
+.razorpay-badge { font-size: 10px; color: #64748b; font-weight: 400; }
+.razorpay-note {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: #64748b; margin: 8px 0 4px;
+  padding: 6px 10px; background: #f8fafc; border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
 
 .pay-btn {
   width: 100%; padding: 14px;
