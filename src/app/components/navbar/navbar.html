@@ -33,8 +33,8 @@
           </button>
         </div>
       } @else {
-        <a routerLink="/auth" [queryParams]="{tab:'login'}" class="btn-login">Login</a>
-        <a routerLink="/auth" [queryParams]="{tab:'register'}" class="btn-register">Sign Up</a>
+        <a (click)="goToAuth('login')" class="btn-login" style="cursor:pointer">Login</a>
+        <a (click)="goToAuth('register')" class="btn-register" style="cursor:pointer">Sign Up</a>
       }
     </div>
 

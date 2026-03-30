@@ -7,6 +7,7 @@ import { Navbar } from '../../components/navbar/navbar';
 import { Footer } from '../../components/footer/footer';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import QRCode from 'qrcode';
 
 @Component({
   selector: 'app-my-bookings',
@@ -25,6 +26,7 @@ export class MyBookings implements OnInit {
   loading          = signal(false);
   error            = signal<string | null>(null);
   selectedBooking  = signal<any>(null);
+  qrDataUrl        = signal<string | null>(null);
   cancelling       = signal<number | null>(null); // bookingId being cancelled
   ratingBookingId  = signal<number | null>(null);
   selectedRating   = signal<number>(0);
@@ -110,9 +112,24 @@ export class MyBookings implements OnInit {
   }
 
   // ── Modal ──
-  viewDetails(booking: any) { this.selectedBooking.set(booking); }
-  closeModal()              { this.selectedBooking.set(null); }
-  goToSearch()              { this.router.navigate(['/']); }
+  viewDetails(booking: any) {
+    this.selectedBooking.set(booking);
+    this.qrDataUrl.set(null);
+    const qrContent = [
+      `Booking #${booking.bookingId}`,
+      booking.pnr ? `PNR: ${booking.pnr}` : '',
+      booking.source ? `Route: ${booking.source} → ${booking.destination}` : '',
+      booking.busNumber ? `Bus: ${booking.busNumber}` : '',
+      booking.travelDate ? `Date: ${this.formatDate(booking.travelDate)}` : '',
+      booking.seatNumbers?.length ? `Seats: ${booking.seatNumbers.join(', ')}` : `Seats: ${booking.numberOfSeats}`,
+      `Status: ${booking.bookingStatus}`
+    ].filter(Boolean).join('\n');
+    QRCode.toDataURL(qrContent, { width: 200, margin: 1 })
+      .then(url => this.qrDataUrl.set(url))
+      .catch(() => {});
+  }
+  closeModal() { this.selectedBooking.set(null); this.qrDataUrl.set(null); }
+  goToSearch()  { this.router.navigate(['/']); }
 
   // ── Status helpers ──
   getStatusClass(status: string): string {
@@ -165,5 +182,10 @@ export class MyBookings implements OnInit {
   getGrandTotal(amount: number, discount = 0): number {
     const discounted = Math.max(0, amount - discount);
     return discounted + this.getTax(amount, discount) + this.convenienceFee;
+  }
+
+  getPromoPercent(amount: number, discount: number): number {
+    if (!amount || !discount) return 0;
+    return Math.round((discount / amount) * 100);
   }
 }

@@ -346,3 +346,39 @@
   color: #16a34a;
   font-weight: 500;
 }
+
+/* Seat chips */
+.seat-chips-inline {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.seat-chip-sm {
+  background: #e0f2fe; color: #0369a1;
+  border-radius: 4px; padding: 2px 8px;
+  font-size: 12px; font-weight: 600;
+}
+
+/* QR Code section in modal */
+.qr-section {
+  border-top: 1px solid var(--border);
+  padding: 20px 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.qr-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.qr-img {
+  width: 160px;
+  height: 160px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.qr-hint {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}

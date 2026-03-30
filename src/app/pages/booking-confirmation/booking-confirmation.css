@@ -132,3 +132,13 @@
   color: #16a34a;
   font-weight: 700;
 }
+
+/* Seat chips inline */
+.seat-chips-inline {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.seat-chip-sm {
+  background: #e0f2fe; color: #0369a1;
+  border-radius: 4px; padding: 2px 8px;
+  font-size: 12px; font-weight: 600;
+}

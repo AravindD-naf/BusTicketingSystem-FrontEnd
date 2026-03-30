@@ -63,6 +63,7 @@ export class Auth implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
         if (params['tab'] === 'register') this.activeTab.set('register');
+        else if (params['tab'] === 'login') this.activeTab.set('login');
         this.redirectUrl.set(params['redirectUrl'] ?? null);
       });
   }

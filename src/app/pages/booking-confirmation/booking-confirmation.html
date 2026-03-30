@@ -52,6 +52,12 @@
           <span class="detail-key">Number of Seats</span>
           <span class="detail-val">{{ booking()?.numberOfSeats }}</span>
         </div>
+        <div class="detail-row" *ngIf="booking()?.seatNumbers?.length">
+          <span class="detail-key">Seat Numbers</span>
+          <span class="detail-val seat-chips-inline">
+            <span class="seat-chip-sm" *ngFor="let s of booking()?.seatNumbers">{{ s }}</span>
+          </span>
+        </div>
         <!-- REPLACE WITH -->
         <div class="detail-row">
           <span class="detail-key">Seat Fare</span>
