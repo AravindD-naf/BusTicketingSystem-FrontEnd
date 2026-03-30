@@ -102,6 +102,12 @@ export class MyBookings implements OnInit {
       next: () => {
         this.ratingSubmitting.set(false);
         this.ratingSuccess.set(true);
+        // Mark the booking as rated locally so the button disables immediately
+        this.bookings.update(list =>
+          list.map(b => b.bookingId === this.ratingBookingId()
+            ? { ...b, hasRated: true }
+            : b)
+        );
         setTimeout(() => this.closeRating(), 1500);
       },
       error: (err) => {

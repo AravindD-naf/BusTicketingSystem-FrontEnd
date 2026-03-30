@@ -135,7 +135,10 @@
               (click)="cancelBooking(b.bookingId)">
               {{ isCancelling(b.bookingId) ? 'Cancelling...' : 'Cancel Booking' }}
             </button>
-            <button class="btn-rate" (click)="openRating(b.bookingId)">⭐ Rate</button>
+            <button class="btn-rate"
+              *ngIf="!b.hasRated"
+              (click)="openRating(b.bookingId)">⭐ Rate</button>
+            <span class="rated-badge" *ngIf="b.hasRated">✅ Rated</span>
           </ng-container>
         </div>
 
