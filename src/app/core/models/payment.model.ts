@@ -22,29 +22,3 @@ export interface PaymentResponse {
   message: string;
   data?: Payment;
 }
-
-// Refund Models
-export interface Refund {
-  refundId: number;
-  bookingId: number;
-  refundAmount: number;
-  refundReason: string;
-  refundMethod: string;
-  transactionId: string;
-  refundStatus: string;
-  refundDate: string;
-  remarks?: string;
-}
-
-export interface RefundListResponse {
-  success: boolean;
-  message: string;
-  data: Refund[];
-  totalCount: number;
-}
-
-export interface RefundResponse {
-  success: boolean;
-  message: string;
-  data?: Refund;
-}
