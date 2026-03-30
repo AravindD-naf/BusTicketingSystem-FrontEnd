@@ -114,21 +114,19 @@ export class MyBookings implements OnInit {
   // ── Modal ──
   viewDetails(booking: any) {
     this.selectedBooking.set(booking);
-    this.qrDataUrl.set(null);
     const qrContent = [
       `Booking #${booking.bookingId}`,
       booking.pnr ? `PNR: ${booking.pnr}` : '',
-      booking.source ? `Route: ${booking.source} → ${booking.destination}` : '',
+      booking.source ? `Route: ${booking.source} -> ${booking.destination}` : '',
       booking.busNumber ? `Bus: ${booking.busNumber}` : '',
       booking.travelDate ? `Date: ${this.formatDate(booking.travelDate)}` : '',
       booking.seatNumbers?.length ? `Seats: ${booking.seatNumbers.join(', ')}` : `Seats: ${booking.numberOfSeats}`,
       `Status: ${booking.bookingStatus}`
-    ].filter(Boolean).join('\n');
-    import('qrcode').then((QRCode) => {
-      QRCode.toDataURL(qrContent, { width: 200, margin: 1 })
-        .then((url: string) => this.qrDataUrl.set(url))
-        .catch(() => {});
-    });
+    ].filter(Boolean).join(' | ');
+    const encoded = encodeURIComponent(qrContent);
+    this.qrDataUrl.set(
+      `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encoded}`
+    );
   }
   closeModal() { this.selectedBooking.set(null); this.qrDataUrl.set(null); }
   goToSearch()  { this.router.navigate(['/']); }
