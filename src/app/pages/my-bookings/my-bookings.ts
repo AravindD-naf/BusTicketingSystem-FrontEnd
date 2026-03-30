@@ -114,10 +114,26 @@ export class MyBookings implements OnInit {
   // ── Modal ──
   viewDetails(booking: any) {
     this.selectedBooking.set(booking);
-    const ticketUrl = `${window.location.origin}/ticket/${booking.bookingId}`;
-    const encoded = encodeURIComponent(ticketUrl);
+
+    // Build self-contained ticket data so QR works on any device/network
+    const lines = [
+      `BusMate E-Ticket`,
+      `Booking: #${booking.bookingId}`,
+      booking.pnr              ? `PNR: ${booking.pnr}`                                          : null,
+      booking.source           ? `Route: ${booking.source} → ${booking.destination}`            : null,
+      booking.busNumber        ? `Bus: ${booking.busNumber}`                                     : null,
+      booking.travelDate       ? `Date: ${this.formatDate(booking.travelDate)}`                  : null,
+      booking.departureTime    ? `Dep: ${booking.departureTime}`                                 : null,
+      booking.seatNumbers?.length
+                               ? `Seats: ${booking.seatNumbers.join(', ')}`
+                               : `Seats: ${booking.numberOfSeats}`,
+      booking.promoCodeUsed    ? `Promo: ${booking.promoCodeUsed} (-₹${booking.discountAmount})` : null,
+      `Status: ${booking.bookingStatus}`,
+    ].filter(Boolean).join('\n');
+
+    const encoded = encodeURIComponent(lines);
     this.qrDataUrl.set(
-      `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encoded}`
+      `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=${encoded}`
     );
   }
   closeModal() { this.selectedBooking.set(null); this.qrDataUrl.set(null); }
