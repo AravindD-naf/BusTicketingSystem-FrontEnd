@@ -220,7 +220,8 @@ export class Payment implements OnInit {
               response.razorpay_order_id,
               response.razorpay_payment_id,
               response.razorpay_signature,
-              method
+              method,
+              promoCode
             ).subscribe({
               next: (confirmResp: any) => {
                 this.processing.set(false);

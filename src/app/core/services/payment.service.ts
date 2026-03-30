@@ -39,9 +39,9 @@ export class PaymentService {
     return this.http.post<ApiResponse<any>>(`${this.API}/razorpay/create-order`, { bookingId, amount });
   }
 
-  verifyAndConfirmRazorpay(bookingId: number, razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string, paymentMethod: string) {
+  verifyAndConfirmRazorpay(bookingId: number, razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string, paymentMethod: string, promoCode?: string) {
     return this.http.post<ApiResponse<any>>(`${this.API}/razorpay/verify-and-confirm`, {
-      bookingId, razorpayOrderId, razorpayPaymentId, razorpaySignature, paymentMethod
+      bookingId, razorpayOrderId, razorpayPaymentId, razorpaySignature, paymentMethod, promoCode
     });
   }
 
