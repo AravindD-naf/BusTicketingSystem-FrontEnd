@@ -149,7 +149,11 @@
 .modal {
   background: var(--white); border-radius: var(--radius-md);
   padding: 28px; width: 460px; max-width: 95vw;
+  max-height: 88vh;
+  overflow-y: auto;
   box-shadow: var(--sh-lg);
+  display: flex;
+  flex-direction: column;
 }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;

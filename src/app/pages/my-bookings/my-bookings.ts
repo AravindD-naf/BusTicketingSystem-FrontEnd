@@ -114,16 +114,8 @@ export class MyBookings implements OnInit {
   // ── Modal ──
   viewDetails(booking: any) {
     this.selectedBooking.set(booking);
-    const qrContent = [
-      `Booking #${booking.bookingId}`,
-      booking.pnr ? `PNR: ${booking.pnr}` : '',
-      booking.source ? `Route: ${booking.source} -> ${booking.destination}` : '',
-      booking.busNumber ? `Bus: ${booking.busNumber}` : '',
-      booking.travelDate ? `Date: ${this.formatDate(booking.travelDate)}` : '',
-      booking.seatNumbers?.length ? `Seats: ${booking.seatNumbers.join(', ')}` : `Seats: ${booking.numberOfSeats}`,
-      `Status: ${booking.bookingStatus}`
-    ].filter(Boolean).join(' | ');
-    const encoded = encodeURIComponent(qrContent);
+    const ticketUrl = `${window.location.origin}/ticket/${booking.bookingId}`;
+    const encoded = encodeURIComponent(ticketUrl);
     this.qrDataUrl.set(
       `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encoded}`
     );
