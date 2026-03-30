@@ -32,6 +32,10 @@ export class BookingConfirmation implements OnInit {
   discountedFare = computed(() => Math.max(0, this.baseFare() - this.discountAmount()));
   taxAmount      = computed(() => Math.round(this.discountedFare() * 0.06));
   grandTotal     = computed(() => this.discountedFare() + this.taxAmount() + this.convenienceFee);
+  promoPercent   = computed(() => {
+    const base = this.baseFare(), disc = this.discountAmount();
+    return base > 0 && disc > 0 ? Math.round((disc / base) * 100) : 0;
+  });
 
   ngOnInit() {
     const id = this.route.snapshot.params['bookingId'];

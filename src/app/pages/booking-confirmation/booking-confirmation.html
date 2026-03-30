@@ -65,11 +65,11 @@
         </div>
         <div class="detail-row" *ngIf="booking()?.promoCodeUsed">
           <span class="detail-key">Promo Code</span>
-          <span class="detail-val promo-code-badge">{{ booking()?.promoCodeUsed }}</span>
+          <span class="detail-val promo-code-badge">🏷️ {{ booking()?.promoCodeUsed }}</span>
         </div>
         <div class="detail-row" *ngIf="discountAmount() > 0">
           <span class="detail-key">Discount</span>
-          <span class="detail-val discount-val">− ₹{{ discountAmount() }}</span>
+          <span class="detail-val discount-val">− ₹{{ discountAmount() }} <span class="promo-pct">({{ promoPercent() }}% off)</span></span>
         </div>
         <div class="detail-row" *ngIf="discountAmount() > 0">
           <span class="detail-key">Discounted Fare</span>
