@@ -7,7 +7,7 @@ import { Navbar } from '../../components/navbar/navbar';
 import { Footer } from '../../components/footer/footer';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import QRCode from 'qrcode';
+
 
 @Component({
   selector: 'app-my-bookings',
@@ -124,9 +124,11 @@ export class MyBookings implements OnInit {
       booking.seatNumbers?.length ? `Seats: ${booking.seatNumbers.join(', ')}` : `Seats: ${booking.numberOfSeats}`,
       `Status: ${booking.bookingStatus}`
     ].filter(Boolean).join('\n');
-    QRCode.toDataURL(qrContent, { width: 200, margin: 1 })
-      .then(url => this.qrDataUrl.set(url))
-      .catch(() => {});
+    import('qrcode').then((QRCode) => {
+      QRCode.toDataURL(qrContent, { width: 200, margin: 1 })
+        .then((url: string) => this.qrDataUrl.set(url))
+        .catch(() => {});
+    });
   }
   closeModal() { this.selectedBooking.set(null); this.qrDataUrl.set(null); }
   goToSearch()  { this.router.navigate(['/']); }
