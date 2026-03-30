@@ -113,29 +113,46 @@ export class MyBookings implements OnInit {
 
   // ── Modal ──
   viewDetails(booking: any) {
+    // Use the list data immediately so modal opens fast
     this.selectedBooking.set(booking);
+    this.qrDataUrl.set(null);
 
-    // Build self-contained ticket data so QR works on any device/network
+    // Then fetch full detail to get busNumber, seatNumbers, etc.
+    this.bookingService.getBookingById(booking.bookingId).subscribe({
+      next: (r: any) => {
+        const full = r?.data ?? r;
+        this.selectedBooking.set(full);
+        this.generateQr(full);
+      },
+      error: () => {
+        // Fall back to list data for QR if detail call fails
+        this.generateQr(booking);
+      }
+    });
+  }
+
+  private generateQr(booking: any) {
     const lines = [
       `BusMate E-Ticket`,
       `Booking: #${booking.bookingId}`,
-      booking.pnr              ? `PNR: ${booking.pnr}`                                          : null,
-      booking.source           ? `Route: ${booking.source} → ${booking.destination}`            : null,
-      booking.busNumber        ? `Bus: ${booking.busNumber}`                                     : null,
-      booking.travelDate       ? `Date: ${this.formatDate(booking.travelDate)}`                  : null,
-      booking.departureTime    ? `Dep: ${booking.departureTime}`                                 : null,
+      booking.pnr           ? `PNR: ${booking.pnr}`                                           : null,
+      booking.source        ? `Route: ${booking.source} → ${booking.destination}`             : null,
+      booking.busNumber     ? `Bus: ${booking.busNumber}`                                      : null,
+      booking.travelDate    ? `Date: ${this.formatDate(booking.travelDate)}`                   : null,
+      booking.departureTime ? `Dep: ${booking.departureTime}`                                  : null,
       booking.seatNumbers?.length
-                               ? `Seats: ${booking.seatNumbers.join(', ')}`
-                               : `Seats: ${booking.numberOfSeats}`,
-      booking.promoCodeUsed    ? `Promo: ${booking.promoCodeUsed} (-₹${booking.discountAmount})` : null,
+                            ? `Seats: ${booking.seatNumbers.join(', ')}`
+                            : `Seats: ${booking.numberOfSeats}`,
+      booking.promoCodeUsed ? `Promo: ${booking.promoCodeUsed} (-₹${booking.discountAmount})` : null,
       `Status: ${booking.bookingStatus}`,
     ].filter(Boolean).join('\n');
 
-    const encoded = encodeURIComponent(lines);
+    const encoded = encodeURIComponent(lines as string);
     this.qrDataUrl.set(
       `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=${encoded}`
     );
   }
+
   closeModal() { this.selectedBooking.set(null); this.qrDataUrl.set(null); }
   goToSearch()  { this.router.navigate(['/']); }
 
