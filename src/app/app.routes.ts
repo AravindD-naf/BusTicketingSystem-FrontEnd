@@ -7,7 +7,6 @@ import { BookingReview } from './pages/booking-review/booking-review';
 import { Payment } from './pages/payment/payment';
 import { BookingConfirmation } from './pages/booking-confirmation/booking-confirmation';
 import { MyBookings } from './pages/my-bookings/my-bookings';
-import { TicketView } from './pages/ticket-view/ticket-view';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { AdminLayout } from './pages/admin-layout/admin-layout';
@@ -45,7 +44,6 @@ export const routes: Routes = [
   { path: 'payment/:bookingId', component: Payment, canActivate: [authGuard] },
   { path: 'booking-confirmation/:bookingId', component: BookingConfirmation, canActivate: [authGuard] },
   { path: 'my-bookings', component: MyBookings, canActivate: [authGuard] },
-  { path: 'ticket/:bookingId', component: TicketView, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
   {
     path: 'admin',
