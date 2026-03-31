@@ -58,7 +58,32 @@
             <span class="seat-chip-sm" *ngFor="let s of booking()?.seatNumbers">{{ s }}</span>
           </span>
         </div>
+        <div class="detail-row" *ngIf="booking()?.boardingPointName">
+          <span class="detail-key">Boarding Point</span>
+          <span class="detail-val">{{ booking()?.boardingPointName }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.dropPointName">
+          <span class="detail-key">Drop Point</span>
+          <span class="detail-val">{{ booking()?.dropPointName }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.contactPhone">
+          <span class="detail-key">Contact Phone</span>
+          <span class="detail-val">{{ booking()?.contactPhone }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.contactEmail">
+          <span class="detail-key">Contact Email</span>
+          <span class="detail-val">{{ booking()?.contactEmail }}</span>
+        </div>
         <!-- REPLACE WITH -->
+        <!-- Passenger details -->
+        <ng-container *ngIf="booking()?.passengers?.length">
+          <div class="detail-section-title">👤 Passenger Details</div>
+          <div class="passenger-row" *ngFor="let p of booking()?.passengers; let i = index">
+            <span class="detail-key">Passenger {{ i + 1 }} ({{ p.seatNumber }})</span>
+            <span class="detail-val">{{ p.name }}{{ p.age ? ', ' + p.age + ' yrs' : '' }}</span>
+          </div>
+        </ng-container>
+
         <div class="detail-row">
           <span class="detail-key">Seat Fare</span>
           <span class="detail-val">₹{{ baseFare() }}</span>

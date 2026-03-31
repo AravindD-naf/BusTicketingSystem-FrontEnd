@@ -186,6 +186,29 @@
             <span class="seat-chip-sm" *ngFor="let s of selectedBooking()?.seatNumbers">{{ s }}</span>
           </span>
         </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.boardingPointName">
+          <span>Boarding Point</span>
+          <span>{{ selectedBooking()?.boardingPointName }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.dropPointName">
+          <span>Drop Point</span>
+          <span>{{ selectedBooking()?.dropPointName }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.contactPhone">
+          <span>Contact Phone</span>
+          <span>{{ selectedBooking()?.contactPhone }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.contactEmail">
+          <span>Contact Email</span>
+          <span>{{ selectedBooking()?.contactEmail }}</span>
+        </div>
+        <ng-container *ngIf="selectedBooking()?.passengers?.length">
+          <div class="dl-section-title">👤 Passengers</div>
+          <div class="dl-row" *ngFor="let p of selectedBooking()?.passengers; let i = index">
+            <span>Passenger {{ i + 1 }} ({{ p.seatNumber }})</span>
+            <span>{{ p.name }}{{ p.age ? ', ' + p.age + ' yrs' : '' }}</span>
+          </div>
+        </ng-container>
         <div class="dl-row">
           <span>Seat Fare</span>
           <span>₹{{ selectedBooking()?.totalAmount }}</span>
