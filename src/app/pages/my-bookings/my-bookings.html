@@ -206,7 +206,7 @@
           <div class="dl-section-title">👤 Passengers</div>
           <div class="dl-row" *ngFor="let p of selectedBooking()?.passengers; let i = index">
             <span>Passenger {{ i + 1 }} ({{ p.seatNumber }})</span>
-            <span>{{ p.name }}{{ p.age ? ', ' + p.age + ' yrs' : '' }}</span>
+            <span>{{ p.name }}{{ p.age ? ', ' + p.age + ' yrs' : '' }}{{ p.gender ? ' · ' + p.gender : '' }}</span>
           </div>
         </ng-container>
         <div class="dl-row">

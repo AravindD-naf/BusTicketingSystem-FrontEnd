@@ -80,7 +80,7 @@
           <div class="detail-section-title">👤 Passenger Details</div>
           <div class="passenger-row" *ngFor="let p of booking()?.passengers; let i = index">
             <span class="detail-key">Passenger {{ i + 1 }} ({{ p.seatNumber }})</span>
-            <span class="detail-val">{{ p.name }}{{ p.age ? ', ' + p.age + ' yrs' : '' }}</span>
+            <span class="detail-val">{{ p.name }}{{ p.age ? ', ' + p.age + ' yrs' : '' }}{{ p.gender ? ' · ' + p.gender : '' }}</span>
           </div>
         </ng-container>
 
