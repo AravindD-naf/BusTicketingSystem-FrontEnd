@@ -3,6 +3,7 @@ import { Component, signal, HostListener, inject, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { WalletService } from '../../core/services/wallet.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -29,6 +30,10 @@ export class Navbar implements OnInit {
 
   toggleMobile() { this.mobileOpen.update(v => !v); }
  
+  goToAuth(tab: 'login' | 'register') {
+    this.router.navigate(['/auth'], { queryParams: { tab } });
+  }
+
   goToSearch() {
     // Try to restore last search from sessionStorage
     const raw = sessionStorage.getItem('last_search');

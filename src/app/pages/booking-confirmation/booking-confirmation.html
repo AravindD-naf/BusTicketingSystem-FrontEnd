@@ -52,18 +52,48 @@
           <span class="detail-key">Number of Seats</span>
           <span class="detail-val">{{ booking()?.numberOfSeats }}</span>
         </div>
-        <!-- REPLACE WITH -->
+        <div class="detail-row" *ngIf="booking()?.seatNumbers?.length">
+          <span class="detail-key">Seat Numbers</span>
+          <span class="detail-val seat-chips-inline">
+            <span class="seat-chip-sm" *ngFor="let s of booking()?.seatNumbers">{{ s }}</span>
+          </span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.boardingPointName">
+          <span class="detail-key">Boarding Point</span>
+          <span class="detail-val">{{ booking()?.boardingPointName }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.dropPointName">
+          <span class="detail-key">Drop Point</span>
+          <span class="detail-val">{{ booking()?.dropPointName }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.contactPhone">
+          <span class="detail-key">Contact Phone</span>
+          <span class="detail-val">{{ booking()?.contactPhone }}</span>
+        </div>
+        <div class="detail-row" *ngIf="booking()?.contactEmail">
+          <span class="detail-key">Contact Email</span>
+          <span class="detail-val">{{ booking()?.contactEmail }}</span>
+        </div>
+        <!-- Passenger details -->
+        <ng-container *ngIf="booking()?.passengers?.length">
+          <div class="detail-section-title">👤 Passenger Details</div>
+          <div class="passenger-row" *ngFor="let p of booking()?.passengers; let i = index">
+            <span class="detail-key">Passenger {{ i + 1 }} ({{ p.seatNumber }})</span>
+            <span class="detail-val">{{ p.name }}{{ p.age ? ', ' + p.age + ' yrs' : '' }}{{ p.gender ? ' · ' + p.gender : '' }}</span>
+          </div>
+        </ng-container>
+
         <div class="detail-row">
           <span class="detail-key">Seat Fare</span>
           <span class="detail-val">₹{{ baseFare() }}</span>
         </div>
         <div class="detail-row" *ngIf="booking()?.promoCodeUsed">
           <span class="detail-key">Promo Code</span>
-          <span class="detail-val promo-code-badge">{{ booking()?.promoCodeUsed }}</span>
+          <span class="detail-val promo-code-badge">🏷️ {{ booking()?.promoCodeUsed }}</span>
         </div>
         <div class="detail-row" *ngIf="discountAmount() > 0">
           <span class="detail-key">Discount</span>
-          <span class="detail-val discount-val">− ₹{{ discountAmount() }}</span>
+          <span class="detail-val discount-val">− ₹{{ discountAmount() }} <span class="promo-pct">({{ promoPercent() }}% off)</span></span>
         </div>
         <div class="detail-row" *ngIf="discountAmount() > 0">
           <span class="detail-key">Discounted Fare</span>

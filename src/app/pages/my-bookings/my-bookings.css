@@ -149,7 +149,11 @@
 .modal {
   background: var(--white); border-radius: var(--radius-md);
   padding: 28px; width: 460px; max-width: 95vw;
+  max-height: 88vh;
+  overflow-y: auto;
   box-shadow: var(--sh-lg);
+  display: flex;
+  flex-direction: column;
 }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -345,4 +349,53 @@
   font-size: 12px;
   color: #16a34a;
   font-weight: 500;
+}
+
+/* Seat chips */
+.seat-chips-inline {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.seat-chip-sm {
+  background: #e0f2fe; color: #0369a1;
+  border-radius: 4px; padding: 2px 8px;
+  font-size: 12px; font-weight: 600;
+}
+
+/* QR Code section in modal */
+.qr-section {
+  border-top: 1px solid var(--border);
+  padding: 20px 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.qr-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.qr-img {
+  width: 160px;
+  height: 160px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.qr-hint {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Rated badge — shown after user submits a rating */
+.rated-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #dcfce7;
+  color: #15803d;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
 }

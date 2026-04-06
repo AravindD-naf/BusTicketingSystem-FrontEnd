@@ -99,12 +99,27 @@
 }
 
 
+/* Date section — centered label + row */
+.date-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.date-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
 /* Date row with toggle + picker */
 .date-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
+  justify-content: center;
 }
 .day-toggle {
   display: flex;
@@ -132,16 +147,22 @@
   box-shadow: 0 2px 8px rgba(10,31,68,0.25);
 }
 .date-group {
-  flex: 1;
+  flex-shrink: 0;
 }
 .date-group input[type="date"] {
-  padding: 8px 10px;
+  padding: 7px 10px;
   font-size: 13px;
+  width: 140px;
 }
 
+/* Search button — centered and compact */
+.search-btn-wrap {
+  display: flex;
+  justify-content: center;
+}
 .search-btn {
-  width: 100%; background: var(--navy); color: white; border: none;
-  padding: 11px; border-radius: var(--radius-sm);
+  background: var(--navy); color: white; border: none;
+  padding: 10px 36px; border-radius: var(--radius-sm);
   font-size: 14px; font-weight: 600; letter-spacing: 0.3px;
   transition: all 0.2s; margin-top: 2px;
 }
@@ -154,8 +175,9 @@
 /* Responsive */
 @media (max-width: 860px) {
   .form-row { grid-template-columns: 1fr; }
-  .date-row { flex-direction: column; align-items: stretch; }
+  .date-row { flex-direction: column; align-items: center; }
 }
 @media (max-width: 540px) {
   .search-card { padding: 24px; }
+  .date-group input[type="date"] { width: 120px; }
 }

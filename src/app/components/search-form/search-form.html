@@ -54,25 +54,30 @@
   </div>
 
   <!-- DATE TOGGLE + DATE PICKER -->
-  <div class="date-row">
-    <div class="day-toggle">
-      <button type="button" class="toggle-btn" [class.active]="selectedDay() === 'today'" (click)="setDay('today')">Today</button>
-      <button type="button" class="toggle-btn" [class.active]="selectedDay() === 'tomorrow'" (click)="setDay('tomorrow')">Tomorrow</button>
-    </div>
-    <div class="form-group date-group">
-      <input
-        type="date"
-        id="travel-date"
-        formControlName="date"
-        [min]="today"
-        [class.input-error]="searchForm.get('date')?.invalid && searchForm.get('date')?.touched"
-        (change)="onDateChange()"
-      />
-      <span class="field-error" *ngIf="searchForm.get('date')?.invalid && searchForm.get('date')?.touched">
-        Please select a travel date
-      </span>
+  <div class="date-section">
+    <label class="date-label">Date</label>
+    <div class="date-row">
+      <div class="day-toggle">
+        <button type="button" class="toggle-btn" [class.active]="selectedDay() === 'today'" (click)="setDay('today')">Today</button>
+        <button type="button" class="toggle-btn" [class.active]="selectedDay() === 'tomorrow'" (click)="setDay('tomorrow')">Tomorrow</button>
+      </div>
+      <div class="form-group date-group">
+        <input
+          type="date"
+          id="travel-date"
+          formControlName="date"
+          [min]="today"
+          [class.input-error]="searchForm.get('date')?.invalid && searchForm.get('date')?.touched"
+          (change)="onDateChange()"
+        />
+        <span class="field-error" *ngIf="searchForm.get('date')?.invalid && searchForm.get('date')?.touched">
+          Please select a travel date
+        </span>
+      </div>
     </div>
   </div>
 
-  <button class="search-btn" type="submit">🔍 Search Buses</button>
+  <div class="search-btn-wrap">
+    <button class="search-btn" type="submit">🔍 Search Buses</button>
+  </div>
 </form>

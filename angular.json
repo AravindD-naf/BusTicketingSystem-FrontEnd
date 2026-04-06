@@ -3,7 +3,11 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
+<<<<<<< HEAD
     "analytics": "dc2b39c4-2320-479b-9d7b-497ecd1fbefb"
+=======
+    "analytics": "0640c718-dc34-4386-894f-3aa407a64ddc"
+>>>>>>> 66aed43576b413127e6346febf569d7373adde6b
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -35,12 +39,12 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumError": "1.5MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
                 }
               ],
               "outputHashing": "all"

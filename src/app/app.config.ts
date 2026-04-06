@@ -6,7 +6,9 @@ import { RouterErrorHandlerService } from './core/services/router-error-handler.
 import { AuthService } from './core/services/auth.service';
 import { routes } from './app.routes';
 
-class GlobalErrorHandler implements ErrorHandler {
+class GlobalErrorHandler implements ErrorHandler { 
+  // Silently ignores router navigation errors (NoMatch, navigation issues) and Logs all other errors as real application errors
+
   handleError(error: Error | any): void {
     if (error?.name === 'NoMatch' ||
         error?.message?.includes('NoMatch') ||

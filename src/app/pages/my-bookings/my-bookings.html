@@ -44,9 +44,9 @@
             <span class="info-label">Route</span>
             <span class="info-val">{{ b.source }} → {{ b.destination }}</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">Schedule</span>
-            <span class="info-val">{{ b.scheduleId }}</span>
+          <div class="info-item" *ngIf="b.busNumber">
+            <span class="info-label">Bus Number</span>
+            <span class="info-val">{{ b.busNumber }}</span>
           </div>
           <div class="info-item" *ngIf="b.travelDate">
             <span class="info-label">Travel Date</span>
@@ -55,6 +55,12 @@
           <div class="info-item">
             <span class="info-label">Seats</span>
             <span class="info-val">{{ b.numberOfSeats }}</span>
+          </div>
+          <div class="info-item" *ngIf="b.seatNumbers?.length">
+            <span class="info-label">Seat Numbers</span>
+            <span class="info-val seat-chips-inline">
+              <span class="seat-chip-sm" *ngFor="let s of b.seatNumbers">{{ s }}</span>
+            </span>
           </div>
           <div class="info-item">
             <span class="info-label">Total Amount</span>
@@ -69,7 +75,7 @@
             <span class="info-label">Promo Applied</span>
             <span class="info-val">
               <span class="promo-tag">🏷️ {{ b.promoCodeUsed }}</span>
-              <span class="promo-saved"> — saved ₹{{ b.discountAmount }}</span>
+              <span class="promo-saved"> — saved ₹{{ b.discountAmount }} ({{ getPromoPercent(b.totalAmount, b.discountAmount) }}% off)</span>
             </span>
           </div>
           <div class="info-item">
@@ -129,7 +135,10 @@
               (click)="cancelBooking(b.bookingId)">
               {{ isCancelling(b.bookingId) ? 'Cancelling...' : 'Cancel Booking' }}
             </button>
-            <button class="btn-rate" (click)="openRating(b.bookingId)">⭐ Rate</button>
+            <button class="btn-rate"
+              *ngIf="!b.hasRated"
+              (click)="openRating(b.bookingId)">⭐ Rate</button>
+            <span class="rated-badge" *ngIf="b.hasRated">✅ Rated</span>
           </ng-container>
         </div>
 
@@ -170,8 +179,36 @@
           <span>Operator</span>
           <span>{{ selectedBooking()?.operatorName }}</span>
         </div>
-        <div class="dl-row"><span>Schedule ID</span><span>{{ selectedBooking()?.scheduleId }}</span></div>
         <div class="dl-row"><span>Seats</span><span>{{ selectedBooking()?.numberOfSeats }}</span></div>
+        <div class="dl-row" *ngIf="selectedBooking()?.seatNumbers?.length">
+          <span>Seat Numbers</span>
+          <span class="seat-chips-inline">
+            <span class="seat-chip-sm" *ngFor="let s of selectedBooking()?.seatNumbers">{{ s }}</span>
+          </span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.boardingPointName">
+          <span>Boarding Point</span>
+          <span>{{ selectedBooking()?.boardingPointName }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.dropPointName">
+          <span>Drop Point</span>
+          <span>{{ selectedBooking()?.dropPointName }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.contactPhone">
+          <span>Contact Phone</span>
+          <span>{{ selectedBooking()?.contactPhone }}</span>
+        </div>
+        <div class="dl-row" *ngIf="selectedBooking()?.contactEmail">
+          <span>Contact Email</span>
+          <span>{{ selectedBooking()?.contactEmail }}</span>
+        </div>
+        <ng-container *ngIf="selectedBooking()?.passengers?.length">
+          <div class="dl-section-title">👤 Passengers</div>
+          <div class="dl-row" *ngFor="let p of selectedBooking()?.passengers; let i = index">
+            <span>Passenger {{ i + 1 }} ({{ p.seatNumber }})</span>
+            <span>{{ p.name }}{{ p.age ? ', ' + p.age + ' yrs' : '' }}{{ p.gender ? ' · ' + p.gender : '' }}</span>
+          </div>
+        </ng-container>
         <div class="dl-row">
           <span>Seat Fare</span>
           <span>₹{{ selectedBooking()?.totalAmount }}</span>
@@ -182,7 +219,7 @@
         </div>
         <div class="dl-row" *ngIf="selectedBooking()?.discountAmount > 0">
           <span>Discount</span>
-          <span style="color:#16a34a;font-weight:600">− ₹{{ selectedBooking()?.discountAmount }}</span>
+          <span style="color:#16a34a;font-weight:600">− ₹{{ selectedBooking()?.discountAmount }} ({{ getPromoPercent(selectedBooking()?.totalAmount, selectedBooking()?.discountAmount) }}% off)</span>
         </div>
         <div class="dl-row" *ngIf="selectedBooking()?.discountAmount > 0">
           <span>Discounted Fare</span>
@@ -255,6 +292,13 @@
         <button class="btn-continue" style="width:100%" (click)="closeModal(); continuePayment(selectedBooking()?.bookingId)">
           💳 Continue Payment
         </button>
+      </div>
+
+      <!-- QR Code section -->
+      <div class="qr-section" *ngIf="selectedBooking() && qrDataUrl()">
+        <div class="qr-title">📱 Scan to View Booking</div>
+        <img [src]="qrDataUrl()" alt="Booking QR Code" class="qr-img" />
+        <p class="qr-hint">Show this QR at boarding for quick verification</p>
       </div>
     </div>
   </div>

@@ -32,13 +32,12 @@
         <h3 class="card-title">🎫 Booking Details</h3>
         <div class="detail-rows" *ngIf="booking()">
           <div class="detail-row"><span class="dk">Booking ID</span><span class="dv">#{{ booking()?.bookingId }}</span></div>
-          <div class="detail-row"><span class="dk">Schedule ID</span><span class="dv">{{ booking()?.scheduleId }}</span></div>
           <div class="detail-row" *ngIf="booking()?.source"><span class="dk">From</span><span class="dv">{{ booking()?.source }}</span></div>
           <div class="detail-row" *ngIf="booking()?.destination"><span class="dk">To</span><span class="dv">{{ booking()?.destination }}</span></div>
           <div class="detail-row" *ngIf="booking()?.travelDate"><span class="dk">Travel Date</span><span class="dv">{{ booking()?.travelDate | date:'mediumDate' }}</span></div>
           <div class="detail-row" *ngIf="booking()?.departureTime"><span class="dk">Departure</span><span class="dv">{{ booking()?.departureTime }}</span></div>
           <div class="detail-row" *ngIf="booking()?.arrivalTime"><span class="dk">Arrival</span><span class="dv">{{ booking()?.arrivalTime }}</span></div>
-          <div class="detail-row" *ngIf="booking()?.busNumber"><span class="dk">Bus</span><span class="dv">{{ booking()?.busNumber }} ({{ booking()?.busType }})</span></div>
+          <div class="detail-row" *ngIf="booking()?.busNumber"><span class="dk">Bus Number</span><span class="dv">{{ booking()?.busNumber }}{{ booking()?.busType ? ' · ' + booking()?.busType : '' }}</span></div>
           <div class="detail-row" *ngIf="booking()?.operatorName"><span class="dk">Operator</span><span class="dv">{{ booking()?.operatorName }}</span></div>
           <div class="detail-row"><span class="dk">Seats</span><span class="dv">{{ booking()?.numberOfSeats }}</span></div>
           <div class="detail-row"><span class="dk">Status</span><span class="status-badge">{{ booking()?.bookingStatus }}</span></div>

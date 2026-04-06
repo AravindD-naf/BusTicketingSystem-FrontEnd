@@ -16,7 +16,15 @@ export class BookingService {
   constructor(private http: HttpClient) {}
 
   // POST /api/v1/booking
-  createBooking(request: { scheduleId: number; seatNumbers: string[] }) {
+  createBooking(request: {
+    scheduleId: number;
+    seatNumbers: string[];
+    boardingPointName?: string | null;
+    dropPointName?: string | null;
+    contactPhone?: string;
+    contactEmail?: string;
+    passengers?: { seatNumber: string; name: string; age: number; gender: string }[];
+  }) {
     return this.http.post<ApiResponse<any>>(`${this.API}/booking`, request);
   }
 

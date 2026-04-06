@@ -382,17 +382,29 @@ export class SeatSelection implements OnInit {
     this.booking.set(true);
     const seatNumbers = this.selectedSeats().map(s => s.seatNumber);
 
+    // Build passenger list from form
+    const passengers = this.passengersArray.controls.map(ctrl => ({
+      seatNumber: ctrl.get('seatNumber')?.value ?? '',
+      name:       ctrl.get('name')?.value ?? '',
+      age:        ctrl.get('age')?.value ?? 0,
+      gender:     ctrl.get('gender')?.value ?? ''
+    }));
+
     this.seatService.lockSeats(this.scheduleId(), seatNumbers).subscribe({
       next: (lockResp: any) => {
-        // Start 5-minute countdown from the lock expiry time
         const expiresAt = lockResp?.data?.lockExpiresAt
           ? new Date(lockResp.data.lockExpiresAt)
           : new Date(Date.now() + 5 * 60 * 1000);
         this.startLockCountdown(expiresAt);
 
         this.bookingService.createBooking({
-          scheduleId: this.scheduleId(),
-          seatNumbers
+          scheduleId:        this.scheduleId(),
+          seatNumbers,
+          boardingPointName: this.selectedBoarding()?.sourceName ?? null,
+          dropPointName:     this.selectedDrop()?.destinationName ?? null,
+          contactPhone:      this.passengerForm.get('contactPhone')?.value ?? '',
+          contactEmail:      this.passengerForm.get('contactEmail')?.value ?? '',
+          passengers
         }).subscribe({
           next: (resp: any) => {
             this.booking.set(false);
