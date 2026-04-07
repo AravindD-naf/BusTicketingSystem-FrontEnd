@@ -69,10 +69,11 @@ export class MyBookings implements OnInit {
     this.bookingService.cancelBooking(bookingId).subscribe({
       next: () => {
         this.cancelling.set(null);
-        // Backend handles refund automatically via cancellation policy
-        // For confirmed bookings, a refund record is created and wallet credited by the backend
+        // For confirmed bookings, cancellation request is sent to admin for approval
         if (booking?.bookingStatus?.toLowerCase() === 'confirmed') {
-          alert('Your booking has been cancelled. Refund will be processed as per cancellation policy and credited to your BusMate Wallet.');
+          alert('Your cancellation request has been submitted. It will be reviewed by our admin team and you will be notified once processed.');
+        } else {
+          alert('Your booking has been cancelled.');
         }
         this.loadBookings();
       },
@@ -169,21 +170,23 @@ export class MyBookings implements OnInit {
   // ── Status helpers ──
   getStatusClass(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'confirmed':         return 'badge-confirmed';
-      case 'pending':           return 'badge-pending';
-      case 'paymentprocessing': return 'badge-pending';
-      case 'expired':           return 'badge-expired';
-      case 'cancelled':         return 'badge-cancelled';
-      case 'paymentfailed':     return 'badge-cancelled';
-      default:                  return 'badge-default';
+      case 'confirmed':              return 'badge-confirmed';
+      case 'pending':                return 'badge-pending';
+      case 'paymentprocessing':      return 'badge-pending';
+      case 'expired':                return 'badge-expired';
+      case 'cancelled':              return 'badge-cancelled';
+      case 'paymentfailed':          return 'badge-cancelled';
+      case 'cancellationrequested':  return 'badge-pending'; // Show as pending
+      default:                       return 'badge-default';
     }
   }
 
   getStatusLabel(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'paymentprocessing': return 'Payment Processing';
-      case 'paymentfailed':     return 'Payment Failed';
-      default:                  return status;
+      case 'paymentprocessing':      return 'Payment Processing';
+      case 'paymentfailed':          return 'Payment Failed';
+      case 'cancellationrequested': return 'Cancellation Requested';
+      default:                       return status;
     }
   }
 

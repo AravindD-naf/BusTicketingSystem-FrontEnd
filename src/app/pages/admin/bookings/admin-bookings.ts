@@ -22,6 +22,7 @@ import { PaymentService } from '../../../core/services/payment.service';
           <option value="Expired">Expired</option>
           <option value="Pending">Pending</option>
           <option value="Cancelled">Cancelled</option>
+          <option value="CancellationRequested">Cancellation Requested</option>
         </select>
         <select class="filter-select" (change)="onPageSizeChange($event)">
           <option value="10">10 per page</option>
@@ -64,7 +65,7 @@ import { PaymentService } from '../../../core/services/payment.service';
                 <button class="btn-view" (click)="viewBooking(b)">👁️ View</button>
                 <button class="btn-cancel" *ngIf="b.bookingStatus === 'Confirmed'" (click)="cancelBooking(b.bookingId)">❌ Cancel</button>
                 <button class="btn-refund"
-                  *ngIf="b.bookingStatus === 'Cancelled' && b.refund"
+                  *ngIf="(b.bookingStatus === 'Cancelled' || b.bookingStatus === 'CancellationRequested') && b.refund"
                   [disabled]="b.refund?.status !== 'Pending'"
                   (click)="b.refund?.status === 'Pending' && openRefundModal(b)">
                   {{ b.refund?.status === 'Pending' ? '💰 Refund' : '✓ Refund ' + b.refund?.status }}
@@ -421,21 +422,23 @@ export class AdminBookings implements OnInit {
 
   getStatusClass(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'confirmed':         return 'status-chip status-confirmed';
-      case 'pending':           return 'status-chip status-pending';
-      case 'paymentprocessing': return 'status-chip status-pending';
-      case 'expired':           return 'status-chip status-expired';
-      case 'cancelled':         return 'status-chip status-cancelled';
-      case 'paymentfailed':     return 'status-chip status-failed';
-      default:                  return 'status-chip status-default';
+      case 'confirmed':              return 'status-chip status-confirmed';
+      case 'pending':                return 'status-chip status-pending';
+      case 'paymentprocessing':      return 'status-chip status-pending';
+      case 'expired':                return 'status-chip status-expired';
+      case 'cancelled':              return 'status-chip status-cancelled';
+      case 'paymentfailed':         return 'status-chip status-failed';
+      case 'cancellationrequested': return 'status-chip status-pending'; // Show as pending since waiting for approval
+      default:                       return 'status-chip status-default';
     }
   }
 
   getStatusLabel(status: string): string {
     switch (status?.toLowerCase()) {
-      case 'paymentprocessing': return 'Payment Processing';
-      case 'paymentfailed':     return 'Payment Failed';
-      default:                  return status;
+      case 'paymentprocessing':       return 'Payment Processing';
+      case 'paymentfailed':          return 'Payment Failed';
+      case 'cancellationrequested':  return 'Cancellation Requested';
+      default:                       return status;
     }
   }
 

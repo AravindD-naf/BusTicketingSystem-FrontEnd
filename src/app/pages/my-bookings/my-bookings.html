@@ -85,11 +85,11 @@
         </div>
 
         <!-- Refund banner — reads from embedded b.refund, zero extra API calls -->
-        <div class="refund-banner" *ngIf="b.bookingStatus === 'Cancelled' && b.refund">
+        <div class="refund-banner" *ngIf="(b.bookingStatus === 'Cancelled' || b.bookingStatus === 'CancellationRequested') && b.refund">
           <div class="refund-banner-left">
             <span class="refund-banner-icon">💰</span>
             <div class="refund-banner-info">
-              <span class="refund-banner-title">Refund Initiated</span>
+              <span class="refund-banner-title">{{ b.bookingStatus === 'CancellationRequested' ? 'Refund Requested' : 'Refund Initiated' }}</span>
               <span class="refund-banner-detail">
                 ₹{{ b.refund?.refundAmount }} refund
                 ({{ b.refund?.refundPercentage }}% of fare •
