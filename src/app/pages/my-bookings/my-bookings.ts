@@ -127,7 +127,11 @@ export class MyBookings implements OnInit {
     this.bookingService.getBookingById(booking.bookingId).subscribe({
       next: (r: any) => {
         const full = r?.data ?? r;
-        this.selectedBooking.set(full);
+        // Merge: prefer detail data but keep refund from list if detail doesn't have it
+        this.selectedBooking.set({
+          ...full,
+          refund: full.refund ?? booking.refund
+        });
         this.generateQr(full);
       },
       error: () => {
