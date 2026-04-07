@@ -75,4 +75,8 @@ export class PaymentService {
   getRefundByBooking(bookingId: number) {
     return this.http.get<ApiResponse<any>>(`${this.API}/booking/${bookingId}/refund`);
   }
+
+  initiateRefund(bookingId: number) {
+    return this.http.post<ApiResponse<any>>(`${this.API}/booking/${bookingId}/refund/initiate`, {});
+  }
 }

@@ -65,10 +65,11 @@ import { PaymentService } from '../../../core/services/payment.service';
                 <button class="btn-view" (click)="viewBooking(b)">👁️ View</button>
                 <button class="btn-cancel" *ngIf="b.bookingStatus === 'Confirmed'" (click)="cancelBooking(b.bookingId)">❌ Cancel</button>
                 <button class="btn-refund"
-                  *ngIf="(b.bookingStatus === 'Cancelled' || b.bookingStatus === 'CancellationRequested') && b.refund"
-                  [disabled]="b.refund?.status !== 'Pending'"
-                  (click)="b.refund?.status === 'Pending' && openRefundModal(b)">
-                  {{ b.refund?.status === 'Pending' ? '💰 Refund' : '✓ Refund ' + b.refund?.status }}
+                  *ngIf="b.bookingStatus === 'CancellationRequested' || (b.bookingStatus === 'Cancelled' && b.refund)"
+                  [disabled]="b.refund?.status && b.refund?.status !== 'Pending'"
+                  (click)="openRefundModal(b)">
+                  {{ b.bookingStatus === 'CancellationRequested' && !b.refund ? '💰 Create Refund' :
+                     b.refund?.status === 'Pending' ? '💰 Process Refund' : '✓ Refund ' + b.refund?.status }}
                 </button>
               </td>
             </tr>
@@ -146,7 +147,7 @@ import { PaymentService } from '../../../core/services/payment.service';
               <span style="color:#0A1F44">₹{{ getGrandTotal(selectedBooking()?.totalAmount ?? 0) }}</span>
             </div>
 
-            <ng-container *ngIf="selectedBooking()?.bookingStatus === 'Cancelled'">
+            <ng-container *ngIf="selectedBooking()?.bookingStatus === 'Cancelled' || selectedBooking()?.bookingStatus === 'CancellationRequested'">
               <div class="detail-section-title">Cancellation Info</div>
               <div class="detail-row"><span class="detail-key">Cancelled By</span><span>{{ selectedBooking()?.cancelledBy || '—' }}</span></div>
               <ng-container *ngIf="selectedBooking()?.refund">
@@ -371,11 +372,55 @@ export class AdminBookings implements OnInit {
   }
 
   openRefundModal(b: any) {
-    if (!b.refund) { alert('No refund record found for this booking.'); return; }
-    this.selectedRefundBooking.set(b);
-    this.refundForm.reset({ refundId: b.refund.refundId, isApproved: true, reason: '' });
+    this.selectedRefundBooking.set(null);
     this.formError.set(null);
-    this.showRefundModal.set(true);
+
+    const handleRefund = (refund: any) => {
+      if (!refund || !refund.refundId) {
+        alert('Unable to find or create a refund record for this booking.');
+        return;
+      }
+      this.selectedRefundBooking.set({ ...b, refund });
+      this.refundForm.reset({ refundId: refund.refundId, isApproved: true, reason: '' });
+      this.showRefundModal.set(true);
+    };
+
+    if (b.refund) {
+      handleRefund(b.refund);
+      return;
+    }
+
+    if (b.bookingStatus !== 'CancellationRequested') {
+      alert('Refund processing is only available for cancellation requests.');
+      return;
+    }
+
+    this.saving.set(true);
+    this.paymentService.getRefundByBooking(b.bookingId).subscribe({
+      next: (r: any) => {
+        const refund = r.data;
+        if (refund && refund.refundId) {
+          handleRefund(refund);
+          this.saving.set(false);
+          return;
+        }
+
+        this.paymentService.initiateRefund(b.bookingId).subscribe({
+          next: (res: any) => {
+            handleRefund(res.data);
+            this.saving.set(false);
+          },
+          error: (err) => {
+            this.saving.set(false);
+            alert(err?.error?.message || 'Failed to create refund record for this booking.');
+          }
+        });
+      },
+      error: (err) => {
+        this.saving.set(false);
+        alert(err?.error?.message || 'Failed to load refund details for this booking.');
+      }
+    });
   }
 
   confirmRefund() {
