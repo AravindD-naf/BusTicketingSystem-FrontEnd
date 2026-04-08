@@ -295,8 +295,12 @@
           <div class="contact-grid">
             <div class="pax-field">
               <label class="pax-label">Mobile Number *</label>
-              <input class="pax-input" type="tel" formControlName="contactPhone" placeholder="+91 98765 43210"/>
-              <span class="pax-error" *ngIf="passengerForm.get('contactPhone')?.invalid && passengerForm.get('contactPhone')?.touched">Required</span>
+              <input class="pax-input" type="tel" inputmode="numeric" formControlName="contactPhone"
+                placeholder="10-digit mobile number"
+                (keypress)="$event.charCode >= 48 && $event.charCode <= 57"/>
+              <span class="pax-error" *ngIf="passengerForm.get('contactPhone')?.invalid && passengerForm.get('contactPhone')?.touched">
+                Enter a valid 10-digit mobile number
+              </span>
             </div>
             <div class="pax-field">
               <label class="pax-label">Email Address *</label>

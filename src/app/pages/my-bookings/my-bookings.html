@@ -109,7 +109,7 @@
         <!-- No-refund notice for unpaid cancellations -->
         <div class="no-refund-banner" *ngIf="b.bookingStatus === 'Cancelled' && !b.refund">
           <span>ℹ️</span>
-          <span>No refund applicable — booking was not paid.</span>
+          <span>No refund applicable — booking was cancelled before payment.</span>
         </div>
 
         <div class="booking-actions">
@@ -280,9 +280,9 @@
             </div>
           </ng-container>
 
-          <div class="dl-row refund-notice" *ngIf="!selectedBooking()?.refund">
+          <div class="dl-row refund-notice" *ngIf="!selectedBooking()?.refund && selectedBooking()?.cancelledBy">
             <span>💰 Refund</span>
-            <span style="color:#94a3b8">Not applicable — no payment was made for this booking.</span>
+            <span style="color:#94a3b8">Not applicable — booking was cancelled before payment was made.</span>
           </div>
         </ng-container>
 

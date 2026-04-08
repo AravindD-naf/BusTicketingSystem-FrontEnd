@@ -65,12 +65,14 @@ import { PaymentService } from '../../../core/services/payment.service';
                 <button class="btn-view" (click)="viewBooking(b)">👁️ View</button>
                 <button class="btn-cancel" *ngIf="b.bookingStatus === 'Confirmed'" (click)="cancelBooking(b.bookingId)">❌ Cancel</button>
                 <button class="btn-refund"
-                  *ngIf="b.bookingStatus === 'CancellationRequested' || (b.bookingStatus === 'Cancelled' && b.refund)"
-                  [disabled]="b.refund?.status && b.refund?.status !== 'Pending'"
+                  *ngIf="b.bookingStatus === 'Cancelled' && b.refund && b.refund?.status === 'Pending'"
                   (click)="openRefundModal(b)">
-                  {{ b.bookingStatus === 'CancellationRequested' && !b.refund ? '💰 Create Refund' :
-                     b.refund?.status === 'Pending' ? '💰 Process Refund' : '✓ Refund ' + b.refund?.status }}
+                  💰 Process Refund
                 </button>
+                <span class="refund-done-chip"
+                  *ngIf="b.bookingStatus === 'Cancelled' && b.refund && b.refund?.status !== 'Pending'">
+                  {{ b.refund?.status === 'Completed' ? '✅ Refund Approved' : '❌ Refund Rejected' }}
+                </span>
               </td>
             </tr>
             <tr *ngIf="filteredBookings().length === 0">
@@ -233,6 +235,7 @@ import { PaymentService } from '../../../core/services/payment.service';
     .btn-cancel{background:#fee2e2;color:#dc2626;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:.8rem;margin-right:4px}
     .btn-refund{border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:.8rem;background:#fff7ed;color:#ea580c}
     .btn-refund:disabled{background:#f1f5f9;color:#94a3b8;cursor:default}
+    .refund-done-chip{padding:4px 10px;border-radius:6px;font-size:.78rem;font-weight:500;background:#f1f5f9;color:#64748b}
     .table-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:auto}
     .data-table{width:100%;border-collapse:collapse;font-size:.875rem}
     .data-table th{background:#f8fafc;padding:12px 16px;text-align:left;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap}

@@ -79,7 +79,7 @@ export class SeatSelection implements OnInit {
 
   passengerForm = this.fb.group({
     passengers:   this.fb.array([]),
-    contactPhone: ['', [Validators.required]],
+    contactPhone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
     contactEmail: ['', [Validators.required, Validators.email]],
   });
 
@@ -227,16 +227,31 @@ export class SeatSelection implements OnInit {
               }))
             );
 
+            // Restore saved passenger data from sessionStorage if available
+            const savedPassengers = sessionStorage.getItem('passenger_form_data');
+            const savedContact    = sessionStorage.getItem('passenger_contact_data');
+            const parsedPassengers = savedPassengers ? JSON.parse(savedPassengers) : null;
+            const parsedContact    = savedContact    ? JSON.parse(savedContact)    : null;
+
             // Build a passenger form entry for each locked seat
             const user = this.authService.user();
             lockedByUser.forEach((seat: any, index: number) => {
+              const saved = parsedPassengers?.find((p: any) => p.seatNumber === seat.seatNumber);
               this.passengersArray.push(this.fb.group({
                 seatNumber: [seat.seatNumber],
-                name:   [index === 0 ? (user?.name || '') : '', Validators.required],
-                age:    ['', [Validators.required, Validators.min(1), Validators.max(120)]],
-                gender: ['', Validators.required],
+                name:   [saved?.name   ?? (index === 0 ? (user?.name || '') : ''), Validators.required],
+                age:    [saved?.age    ?? '', [Validators.required, Validators.min(1), Validators.max(120)]],
+                gender: [saved?.gender ?? '', Validators.required],
               }));
             });
+
+            // Restore contact details
+            if (parsedContact) {
+              this.passengerForm.patchValue({
+                contactPhone: parsedContact.contactPhone ?? '',
+                contactEmail: parsedContact.contactEmail ?? ''
+              });
+            }
           }
         }
       },
@@ -388,6 +403,13 @@ export class SeatSelection implements OnInit {
       name:       ctrl.get('name')?.value ?? '',
       age:        ctrl.get('age')?.value ?? 0,
       gender:     ctrl.get('gender')?.value ?? ''
+    }));
+
+    // Save passenger data to sessionStorage so it can be restored if user comes back
+    sessionStorage.setItem('passenger_form_data', JSON.stringify(passengers));
+    sessionStorage.setItem('passenger_contact_data', JSON.stringify({
+      contactPhone: this.passengerForm.get('contactPhone')?.value ?? '',
+      contactEmail: this.passengerForm.get('contactEmail')?.value ?? ''
     }));
 
     this.seatService.lockSeats(this.scheduleId(), seatNumbers).subscribe({
