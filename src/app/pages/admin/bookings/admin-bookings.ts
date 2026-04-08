@@ -64,13 +64,20 @@ import { PaymentService } from '../../../core/services/payment.service';
               <td>
                 <button class="btn-view" (click)="viewBooking(b)">👁️ View</button>
                 <button class="btn-cancel" *ngIf="b.bookingStatus === 'Confirmed'" (click)="cancelBooking(b.bookingId)">❌ Cancel</button>
+                <!-- Process Refund: show for CancellationRequested (pending admin decision) -->
                 <button class="btn-refund"
-                  *ngIf="b.bookingStatus === 'Cancelled' && b.refund && b.refund?.status === 'Pending'"
+                  *ngIf="b.bookingStatus === 'CancellationRequested' && b.refund?.status === 'Pending'"
+                  (click)="openRefundModal(b)">
+                  💰 Process Refund
+                </button>
+                <!-- Also show for already-Cancelled bookings with a pending refund -->
+                <button class="btn-refund"
+                  *ngIf="b.bookingStatus === 'Cancelled' && b.refund?.status === 'Pending'"
                   (click)="openRefundModal(b)">
                   💰 Process Refund
                 </button>
                 <span class="refund-done-chip"
-                  *ngIf="b.bookingStatus === 'Cancelled' && b.refund && b.refund?.status !== 'Pending'">
+                  *ngIf="(b.bookingStatus === 'Cancelled' || b.bookingStatus === 'CancellationRequested') && b.refund && b.refund?.status !== 'Pending'">
                   {{ b.refund?.status === 'Completed' ? '✅ Refund Approved' : '❌ Refund Rejected' }}
                 </span>
               </td>
@@ -244,6 +251,7 @@ import { PaymentService } from '../../../core/services/payment.service';
     .status-chip{padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:500}
     .status-confirmed{background:#dcfce7;color:#16a34a}
     .status-pending{background:#fef9c3;color:#ca8a04}
+    .status-cancellation-requested{background:#fff7ed;color:#ea580c;border:1px solid #fed7aa}
     .status-cancelled{background:#fee2e2;color:#dc2626}
     .status-expired{background:#fff3e0;color:#e65100}
     .status-failed{background:#fce7f3;color:#9d174d}
@@ -380,7 +388,7 @@ export class AdminBookings implements OnInit {
 
     const handleRefund = (refund: any) => {
       if (!refund || !refund.refundId) {
-        alert('Unable to find or create a refund record for this booking.');
+        alert('Unable to find a refund record for this booking.');
         return;
       }
       this.selectedRefundBooking.set({ ...b, refund });
@@ -388,40 +396,27 @@ export class AdminBookings implements OnInit {
       this.showRefundModal.set(true);
     };
 
-    if (b.refund) {
+    // If refund already attached to the booking object, use it directly
+    if (b.refund?.refundId) {
       handleRefund(b.refund);
       return;
     }
 
-    if (b.bookingStatus !== 'CancellationRequested') {
-      alert('Refund processing is only available for cancellation requests.');
-      return;
-    }
-
+    // Otherwise fetch from API
     this.saving.set(true);
     this.paymentService.getRefundByBooking(b.bookingId).subscribe({
       next: (r: any) => {
-        const refund = r.data;
-        if (refund && refund.refundId) {
-          handleRefund(refund);
-          this.saving.set(false);
-          return;
-        }
-
-        this.paymentService.initiateRefund(b.bookingId).subscribe({
-          next: (res: any) => {
-            handleRefund(res.data);
-            this.saving.set(false);
-          },
-          error: (err) => {
-            this.saving.set(false);
-            alert(err?.error?.message || 'Failed to create refund record for this booking.');
-          }
-        });
-      },
-      error: (err) => {
         this.saving.set(false);
-        alert(err?.error?.message || 'Failed to load refund details for this booking.');
+        const refund = r?.data;
+        if (refund?.refundId) {
+          handleRefund(refund);
+        } else {
+          alert('No refund record found for this booking.');
+        }
+      },
+      error: () => {
+        this.saving.set(false);
+        alert('Failed to load refund details.');
       }
     });
   }
@@ -476,7 +471,7 @@ export class AdminBookings implements OnInit {
       case 'expired':                return 'status-chip status-expired';
       case 'cancelled':              return 'status-chip status-cancelled';
       case 'paymentfailed':         return 'status-chip status-failed';
-      case 'cancellationrequested': return 'status-chip status-pending'; // Show as pending since waiting for approval
+      case 'cancellationrequested': return 'status-chip status-cancellation-requested';
       default:                       return 'status-chip status-default';
     }
   }
