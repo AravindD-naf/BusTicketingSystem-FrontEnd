@@ -64,18 +64,21 @@ import { PaymentService } from '../../../core/services/payment.service';
               <td>
                 <button class="btn-view" (click)="viewBooking(b)">👁️ View</button>
                 <button class="btn-cancel" *ngIf="b.bookingStatus === 'Confirmed'" (click)="cancelBooking(b.bookingId)">❌ Cancel</button>
-                <!-- Process Refund: show for CancellationRequested (pending admin decision) -->
+
+                <!-- Process Refund: always show for CancellationRequested, regardless of refund object -->
                 <button class="btn-refund"
-                  *ngIf="b.bookingStatus === 'CancellationRequested' && b.refund?.status === 'Pending'"
+                  *ngIf="b.bookingStatus === 'CancellationRequested'"
                   (click)="openRefundModal(b)">
                   💰 Process Refund
                 </button>
-                <!-- Also show for already-Cancelled bookings with a pending refund -->
+
+                <!-- Also show for Cancelled bookings with a pending refund -->
                 <button class="btn-refund"
                   *ngIf="b.bookingStatus === 'Cancelled' && b.refund?.status === 'Pending'"
                   (click)="openRefundModal(b)">
                   💰 Process Refund
                 </button>
+
                 <span class="refund-done-chip"
                   *ngIf="(b.bookingStatus === 'Cancelled' || b.bookingStatus === 'CancellationRequested') && b.refund && b.refund?.status !== 'Pending'">
                   {{ b.refund?.status === 'Completed' ? '✅ Refund Approved' : '❌ Refund Rejected' }}
@@ -406,12 +409,23 @@ export class AdminBookings implements OnInit {
     this.saving.set(true);
     this.paymentService.getRefundByBooking(b.bookingId).subscribe({
       next: (r: any) => {
-        this.saving.set(false);
         const refund = r?.data;
         if (refund?.refundId) {
+          this.saving.set(false);
           handleRefund(refund);
         } else {
-          alert('No refund record found for this booking.');
+          // Refund record doesn't exist yet — create it now (handles cases where
+          // auto-creation failed during cancellation)
+          this.paymentService.initiateRefund(b.bookingId).subscribe({
+            next: (res: any) => {
+              this.saving.set(false);
+              handleRefund(res?.data);
+            },
+            error: (err: any) => {
+              this.saving.set(false);
+              alert(err?.error?.message || 'Failed to create refund record. Please try again.');
+            }
+          });
         }
       },
       error: () => {
