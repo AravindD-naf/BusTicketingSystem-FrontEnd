@@ -61,7 +61,7 @@ export class ChatService {
     this.hub.onclose(() => this.connected.set(false));
     this.hub.onreconnecting(() => this.connected.set(false));
 
-    this.hub.on('ReceiveMessage', (msg: ChatMsg) => {
+    this.hub.on('ReceiveMessage', (msg: ChatMsg) => {             //Only append messages for the active conversation andAlways refresh conversation list (to update unread badge)
       const isAdmin = this.auth.user()?.role === 'Admin';
       if (isAdmin) {
         const active = this.activeConvUserId();
@@ -84,7 +84,7 @@ export class ChatService {
       });
   }
 
-  private dedup(msgs: ChatMsg[]): ChatMsg[] {
+  private dedup(msgs: ChatMsg[]): ChatMsg[] {  //prevents de-duplication of messages when both sender and receiver are admins (since both will receive the same message via SignalR)
     const seen = new Set<number>();
     return msgs.filter(m => {
       if (seen.has(m.messageId)) return false;
@@ -93,7 +93,7 @@ export class ChatService {
     });
   }
 
-  sendMessage(receiverId: number, content: string) {
+  sendMessage(receiverId: number, content: string) {    // protects againts empty text or disconnected hub, which would cause an error. The UI should ideally prevent this, but this is a safety net.
     if (!content.trim() || !this.isConnected()) return;
     this.hub.invoke('SendMessage', receiverId, content)
       .catch((err: unknown) => console.error('Send error:', err));
@@ -107,11 +107,11 @@ export class ChatService {
     );
   }
 
-  loadHistory(otherUserId: number) {
+  loadHistory(otherUserId: number) {  // sets active conversation and loads its history. Clears messages first to show loading state, then populates with API response. If API call fails, messages remain cleared (empty) rather than showing stale data.
     this.messages.set([]);
     this.activeConvUserId.set(otherUserId);
     this.http.get<any>(`${this.API}/chat/history/${otherUserId}`).subscribe({
-      next: r => this.messages.set(r?.data ?? []),
+      next: r => this.messages.set(r?.data ?? []),   //sets message list from r.data or empty array if r.data is falsy (null or undefined)
       error: () => {}
     });
   }
