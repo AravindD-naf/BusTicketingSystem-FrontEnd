@@ -55,13 +55,20 @@
       <div class="form-row">
         <label class="form-label">
           First Name
-          <input class="form-input" formControlName="firstName" placeholder="John" autocomplete="given-name" />
-          <span class="field-error" *ngIf="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched">Required.</span>
+          <input class="form-input" formControlName="firstName" placeholder="John" autocomplete="given-name" maxlength="50" />
+          <span class="field-error" *ngIf="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched">
+            <ng-container *ngIf="registerForm.get('firstName')?.errors?.['required']">First name is required.</ng-container>
+            <ng-container *ngIf="registerForm.get('firstName')?.errors?.['minlength']">Minimum 2 characters.</ng-container>
+            <ng-container *ngIf="registerForm.get('firstName')?.errors?.['pattern']">Only letters allowed.</ng-container>
+          </span>
         </label>
         <label class="form-label">
           Last Name
-          <input class="form-input" formControlName="lastName" placeholder="Doe" autocomplete="family-name" />
-          <span class="field-error" *ngIf="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched">Required.</span>
+          <input class="form-input" formControlName="lastName" placeholder="Doe" autocomplete="family-name" maxlength="50" />
+          <span class="field-error" *ngIf="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched">
+            <ng-container *ngIf="registerForm.get('lastName')?.errors?.['required']">Last name is required.</ng-container>
+            <ng-container *ngIf="registerForm.get('lastName')?.errors?.['pattern']">Only letters allowed.</ng-container>
+          </span>
         </label>
       </div>
 
@@ -74,15 +81,23 @@
       </label>
 
       <label class="form-label">
-        Phone Number <span class="optional">(optional)</span>
-        <input class="form-input" type="tel" formControlName="phone" placeholder="+91 98765 43210" autocomplete="tel" />
+        Phone Number
+        <input class="form-input" type="tel" inputmode="numeric" formControlName="phone"
+          placeholder="10-digit mobile number"
+          maxlength="10"
+          (keypress)="$event.charCode >= 48 && $event.charCode <= 57 || $event.preventDefault()" />
+        <span class="field-error" *ngIf="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched">
+          Enter a valid 10-digit Indian mobile number (starts with 6–9).
+        </span>
       </label>
 
       <label class="form-label">
         Password
-        <input class="form-input" type="password" formControlName="password" placeholder="Min. 6 characters" autocomplete="new-password" />
+        <input class="form-input" type="password" formControlName="password" placeholder="Min. 8 characters" autocomplete="new-password" maxlength="32" />
         <span class="field-error" *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
-          Password must be at least 6 characters.
+          <ng-container *ngIf="registerForm.get('password')?.errors?.['required']">Password is required.</ng-container>
+          <ng-container *ngIf="registerForm.get('password')?.errors?.['minlength']">Minimum 8 characters.</ng-container>
+          <ng-container *ngIf="registerForm.get('password')?.errors?.['pattern']">Must include uppercase, lowercase and a number.</ng-container>
         </span>
       </label>
 

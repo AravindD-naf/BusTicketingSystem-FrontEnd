@@ -36,11 +36,11 @@ export class Auth implements OnInit, OnDestroy {
   });
 
   registerForm: FormGroup = this.fb.group({
-    firstName:       ['', Validators.required],
-    lastName:        ['', Validators.required],
+    firstName:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[a-zA-Z\s'-]+$/)]],
+    lastName:        ['', [Validators.required, Validators.minLength(1), Validators.maxLength(50), Validators.pattern(/^[a-zA-Z\s'-]+$/)]],
     email:           ['', [Validators.required, Validators.email]],
-    phone:           [''],
-    password:        ['', [Validators.required, Validators.minLength(6)]],
+    phone:           ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
+    password:        ['', [Validators.required, Validators.minLength(8), Validators.maxLength(32), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)]],
     confirmPassword: ['', Validators.required],
   }, {
     validators: (g: FormGroup) =>

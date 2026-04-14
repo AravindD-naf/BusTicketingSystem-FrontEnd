@@ -44,9 +44,13 @@ export class Landing implements OnInit {
   private promoService = inject(PromoService);
 
   selectedDeal = signal<DealOffer | null>(null);
-  codeCopied = signal(false);
+  codeCopied   = signal(false);
 
-  // Backgrounds for promo cards — cycled through
+  // FIX: use signal instead of plain array property to avoid NG0100
+  // ExpressionChangedAfterItHasBeenCheckedError was caused by mutating
+  // a plain class property inside an async subscription during ngOnInit
+  deals = signal<DealOffer[]>([]);
+
   private readonly BG_IMAGES = [
     'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600&q=80',
     'https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?w=600&q=80',
@@ -56,27 +60,27 @@ export class Landing implements OnInit {
   ];
   private readonly BG_COLORS = ['#1a3a5c', '#1e4d2b', '#4a1a6b', '#7a2d00', '#003d5b'];
 
-  deals: DealOffer[] = [];
-
   ngOnInit() {
     this.promoService.getActive().subscribe({
       next: (r: any) => {
         const promos: PromoCode[] = r?.data ?? [];
-        this.deals = promos.map((p, i) => this.promoToDeals(p, i));
+        this.deals.set(promos.map((p, i) => this.promoToDeals(p, i)));
       },
-      error: () => { this.deals = []; }
+      error: () => { this.deals.set([]); }
     });
   }
 
   private promoToDeals(p: PromoCode, i: number): DealOffer {
     const isPercent = p.discountType === 'Percentage';
-    const discount = isPercent ? `${p.discountValue}%` : `₹${p.discountValue}`;
+    const discount  = isPercent ? `${p.discountValue}%` : `₹${p.discountValue}`;
     const discountSub = isPercent ? 'OFF' : 'FLAT OFF';
-    const validUntil = new Date(p.validUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const validUntil  = new Date(p.validUntil).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
     const terms: string[] = [];
-    if (p.minBookingAmount > 0) terms.push(`Minimum booking value ₹${p.minBookingAmount}`);
+    if (p.minBookingAmount > 0)  terms.push(`Minimum booking value ₹${p.minBookingAmount}`);
     if (p.maxDiscountAmount > 0) terms.push(`Maximum discount capped at ₹${p.maxDiscountAmount}`);
-    if (p.maxUsageCount > 0) terms.push(`Limited to ${p.maxUsageCount} uses`);
+    if (p.maxUsageCount > 0)     terms.push(`Limited to ${p.maxUsageCount} uses`);
     terms.push('Valid on all routes and bus types');
     return {
       id: p.promoCodeId,
@@ -88,43 +92,20 @@ export class Landing implements OnInit {
       promoCode: p.code,
       discount,
       discountSub,
-      bgImage: this.BG_IMAGES[i % this.BG_IMAGES.length],
-      bgColor: this.BG_COLORS[i % this.BG_COLORS.length],
+      bgImage:  this.BG_IMAGES[i % this.BG_IMAGES.length],
+      bgColor:  this.BG_COLORS[i % this.BG_COLORS.length],
       validUntil,
       termsLines: terms
     };
   }
+
   topRoutes: TopRoute[] = [
-    {
-      from: 'Chennai',
-      to: 'Bangalore',
-      image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800&q=80&auto=format&fit=crop' // Bangalore city
-    },
-    {
-      from: 'Mumbai',
-      to: 'Pune',
-      image: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=800&q=80&auto=format&fit=crop' // Mumbai Gateway
-    },
-    {
-      from: 'Hyderabad',
-      to: 'Chennai',
-      image: 'https://images.unsplash.com/photo-1551161242-b5af797b7233?q=80&w=1151&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-    },
-    {
-      from: 'Delhi',
-      to: 'Jaipur',
-      image: 'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-    },
-    {
-      from: 'Bangalore',
-      to: 'Hyderabad',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/View_of_Banglore_Fort%2C_Karnatka%2C_India.jpg?w=800&q=80&auto=format&fit=crop' // Hyderabad Charminar
-    },
-    {
-      from: 'Coimbatore',
-      to: 'Chennai',
-      image: 'https://images.unsplash.com/photo-1609609830354-8f615d61b9c8?q=80&w=1931&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=800&q=80&auto=format&fit=crop' // Chennai temple
-    },
+    { from: 'Chennai',    to: 'Bangalore', image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800&q=80&auto=format&fit=crop' },
+    { from: 'Mumbai',     to: 'Pune',      image: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=800&q=80&auto=format&fit=crop' },
+    { from: 'Hyderabad',  to: 'Chennai',   image: 'https://images.unsplash.com/photo-1551161242-b5af797b7233?q=80&w=1151&auto=format&fit=crop' },
+    { from: 'Delhi',      to: 'Jaipur',    image: 'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33?q=80&w=2071&auto=format&fit=crop' },
+    { from: 'Bangalore',  to: 'Hyderabad', image: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/View_of_Banglore_Fort%2C_Karnatka%2C_India.jpg' },
+    { from: 'Coimbatore', to: 'Chennai',   image: 'https://images.unsplash.com/photo-1609609830354-8f615d61b9c8?q=80&w=1931&auto=format&fit=crop' },
   ];
 
   sanitizeUrl(url: string): SafeStyle {
@@ -155,24 +136,20 @@ export class Landing implements OnInit {
   goToRoute(route: TopRoute) {
     const today = new Date().toISOString().split('T')[0];
     this.router.navigate(['/results'], {
-      queryParams: {
-        from: route.from,
-        to: route.to,
-        date: today,
-      }
+      queryParams: { from: route.from, to: route.to, date: today }
     });
   }
 
   features = [
-    { icon: 'calendar', title: 'Easy Booking', desc: 'Reserve your seat in under 60 seconds with our streamlined booking flow.' },
-    { icon: 'shield', title: 'Secure Payments', desc: 'Bank-grade encryption for every transaction. Pay via UPI, cards, or net banking.' },
-    { icon: 'map-pin', title: 'Live Bus Tracking', desc: 'Track your bus on a real-time map. Never miss your pickup point again.' },
-    { icon: 'heart', title: 'Comfortable Travel', desc: 'Choose from AC sleepers, semi-sleepers, and luxury coaches.' }
+    { icon: 'calendar', title: 'Easy Booking',      desc: 'Reserve your seat in under 60 seconds with our streamlined booking flow.' },
+    { icon: 'shield',   title: 'Secure Payments',   desc: 'Bank-grade encryption for every transaction. Pay via UPI, cards, or net banking.' },
+    { icon: 'map-pin',  title: 'Live Bus Tracking',  desc: 'Track your bus on a real-time map. Never miss your pickup point again.' },
+    { icon: 'heart',    title: 'Comfortable Travel', desc: 'Choose from AC sleepers, semi-sleepers, and luxury coaches.' }
   ];
 
   steps = [
-    { num: '01', title: 'Search Your Route', desc: "Enter origin, destination, and date. We'll show every available bus instantly." },
-    { num: '02', title: 'Pick & Customize', desc: 'Choose your seat on an interactive map. Filter by type, timing, or price.' },
-    { num: '03', title: 'Pay & Board', desc: 'Secure payment, instant e-ticket. Show it on your phone at boarding.' }
+    { num: '01', title: 'Search Your Route',   desc: "Enter origin, destination, and date. We'll show every available bus instantly." },
+    { num: '02', title: 'Pick & Customize',    desc: 'Choose your seat on an interactive map. Filter by type, timing, or price.' },
+    { num: '03', title: 'Pay & Board',         desc: 'Secure payment, instant e-ticket. Show it on your phone at boarding.' }
   ];
 }
